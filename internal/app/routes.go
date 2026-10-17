@@ -20,6 +20,10 @@ func (a *App) routes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /events", a.events)
 
 	mux.HandleFunc("GET /{$}", a.home)
+	mux.HandleFunc("GET /residences", a.residences)
+	mux.HandleFunc("GET /residences/{id}", a.unit)
+	mux.HandleFunc("GET /schedule/{id}", a.unitSchedule)
+	mux.HandleFunc("GET /residences/types/{code}", a.homeType)
 
 	mux.HandleFunc("/", a.notFound)
 }

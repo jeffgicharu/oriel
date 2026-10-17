@@ -7,12 +7,20 @@ import (
 	"strings"
 
 	"github.com/jeffgicharu/oriel/internal/assets"
+	"github.com/jeffgicharu/oriel/internal/building"
 	"github.com/jeffgicharu/oriel/internal/web"
 )
 
 // publicPaths are the pages listed in the sitemap.
 func (a *App) publicPaths() []string {
-	return []string{"/"}
+	paths := []string{"/", "/residences"}
+	for _, code := range building.TypeOrder {
+		paths = append(paths, "/residences/types/"+code)
+	}
+	for _, u := range building.Units() {
+		paths = append(paths, "/residences/"+u.ID)
+	}
+	return paths
 }
 
 func (a *App) robots(w http.ResponseWriter, r *http.Request) {

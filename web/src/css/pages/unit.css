@@ -1,0 +1,257 @@
+/* ---------- A home's page ---------- */
+
+.unit .breadcrumb {
+  padding-top: clamp(28px, 4vw, 48px);
+}
+
+.unit-head {
+  display: grid;
+  gap: 28px;
+  padding: clamp(20px, 3vw, 36px) 0 clamp(24px, 3vw, 40px);
+}
+
+@media (min-width: 1000px) {
+  .unit-head {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    align-items: end;
+    gap: 48px;
+  }
+}
+
+.unit-head__id {
+  display: grid;
+  gap: 10px;
+}
+
+.unit-head__number {
+  font-size: clamp(64px, 11vw, 168px);
+  line-height: 0.82;
+  font-weight: 300;
+  letter-spacing: -0.06em;
+  color: var(--cobalt);
+}
+
+.unit-head__titles {
+  display: grid;
+  gap: 10px;
+}
+
+.unit-head__titles .h2 {
+  max-width: 20ch;
+}
+
+.unit-head__deal {
+  display: grid;
+  gap: 14px;
+  justify-items: start;
+  padding: 20px 22px;
+  border: 1px solid var(--rule-strong);
+  background: var(--plaster-hi);
+  box-shadow: var(--shadow-sheet);
+}
+
+.unit-head__price {
+  display: grid;
+  gap: 2px;
+}
+
+.unit-head__price .label {
+  color: var(--ink-soft);
+}
+
+.unit-head__price .tnum,
+.unit-head__price.is-gone span:last-child {
+  font-size: clamp(30px, 3.4vw, 44px);
+  font-weight: 720;
+  font-stretch: 112%;
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+}
+
+.unit-head__price.is-gone span:last-child {
+  color: var(--ink-soft);
+}
+
+.unit-head__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.unit-head__note {
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+.shortlist-toggle .heart {
+  width: 18px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  transition: fill 0.25s var(--ease), transform 0.35s var(--ease-out);
+}
+
+.shortlist-toggle[aria-pressed="true"] .heart {
+  fill: var(--cobalt);
+  stroke: var(--cobalt);
+  transform: scale(1.12);
+}
+
+.unit-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-top: 1px solid var(--rule-strong);
+  border-bottom: 1px solid var(--rule);
+}
+
+@media (min-width: 700px) {
+  .unit-facts {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1200px) {
+  .unit-facts {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+  }
+}
+
+.unit-facts > div {
+  display: grid;
+  gap: 4px;
+  padding: 14px 14px 14px 0;
+}
+
+.unit-facts dt {
+  color: var(--ink-soft);
+}
+
+.unit-facts dd {
+  font-size: 18px;
+  font-weight: 620;
+}
+
+.unit-plan__grid {
+  display: grid;
+  gap: 28px;
+}
+
+@media (min-width: 1000px) {
+  .unit-plan__grid {
+    grid-template-columns: minmax(0, 1fr) 300px;
+    align-items: start;
+  }
+}
+
+.unit-plan__drawing {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+.unit-plan__bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.unit-plan__bar .label {
+  color: var(--ink-soft);
+}
+
+.plan-figure {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: clamp(12px, 2vw, 24px);
+  border: 1px solid var(--rule);
+  background: #fbfbfa;
+}
+
+.plan-figure figcaption {
+  font-size: 10px;
+}
+
+.unit-plan__side {
+  display: grid;
+  gap: 14px;
+}
+
+@media (min-width: 1000px) {
+  .unit-plan__side {
+    position: sticky;
+    top: calc(var(--header-h) + 20px);
+  }
+}
+
+.side-card--elev {
+  justify-items: start;
+}
+
+.unit-light__grid,
+.unit-more__grid {
+  display: grid;
+  gap: 32px;
+}
+
+@media (min-width: 1000px) {
+  .unit-light__grid {
+    grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+    align-items: center;
+    gap: 64px;
+  }
+
+  .unit-more__grid {
+    grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+    gap: 64px;
+  }
+}
+
+.unit-light__grid .h3 {
+  margin: 10px 0 12px;
+}
+
+/* On phones, the price and the button stay in reach at the bottom. */
+.unit-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px var(--gutter) calc(10px + env(safe-area-inset-bottom));
+  background: rgb(244 245 242 / 0.96);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid var(--rule-strong);
+}
+
+.unit-bar > div {
+  display: grid;
+}
+
+.unit-bar .mono {
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+
+.unit-bar strong {
+  font-size: 18px;
+}
+
+@media (min-width: 1000px) {
+  .unit-bar {
+    display: none;
+  }
+}
+
+@media (max-width: 999px) {
+  body.has-unit-bar .site-footer {
+    padding-bottom: 72px;
+  }
+}

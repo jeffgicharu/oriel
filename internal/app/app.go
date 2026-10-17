@@ -12,6 +12,8 @@ import (
 	"github.com/a-h/templ"
 
 	"github.com/jeffgicharu/oriel/internal/config"
+	"github.com/jeffgicharu/oriel/internal/copies"
+	"github.com/jeffgicharu/oriel/internal/sample"
 	"github.com/jeffgicharu/oriel/internal/web"
 )
 
@@ -22,36 +24,59 @@ type App struct {
 	log     *slog.Logger
 	now     func() time.Time
 
-	// streams ends every live-update stream when the server shuts down, so
-	// browsers reconnect to the release that is taking over.
+	copies      *copies.Store
+	copyLimiter *limiter
+	formLimiter *limiter
+
+	// streams ends every live-update stream and the background work when the
+	// server shuts down, so browsers reconnect to the release taking over.
 	streams context.Context
 	stop    context.CancelFunc
 }
 
-// New prepares the server.
+// New prepares the server: it opens the data folder, building the shared
+// sample if there is none, and starts the nightly rebuild and the sweep of
+// expired copies.
 func New(cfg config.Config, release string, log *slog.Logger) (*App, error) {
 	streams, stop := context.WithCancel(context.Background())
-	a := &App{
-		cfg:     cfg,
-		release: release,
-		log:     log,
-		now:     time.Now,
-		streams: streams,
-		stop:    stop,
+	store, err := copies.Open(streams, cfg.DataDir, copies.DefaultOptions(), sample.Build, log)
+	if err != nil {
+		stop()
+		return nil, err
 	}
+	a := &App{
+		cfg:         cfg,
+		release:     release,
+		log:         log,
+		now:         time.Now,
+		copies:      store,
+		copyLimiter: newLimiter(20, 6),
+		formLimiter: newLimiter(60, 12),
+		streams:     streams,
+		stop:        stop,
+	}
+	go store.Run(streams)
 	return a, nil
 }
 
-// Close ends live-update streams. Call it when the server starts shutting down.
+// Close ends live-update streams and background work. Call it when the
+// server starts shutting down.
 func (a *App) Close() {
 	a.stop()
+}
+
+// Shutdown closes the databases once requests have finished.
+func (a *App) Shutdown() {
+	a.copies.Close()
 }
 
 // Handler is every route of the site, wrapped in the middleware all of them share.
 func (a *App) Handler() http.Handler {
 	mux := http.NewServeMux()
 	a.routes(mux)
-	return a.recoverer(a.headers(mux))
+	// Forms may only be posted from Oriel's own pages.
+	cross := http.NewCrossOriginProtection()
+	return a.recoverer(a.headers(cross.Handler(a.withVisitor(mux))))
 }
 
 func (a *App) site() web.Site {

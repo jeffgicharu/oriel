@@ -1,0 +1,292 @@
+package web
+
+import (
+	"strconv"
+
+	"github.com/jeffgicharu/oriel/internal/floorplan"
+	"github.com/jeffgicharu/oriel/internal/light"
+	"github.com/jeffgicharu/oriel/internal/plans"
+	"github.com/jeffgicharu/oriel/internal/store"
+)
+
+templ Unit(p Page, d UnitData) {
+	@Layout(p) {
+		<article class="unit">
+			<div class="wrap">
+				<nav class="breadcrumb label" aria-label="Breadcrumb">
+					<a href="/residences">Residences</a><span aria-hidden="true">/</span>
+					<a href={ templ.SafeURL("/residences/types/" + d.Home.Type.Code) }>Type { d.Home.Type.Code }</a><span aria-hidden="true">/</span>
+					<span aria-current="page">{ d.Home.ID }</span>
+				</nav>
+				<header class="unit-head">
+					<div class="unit-head__id">
+						<p class="unit-head__number mono" aria-hidden="true">{ d.Home.ID }</p>
+						<div class="unit-head__titles">
+							<p class="label label--cobalt">Home { d.Home.ID } · Type { d.Home.Type.Code }</p>
+							<h1 class="h2">{ HomeTitle(d.Home) }, facing { d.Home.Facings() }</h1>
+						</div>
+					</div>
+					<div class="unit-head__deal">
+						@StatusBadge(d.Home.Status)
+						if d.Home.ShowsPrice() {
+							<p class="unit-head__price"><span class="label">Price</span><span class="tnum">{ KES(d.Home.Price) }</span></p>
+						} else {
+							<p class="unit-head__price is-gone"><span class="label">Price</span><span>{ store.StatusName(d.Home.Status) }</span></p>
+						}
+						<div class="unit-head__actions">
+							if d.Home.OnSale() {
+								<a class="btn btn--cobalt" href={ templ.SafeURL("/reserve/" + d.Home.ID) }>Request a reservation @Arrow()</a>
+							}
+							<a class={ "btn", templ.KV("btn--line", d.Home.OnSale()), templ.KV("btn--cobalt", !d.Home.OnSale()) } href={ templ.SafeURL("/viewings/new?home=" + d.Home.ID) }>Book a viewing</a>
+							<button class="btn btn--line shortlist-toggle" type="button" data-shortlist={ d.Home.ID } aria-pressed="false">
+								<svg class="heart" viewBox="0 0 20 18" aria-hidden="true"><path d="M10 16.5S2 11.6 2 6.2A4 4 0 0 1 10 4a4 4 0 0 1 8 2.2c0 5.4-8 10.3-8 10.3Z"></path></svg>
+								<span data-shortlist-label>Shortlist</span>
+							</button>
+						</div>
+						if d.Home.Status == store.Held {
+							<p class="unit-head__note">A reservation on this home is waiting to be confirmed. You can still book a viewing, and we will tell you if it comes free.</p>
+						}
+					</div>
+				</header>
+				<dl class="unit-facts">
+					<div><dt class="label">Inside</dt><dd class="tnum">{ strconv.Itoa(d.Home.Type.Internal) } m²</dd></div>
+					<div><dt class="label">{ d.Home.Type.OutdoorName }</dt><dd class="tnum">{ strconv.Itoa(d.Home.Type.Outdoor) } m²</dd></div>
+					<div><dt class="label">Bedrooms</dt><dd>{ bedroomsText(d.Home) }</dd></div>
+					<div><dt class="label">Bathrooms</dt><dd>{ strconv.Itoa(d.Home.Type.Bathrooms) }</dd></div>
+					<div><dt class="label">Level</dt><dd>{ Ordinal(d.Home.Level) } of { strconv.Itoa(16) }</dd></div>
+					<div><dt class="label">Faces</dt><dd>{ d.Home.Aspect() }</dd></div>
+					<div><dt class="label">Parking</dt><dd>{ strconv.Itoa(d.Home.Type.Parking) } { plural(d.Home.Type.Parking, "bay", "bays") }</dd></div>
+				</dl>
+			</div>
+			<section class="unit-plan section--tight" aria-labelledby="plan-title">
+				<div class="wrap unit-plan__grid">
+					<div class="unit-plan__drawing">
+						<div class="unit-plan__bar">
+							<h2 class="label" id="plan-title">A-2·{ d.Home.ID } · Floor plan</h2>
+							<label class="switch">
+								<input type="checkbox" data-plan-furniture checked/>
+								<span>Furniture</span>
+							</label>
+						</div>
+						<figure class="plan-figure" data-plan>
+							@planSVG(d.Plan, floorplan.Options{North: NorthFor(d.Home.Unit), Title: "Floor plan of home " + d.Home.ID + ", " + d.Home.Type.Name})
+							<figcaption class="label muted">
+								if d.Home.Position.Handed {
+									Drawn as built: the mirror image of the type B plan.
+								}
+								Not to scale. Areas are internal and approximate.
+							</figcaption>
+						</figure>
+					</div>
+					<aside class="unit-plan__side" aria-label="Where it is">
+						<div class="side-card">
+							<h2 class="label">Key plan · { LevelName(d.Home.Level) }</h2>
+							@KeyPlan(d.Home.Unit)
+							<p class="muted">Home { d.Home.ID } is position { strconv.Itoa(d.Home.Position.Number) } on the { Ordinal(d.Home.Level) } floor{ riverNote(d.Home) }.</p>
+						</div>
+						<div class="side-card side-card--elev">
+							<h2 class="label">In the building</h2>
+							@MiniElevation(d.Home.Level)
+						</div>
+						<a class="link-arrow" href={ templ.SafeURL("/explore?home=" + d.Home.ID) }>See it in the 3D building @Arrow()</a>
+					</aside>
+				</div>
+			</section>
+			<section class="unit-light section--tight section--rule" aria-labelledby="light-title">
+				<div class="wrap unit-light__grid">
+					<div>
+						<p class="sheet-tag label">Light study</p>
+						<h2 class="h3" id="light-title">{ MorningOrEvening(d.Light) }</h2>
+						<p class="muted">{ LightSummary(d.Light) } Worked out from the sun's path over Riverside, the slab edge over each window and the fins on the east and west faces.</p>
+					</div>
+					@LightChart(d.Light)
+				</div>
+			</section>
+			<section class="unit-pay section--tight section--rule" aria-labelledby="pay-title">
+				<div class="wrap">
+					<div class="section-head section-head--split">
+						<div>
+							<p class="sheet-tag label">Paying for it</p>
+							<h2 class="h2" id="pay-title">Choose how you pay.</h2>
+						</div>
+						<p class="muted">Dates run from a reservation made today. Your letter of offer confirms the exact figures.</p>
+					</div>
+					if d.Home.ShowsPrice() {
+						@PaymentPlans(d.Home, d.Schedule, d.PlanCode)
+					} else {
+						<p class="notice">This home is { store.StatusName(d.Home.Status) }. The same plans apply to every home still available: <a href={ templ.SafeURL("/residences?beds=" + strconv.Itoa(Bedrooms(d.Home.Type.Code))) }>see similar homes</a>.</p>
+					}
+				</div>
+			</section>
+			<section class="unit-more section--tight section--rule" aria-labelledby="more-title">
+				<div class="wrap unit-more__grid">
+					<div>
+						<p class="sheet-tag label">Type { d.Home.Type.Code }</p>
+						<h2 class="h3" id="more-title">{ d.Home.Type.Name }</h2>
+						<p class="muted">{ d.Home.Type.Summary }</p>
+						<ul class="ticks" role="list">
+							for _, f := range d.Home.Type.Features {
+								<li>{ f }</li>
+							}
+						</ul>
+						<a class="link-arrow" href="/building#specification">Finishes and specification @Arrow()</a>
+					</div>
+					if len(d.Similar) > 0 {
+						<div>
+							<p class="sheet-tag label">Also available</p>
+							<ul class="similar" role="list">
+								for _, s := range d.Similar {
+									<li>
+										<a class="similar__card" href={ templ.SafeURL(HomePath(s.ID)) }>
+											<span class="mono similar__id">{ s.ID }</span>
+											<span>{ HomeTitle(s) }</span>
+											<span class="muted">Faces { s.Facings() }</span>
+											<span class="tnum similar__price">{ KESShort(s.Price) }</span>
+										</a>
+									</li>
+								}
+							</ul>
+						</div>
+					}
+				</div>
+			</section>
+			if d.Home.OnSale() {
+				<div class="unit-bar" aria-hidden="false">
+					<div>
+						<span class="mono">{ d.Home.ID }</span>
+						<strong class="tnum">{ KESShort(d.Home.Price) }</strong>
+					</div>
+					<a class="btn btn--cobalt btn--small" href={ templ.SafeURL("/reserve/" + d.Home.ID) }>Reserve</a>
+				</div>
+			}
+		</article>
+	}
+}
+
+// PaymentPlans is the calculator: a choice of plan, and the schedule it gives.
+templ PaymentPlans(h store.Home, s plans.Schedule, code string) {
+	<form class="payplans" method="get" action={ templ.SafeURL(HomePath(h.ID) + "#pay-title") } hx-get={ "/schedule/" + h.ID } hx-target="#schedule" hx-swap="outerHTML" hx-trigger="change">
+		<fieldset class="payplans__choices">
+			<legend class="visually-hidden">Payment plan</legend>
+			for _, pl := range plans.Plans {
+				<label class="choice payplan">
+					<input type="radio" name="plan" value={ pl.Code } checked?={ pl.Code == code }/>
+					<span>
+						<strong>{ pl.Name }</strong>
+						<span class="muted">{ pl.Summary }</span>
+					</span>
+				</label>
+			}
+		</fieldset>
+		@Schedule(h, s)
+		<noscript><button class="btn btn--small" type="submit">Show the schedule</button></noscript>
+	</form>
+}
+
+templ Schedule(h store.Home, s plans.Schedule) {
+	<div id="schedule" class="schedule-card">
+		<div class="schedule-card__head">
+			<div>
+				<span class="label">{ s.Plan.Name }</span>
+				<p class="schedule-card__total tnum">{ KES(s.Price) }</p>
+				if s.Discount > 0 {
+					<p class="schedule-card__saving">{ KES(s.Discount) } off the list price of { KES(s.ListPrice) }</p>
+				}
+			</div>
+		</div>
+		<table class="pay-table">
+			<caption class="visually-hidden">Payments on the { s.Plan.Name } plan</caption>
+			<thead>
+				<tr><th scope="col">Payment</th><th scope="col">Due</th><th scope="col" class="num">Share</th><th scope="col" class="num">Amount</th></tr>
+			</thead>
+			<tbody>
+				for _, i := range s.Instalments {
+					<tr>
+						<th scope="row">
+							{ i.Label }
+							if i.Note != "" {
+								<span class="pay-table__note">{ i.Note }</span>
+							}
+						</th>
+						<td class="mono">{ i.Due.Format("2 Jan 2006") }</td>
+						<td class="num mono">{ percent(i.PercentBP) }</td>
+						<td class="num tnum">{ KES(i.Amount) }</td>
+					</tr>
+				}
+			</tbody>
+			<tfoot>
+				<tr><th scope="row" colspan="3">Total</th><td class="num tnum">{ KES(s.Total()) }</td></tr>
+			</tfoot>
+		</table>
+		if s.Mortgage != nil {
+			<div class="mortgage">
+				<div class="mortgage__inputs">
+					<label class="field">
+						<span class="field__label">Interest rate</span>
+						<select class="select select--small" name="rate">
+							for _, r := range []int64{1050, 1150, 1250, 1350, 1450, 1550, 1650} {
+								<option value={ strconv.FormatInt(r, 10) } selected?={ r == s.Mortgage.RateBP }>{ percent(r) } a year</option>
+							}
+						</select>
+					</label>
+					<label class="field">
+						<span class="field__label">Term</span>
+						<select class="select select--small" name="years">
+							for _, y := range []int{10, 15, 20, 25} {
+								<option value={ strconv.Itoa(y) } selected?={ y == s.Mortgage.Years }>{ strconv.Itoa(y) } years</option>
+							}
+						</select>
+					</label>
+				</div>
+				<p class="mortgage__result">
+					<span class="label">Estimated repayment</span>
+					<span class="mortgage__monthly tnum">{ KES(s.Mortgage.Monthly) }</span>
+					<span class="muted">a month on a loan of { KES(s.Mortgage.Loan) }, from { s.Mortgage.FirstMonth.Format("January 2006") }. An estimate only: your bank sets the terms.</span>
+				</p>
+			</div>
+		}
+	</div>
+}
+
+// LightChart shows hours of direct sun in each month, morning and afternoon.
+templ LightChart(s light.Study) {
+	{{ bars, max := lightBars(s) }}
+	<figure class="light-chart">
+		<div class="light-chart__legend" aria-hidden="true">
+			<span><i class="swatch swatch--morning"></i>Morning</span>
+			<span><i class="swatch swatch--afternoon"></i>Afternoon</span>
+		</div>
+		<svg viewBox={ "0 0 " + f1(chartW) + " " + f1(chartH) } role="img" aria-label={ LightSummary(s) }>
+			for _, g := range gridLines(max) {
+				<path class="light-chart__grid" d={ "M" + f1(chartLeft) + " " + f1(chartY(g, max)) + "H" + f1(chartW-8) }></path>
+				<text class="light-chart__axis" x={ f1(chartLeft - 8) } y={ f1(chartY(g, max)) } text-anchor="end" dominant-baseline="middle">{ strconv.Itoa(int(g)) }h</text>
+			}
+			for _, b := range bars {
+				<g class="light-chart__bar" tabindex="0">
+					<title>{ MonthName(b.Month) }: { Hours(b.Total) } hours, { Hours(b.Morning) } in the morning and { Hours(b.Aftn) } in the afternoon</title>
+					<rect class="light-chart__hit" x={ f1(b.X - 4) } y={ f1(chartTop) } width={ f1(b.W + 8) } height={ f1(chartBase - chartTop) }></rect>
+					if b.MorningH > 0 {
+						<path class="light-chart__morning" d={ barPath(b.X, b.MorningY, b.W, b.MorningH, b.AfterH <= 0) }></path>
+					}
+					if b.AfterH > 0 {
+						<path class="light-chart__afternoon" d={ barPath(b.X, b.AfternoonY, b.W, b.AfterH, true) }></path>
+					}
+					<text class={ "light-chart__value", templ.KV("is-shown", b.Label) } x={ f1(b.X + b.W/2) } y={ f1(minF(b.MorningY, b.AfternoonY) - 7) } text-anchor="middle">{ Hours(b.Total) }</text>
+					<text class="light-chart__axis" x={ f1(b.X + b.W/2) } y={ f1(chartBase + 18) } text-anchor="middle">{ MonthLetter(b.Month) }</text>
+				</g>
+			}
+			<path class="light-chart__base" d={ "M" + f1(chartLeft) + " " + f1(chartBase) + "H" + f1(chartW-8) }></path>
+		</svg>
+		<details class="light-chart__table">
+			<summary class="label">See the figures</summary>
+			<table>
+				<thead><tr><th scope="col">Month</th><th scope="col" class="num">Morning</th><th scope="col" class="num">Afternoon</th><th scope="col" class="num">Total</th></tr></thead>
+				<tbody>
+					for _, b := range bars {
+						<tr><th scope="row">{ MonthName(b.Month) }</th><td class="num mono">{ Hours(b.Morning) } h</td><td class="num mono">{ Hours(b.Aftn) } h</td><td class="num mono">{ Hours(b.Total) } h</td></tr>
+					}
+				</tbody>
+			</table>
+		</details>
+	</figure>
+}

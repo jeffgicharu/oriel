@@ -2,4 +2,7 @@
 @import "./base.css";
 @import "./layout.css";
 @import "./forms.css";
+@import "./components.css";
 @import "./pages/home.css";
+@import "./pages/residences.css";
+@import "./pages/unit.css";

@@ -3,6 +3,8 @@
 // heavier modules (the 3D building, the calculator) only on pages that use them.
 
 import htmx from "htmx.org";
+import { setUpPlans } from "./plans";
+import { setUpShortlist } from "./shortlist";
 
 declare global {
   interface Window {
@@ -75,4 +77,13 @@ function loadModel(): void {
 setUpMenu();
 setUpHeader();
 measureDrawings();
+setUpPlans();
+setUpShortlist();
 loadModel();
+
+// Parts of a page swapped in by htmx get the same treatment.
+document.body.addEventListener("htmx:afterSwap", (event) => {
+  const target = (event as CustomEvent<{ target: HTMLElement }>).detail.target;
+  setUpPlans(target);
+  setUpShortlist(target);
+});

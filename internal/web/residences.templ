@@ -1,0 +1,214 @@
+package web
+
+import (
+	"fmt"
+	"strconv"
+
+	"github.com/jeffgicharu/oriel/internal/floorplan"
+	"github.com/jeffgicharu/oriel/internal/store"
+)
+
+// StatusBadge shows a home's status with the hatch the drawings use, so it
+// reads without colour.
+templ StatusBadge(status string) {
+	<span class={ statusClass(status) }><span class="status__swatch" aria-hidden="true"></span>{ store.StatusName(status) }</span>
+}
+
+templ Residences(p Page, d ResidencesData) {
+	@Layout(p) {
+		<div class="wrap">
+			<header class="page-head">
+				<p class="sheet-tag label">A-200 · Residences</p>
+				<h1 class="h1">Find your home.</h1>
+				<p class="lede">
+					{ strconv.Itoa(d.Available) } of { strconv.Itoa(d.Total) } homes are available,
+					if d.From > 0 {
+						from <span class="tnum">{ KESShort(d.From) }</span>.
+					}
+					Every one has its own plan, aspect and light.
+				</p>
+			</header>
+			<section class="types" aria-label="Home types">
+				<ol class="types__list" role="list">
+					for _, t := range d.Types {
+						<li>
+							<a class="type-card" href={ templ.SafeURL("/residences/types/" + t.Code) }>
+								<span class="type-card__plan" aria-hidden="true">
+									@planSVG(typePlan(t.Code), floorplan.Options{Plain: true, ID: "tp-" + t.Code})
+								</span>
+								<span class="type-card__code label">Type { t.Code }</span>
+								<span class="type-card__name">{ t.Name }</span>
+								<span class="type-card__facts mono">{ strconv.Itoa(t.Internal) } m² · { t.OutdoorName } { strconv.Itoa(t.Outdoor) } m²</span>
+								<span class="type-card__price">
+									if t.Available > 0 {
+										From <strong class="tnum">{ KESShort(t.From) }</strong>
+									} else {
+										<strong>Sold out</strong>
+									}
+								</span>
+								<span class="type-card__left label">{ strconv.Itoa(t.Available) } of { strconv.Itoa(t.Total) } left</span>
+							</a>
+						</li>
+					}
+				</ol>
+			</section>
+		</div>
+		<section class="finder" aria-label="Find a home">
+			<form class="filters" method="get" action="/residences" hx-get="/residences" hx-target="#results" hx-select="#results" hx-swap="outerHTML" hx-push-url="true" hx-trigger="change">
+				<div class="wrap filters__inner">
+					<fieldset class="filter">
+						<legend class="label">Bedrooms</legend>
+						<div class="chips">
+							@chip("beds", "", "Any", d.Filter.Beds == 0)
+							for n := 1; n <= 4; n++ {
+								@chip("beds", strconv.Itoa(n), strconv.Itoa(n), d.Filter.Beds == n)
+							}
+						</div>
+					</fieldset>
+					<label class="filter">
+						<span class="label">Up to</span>
+						<select class="select select--small" name="max">
+							<option value="" selected?={ d.Filter.Max == 0 }>Any price</option>
+							for _, step := range PriceSteps {
+								<option value={ strconv.FormatInt(step, 10) } selected?={ d.Filter.Max == step }>{ KESShort(step) }</option>
+							}
+						</select>
+					</label>
+					<label class="filter">
+						<span class="label">Floors</span>
+						<select class="select select--small" name="floors">
+							<option value="" selected?={ d.Filter.Floors == "" }>All floors</option>
+							<option value="lower" selected?={ d.Filter.Floors == "lower" }>Lower, 2 to 6</option>
+							<option value="middle" selected?={ d.Filter.Floors == "middle" }>Middle, 7 to 11</option>
+							<option value="upper" selected?={ d.Filter.Floors == "upper" }>Upper, 12 to 16</option>
+						</select>
+					</label>
+					<label class="filter">
+						<span class="label">Side</span>
+						<select class="select select--small" name="side">
+							<option value="" selected?={ d.Filter.Side == "" }>Both sides</option>
+							<option value="river" selected?={ d.Filter.Side == "river" }>River, facing north</option>
+							<option value="garden" selected?={ d.Filter.Side == "garden" }>Garden, facing south</option>
+						</select>
+					</label>
+					<label class="filter">
+						<span class="label">Sort by</span>
+						<select class="select select--small" name="sort">
+							<option value="price" selected?={ d.Filter.Sort == "price" }>Price, lowest first</option>
+							<option value="price-desc" selected?={ d.Filter.Sort == "price-desc" }>Price, highest first</option>
+							<option value="floor" selected?={ d.Filter.Sort == "floor" }>Floor, highest first</option>
+							<option value="size" selected?={ d.Filter.Sort == "size" }>Size, largest first</option>
+						</select>
+					</label>
+					<label class="filter filter--toggle">
+						<input type="checkbox" name="show" value="all" checked?={ d.Filter.All }/>
+						<span>Include sold and reserved</span>
+					</label>
+					<noscript><button class="btn btn--small" type="submit">Show homes</button></noscript>
+				</div>
+			</form>
+			@ResidenceResults(d)
+		</section>
+	}
+}
+
+templ chip(name, value, label string, checked bool) {
+	<label class="chip">
+		<input type="radio" name={ name } value={ value } checked?={ checked }/>
+		<span>{ label }</span>
+	</label>
+}
+
+// ResidenceResults is the list itself; filters swap only this part.
+templ ResidenceResults(d ResidencesData) {
+	<div id="results" class="wrap results">
+		<div class="results__bar">
+			<p class="results__count" role="status">
+				<strong class="tnum">{ strconv.Itoa(len(d.Homes)) }</strong>
+				if len(d.Homes) == 1 {
+					home
+				} else {
+					homes
+				}
+				if !d.Filter.All {
+					available
+				}
+			</p>
+			<div class="results__links">
+				if d.Filter.Active() {
+					<a class="link-arrow" href="/residences">Clear filters</a>
+				}
+				<a class="link-arrow" href={ templ.SafeURL(explorePath(d.Filter)) }>See them in 3D @Arrow()</a>
+			</div>
+		</div>
+		if len(d.Homes) == 0 {
+			<div class="empty">
+				<p class="h3">No home matches all of those.</p>
+				<p class="muted">Try another price or floor, or include homes that are already reserved to see the whole building.</p>
+				<a class="btn btn--line btn--small" href="/residences">Show every available home</a>
+			</div>
+		} else {
+			<table class="schedule">
+				<caption class="visually-hidden">Homes matching your choices</caption>
+				<thead>
+					<tr>
+						<th scope="col">Home</th>
+						<th scope="col">Type</th>
+						<th scope="col" class="num">Level</th>
+						<th scope="col" class="num">Size</th>
+						<th scope="col">Faces</th>
+						<th scope="col" class="num">Sun a day</th>
+						<th scope="col" class="num">Price</th>
+						<th scope="col">Status</th>
+					</tr>
+				</thead>
+				<tbody>
+					for _, h := range d.Homes {
+						<tr class={ "schedule__row", templ.KV("is-off", !h.ShowsPrice()) }>
+							<th scope="row" class="schedule__home"><a href={ templ.SafeURL(HomePath(h.ID)) }><span class="mono">{ h.ID }</span><span class="visually-hidden">, { HomeTitle(h) }</span></a></th>
+							<td data-label="Type"><span class="schedule__type">{ h.Type.Code }</span> { h.Type.Short }</td>
+							<td class="num mono" data-label="Level">{ LevelName(h.Level) }</td>
+							<td class="num mono" data-label="Size">{ strconv.Itoa(h.Type.Internal) } m²</td>
+							<td data-label="Faces">{ capitalise(h.Facings()) }</td>
+							<td class="num mono" data-label="Sun a day">{ sunHours(h.ID) } h</td>
+							<td class="num" data-label="Price">
+								if h.ShowsPrice() {
+									<span class="tnum schedule__price">{ KESShort(h.Price) }</span>
+								} else {
+									<span class="muted">—</span>
+								}
+							</td>
+							<td data-label="Status">@StatusBadge(h.Status)</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		}
+	</div>
+}
+
+func explorePath(f Filter) string {
+	if q := f.Query(); q != "" {
+		return "/explore?" + q
+	}
+	return "/explore"
+}
+
+func sunHours(id string) string {
+	if s, ok := lightFor(id); ok {
+		return Hours(s.AverageDay)
+	}
+	return "—"
+}
+
+func typePlan(code string) floorplan.Plan {
+	p, _ := floorplan.For(code)
+	return p
+}
+
+func capitalise(s string) string {
+	if s == "" {
+		return s
+	}
+	return fmt.Sprintf("%c%s", s[0]-32, s[1:])
+}

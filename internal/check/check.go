@@ -21,6 +21,9 @@ import (
 func PublicPaths() []string {
 	return []string{
 		"/",
+		"/residences",
+		"/residences/0704",
+		"/residences/types/B",
 		"/robots.txt",
 		"/sitemap.xml",
 		"/site.webmanifest",
@@ -36,6 +39,12 @@ var pages = []struct {
 	phrase string
 }{
 	{"/", "Homes designed around the light."},
+	{"/residences", "Find your home."},
+	{"/residences?beds=2&floors=upper&show=all", "homes"},
+	{"/residences/0704", "Home 0704"},
+	{"/residences/1601", "Penthouse on the top floor"},
+	{"/residences/types/B", "Two bedrooms."},
+	{"/residences/types/P", "Penthouse."},
 }
 
 // Checker walks a release at Base.

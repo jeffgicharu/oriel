@@ -1,0 +1,1023 @@
+/* ---------- Status: hatches as on a stacking plan ---------- */
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.status__swatch {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  border: 1.5px solid currentColor;
+}
+
+.status--available {
+  color: var(--cobalt);
+}
+
+.status--available .status__swatch {
+  background: var(--cobalt-wash);
+}
+
+.status--held {
+  color: var(--graphite-2);
+}
+
+.status--held .status__swatch {
+  background: repeating-linear-gradient(45deg, currentColor 0 1.5px, transparent 1.5px 5px);
+}
+
+.status--reserved {
+  color: var(--graphite-2);
+}
+
+.status--reserved .status__swatch {
+  background:
+    repeating-linear-gradient(45deg, currentColor 0 1.2px, transparent 1.2px 5px),
+    repeating-linear-gradient(-45deg, currentColor 0 1.2px, transparent 1.2px 5px);
+}
+
+.status--sold {
+  color: var(--ink-soft);
+}
+
+.status--sold .status__swatch {
+  background: var(--graphite);
+  border-color: var(--graphite);
+}
+
+.status--withheld {
+  color: var(--ink-faint);
+}
+
+.status--withheld .status__swatch {
+  border-style: dashed;
+}
+
+/* ---------- Chips and small controls ---------- */
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  position: relative;
+  cursor: pointer;
+}
+
+.chip input {
+  position: absolute;
+  opacity: 0;
+  inset: 0;
+  margin: 0;
+  cursor: pointer;
+}
+
+.chip span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+  background: var(--plaster-hi);
+  font-size: 15px;
+  font-weight: 550;
+  transition: background-color 0.2s var(--ease), color 0.2s var(--ease), border-color 0.2s var(--ease);
+}
+
+.chip:hover span {
+  border-color: var(--graphite);
+}
+
+.chip input:checked + span {
+  background: var(--graphite);
+  border-color: var(--graphite);
+  color: var(--plaster-hi);
+}
+
+.chip input:focus-visible + span {
+  outline: 2px solid var(--cobalt);
+  outline-offset: 2px;
+}
+
+.select--small {
+  min-height: 40px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  font-size: 15px;
+}
+
+.switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 550;
+  cursor: pointer;
+}
+
+.switch input {
+  appearance: none;
+  width: 36px;
+  height: 20px;
+  margin: 0;
+  border-radius: 999px;
+  background: var(--concrete-lo);
+  position: relative;
+  cursor: pointer;
+  transition: background-color 0.25s var(--ease);
+}
+
+.switch input::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.25);
+  transition: transform 0.25s var(--ease-out);
+}
+
+.switch input:checked {
+  background: var(--cobalt);
+}
+
+.switch input:checked::after {
+  transform: translateX(16px);
+}
+
+.ticks {
+  display: grid;
+  gap: 10px;
+  margin: 22px 0 26px;
+}
+
+.ticks li {
+  position: relative;
+  padding-left: 26px;
+}
+
+.ticks li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.62em;
+  width: 14px;
+  height: 1.5px;
+  background: var(--cobalt);
+}
+
+.ticks--wide {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px 32px;
+}
+
+.notice a {
+  color: var(--cobalt);
+}
+
+/* ---------- Schedule: the list of homes as an architect's schedule ---------- */
+
+.schedule {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+
+.schedule thead th {
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  padding: 0 14px 12px;
+  border-bottom: 1px solid var(--rule-strong);
+  white-space: nowrap;
+}
+
+.schedule td,
+.schedule tbody th {
+  padding: 14px;
+  border-bottom: 1px solid var(--rule);
+  text-align: left;
+  font-weight: 450;
+  vertical-align: middle;
+}
+
+.schedule .num {
+  text-align: right;
+}
+
+.schedule__row {
+  position: relative;
+  transition: background-color 0.2s var(--ease);
+}
+
+.schedule__row:hover {
+  background: var(--cobalt-mist);
+}
+
+.schedule__home a {
+  text-decoration: none;
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--graphite);
+}
+
+/* The whole row is the link. */
+.schedule__home a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.schedule__row:hover .schedule__home a {
+  color: var(--cobalt);
+}
+
+.schedule__type {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  margin-right: 6px;
+  border: 1px solid var(--rule-strong);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.schedule__price {
+  font-weight: 650;
+}
+
+.schedule__row.is-off {
+  color: var(--ink-soft);
+}
+
+.schedule__row.is-off .schedule__home a {
+  color: var(--ink-soft);
+}
+
+@media (max-width: 899px) {
+  .schedule thead {
+    display: none;
+  }
+
+  .schedule,
+  .schedule tbody {
+    display: block;
+  }
+
+  .schedule__row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 6px 16px;
+    padding: 16px 4px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .schedule td,
+  .schedule tbody th {
+    padding: 0;
+    border: 0;
+    text-align: left;
+  }
+
+  .schedule .num {
+    text-align: left;
+  }
+
+  .schedule__home {
+    grid-column: 1;
+  }
+
+  .schedule td[data-label="Price"] {
+    grid-column: 2;
+    grid-row: 1;
+    text-align: right;
+    font-size: 17px;
+  }
+
+  .schedule td[data-label="Status"] {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: end;
+  }
+
+  .schedule td[data-label="Type"] {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .schedule td[data-label="Level"],
+  .schedule td[data-label="Size"],
+  .schedule td[data-label="Faces"],
+  .schedule td[data-label="Sun a day"] {
+    grid-column: 1 / -1;
+    display: inline;
+    color: var(--ink-soft);
+    font-size: 13px;
+  }
+
+  .schedule td[data-label="Level"]::before,
+  .schedule td[data-label="Size"]::before,
+  .schedule td[data-label="Faces"]::before,
+  .schedule td[data-label="Sun a day"]::before {
+    content: attr(data-label) " ";
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .schedule__row {
+    grid-template-areas: none;
+  }
+}
+
+/* ---------- Floor plans ---------- */
+
+.floorplan {
+  width: 100%;
+  height: auto;
+  font-family: var(--font-sans);
+}
+
+.floorplan .fp-floor {
+  fill: #f6f7f4;
+  stroke: none;
+}
+
+.floorplan .fp-hatch {
+  stroke: rgb(26 29 31 / 0.12);
+  stroke-width: 1.5;
+}
+
+.floorplan .fp-hatch-out {
+  stroke: rgb(26 29 31 / 0.14);
+  stroke-width: 1.2;
+}
+
+.floorplan .fp-outdoor {
+  stroke: var(--rule-strong);
+  stroke-width: 2;
+  stroke-dasharray: 8 6;
+}
+
+.floorplan .fp-bay {
+  fill: var(--cobalt-wash);
+  stroke: var(--cobalt);
+  stroke-width: 3;
+}
+
+.floorplan .fp-seat {
+  fill: #e6d8bf;
+  stroke: #b49c76;
+  stroke-width: 1.5;
+}
+
+.floorplan .fp-wall {
+  fill: none;
+  stroke: var(--graphite);
+  stroke-width: 10;
+  stroke-linejoin: miter;
+}
+
+.floorplan .fp-outer {
+  fill: none;
+  stroke: var(--graphite);
+  stroke-width: 26;
+  stroke-linejoin: miter;
+}
+
+.floorplan .fp-cut {
+  fill: #f6f7f4;
+  stroke: none;
+}
+
+.floorplan .fp-open {
+  stroke: var(--ink-faint);
+  stroke-width: 2;
+  stroke-dasharray: 10 8;
+  fill: none;
+}
+
+.floorplan .fp-window {
+  stroke: var(--graphite);
+  stroke-width: 2.5;
+  fill: none;
+}
+
+.floorplan .fp-glass {
+  stroke: var(--cobalt);
+  stroke-width: 2;
+  fill: none;
+}
+
+.floorplan .fp-bayglass {
+  stroke: var(--cobalt);
+  stroke-width: 2.5;
+  fill: none;
+}
+
+.floorplan .fp-door {
+  stroke: var(--graphite);
+  stroke-width: 3;
+  fill: none;
+}
+
+.floorplan .fp-door--main {
+  stroke-width: 5;
+}
+
+.floorplan .fp-swing {
+  stroke: var(--ink-faint);
+  stroke-width: 1.5;
+  stroke-dasharray: 6 5;
+  fill: none;
+}
+
+.floorplan .fp-arrow {
+  fill: var(--cobalt);
+}
+
+.floorplan .fp-item {
+  fill: none;
+  stroke: #9aa0a5;
+  stroke-width: 2;
+}
+
+.floorplan .fp-dash {
+  stroke-dasharray: 8 6;
+}
+
+.floorplan .fp-dim {
+  stroke: var(--ink-soft);
+  stroke-width: 1.8;
+  fill: none;
+}
+
+.floorplan .fp-ext {
+  stroke-dasharray: 4 5;
+}
+
+.floorplan .fp-dimtext,
+.floorplan .fp-size,
+.floorplan .fp-note {
+  font-family: var(--font-mono);
+  fill: var(--ink-soft);
+}
+
+.floorplan .fp-dimtext {
+  font-size: 19px;
+}
+
+.floorplan .fp-size {
+  font-size: 15px;
+}
+
+.floorplan .fp-note {
+  font-size: 15px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.floorplan .fp-note--bay {
+  fill: var(--cobalt);
+}
+
+.floorplan .fp-name {
+  font-weight: 620;
+  fill: var(--graphite);
+  letter-spacing: -0.01em;
+}
+
+.floorplan .fp-north circle {
+  fill: none;
+  stroke: var(--graphite);
+  stroke-width: 2;
+}
+
+.floorplan .fp-north path {
+  fill: var(--graphite);
+}
+
+.floorplan .fp-north text {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  fill: var(--graphite);
+}
+
+.plan-figure.hide-furniture .fp-items {
+  opacity: 0;
+}
+
+.plan-figure .fp-items {
+  transition: opacity 0.35s var(--ease);
+}
+
+/* The plan draws itself: walls, then glass and doors, then the rest. */
+@media (prefers-reduced-motion: no-preference) {
+  .plan-figure.is-drawing .fp-wall,
+  .plan-figure.is-drawing .fp-outer {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: plan-line 1.4s var(--ease-in-out) forwards;
+  }
+
+  .plan-figure.is-drawing .fp-outer {
+    animation-duration: 1.8s;
+  }
+
+  .plan-figure.is-drawing .fp-floors,
+  .plan-figure.is-drawing .fp-outside,
+  .plan-figure.is-drawing .fp-glazing,
+  .plan-figure.is-drawing .fp-doors,
+  .plan-figure.is-drawing .fp-items,
+  .plan-figure.is-drawing .fp-dims,
+  .plan-figure.is-drawing .fp-labels,
+  .plan-figure.is-drawing .fp-north {
+    animation: plan-in 0.7s var(--ease) both;
+  }
+
+  .plan-figure.is-drawing .fp-floors {
+    animation-delay: 0.2s;
+  }
+
+  .plan-figure.is-drawing .fp-outside {
+    animation-delay: 0.9s;
+  }
+
+  .plan-figure.is-drawing .fp-glazing {
+    animation-delay: 1.2s;
+  }
+
+  .plan-figure.is-drawing .fp-doors {
+    animation-delay: 1.45s;
+  }
+
+  .plan-figure.is-drawing .fp-items {
+    animation-delay: 1.7s;
+  }
+
+  .plan-figure.is-drawing .fp-dims,
+  .plan-figure.is-drawing .fp-north {
+    animation-delay: 1.9s;
+  }
+
+  .plan-figure.is-drawing .fp-labels {
+    animation-delay: 2.1s;
+  }
+}
+
+@keyframes plan-line {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes plan-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ---------- Side cards: key plan and mini elevation ---------- */
+
+.side-card {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid var(--rule);
+  background: var(--plaster-hi);
+}
+
+.side-card .label {
+  color: var(--ink-soft);
+}
+
+.side-card p {
+  font-size: 14px;
+}
+
+.keyplan {
+  width: 100%;
+  height: auto;
+}
+
+.keyplan__river {
+  fill: none;
+  stroke: #9db4c1;
+  stroke-width: 7;
+  stroke-linecap: round;
+}
+
+.keyplan__note,
+.keyplan__num,
+.keyplan__north text {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  fill: var(--ink-soft);
+}
+
+.keyplan__core {
+  fill: var(--concrete);
+}
+
+.keyplan__home {
+  fill: var(--plaster-hi);
+  stroke: var(--graphite);
+  stroke-width: 1.2;
+}
+
+.keyplan__home.is-this {
+  fill: var(--cobalt);
+  stroke: var(--cobalt-lo);
+}
+
+.keyplan__home.is-this + .keyplan__bay,
+.keyplan__bay.is-this {
+  fill: var(--cobalt-hi);
+}
+
+.keyplan__num {
+  font-size: 11px;
+}
+
+.keyplan__home.is-this ~ .keyplan__num {
+  fill: inherit;
+}
+
+.keyplan__north path {
+  fill: var(--graphite);
+}
+
+.minielev {
+  width: 100%;
+  max-width: 220px;
+  height: auto;
+}
+
+.minielev__floor {
+  fill: var(--plaster);
+  stroke: var(--rule-strong);
+  stroke-width: 1;
+}
+
+.minielev__floor.is-shared {
+  fill: var(--concrete);
+}
+
+.minielev__floor.is-this {
+  fill: var(--cobalt);
+  stroke: var(--cobalt-lo);
+}
+
+.minielev__label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  fill: var(--ink-soft);
+}
+
+.minielev__label.is-this {
+  fill: var(--cobalt);
+  font-weight: 600;
+}
+
+.minielev__ground {
+  stroke: var(--graphite);
+  stroke-width: 1.5;
+}
+
+/* ---------- Light study chart ---------- */
+
+.light-chart {
+  display: grid;
+  gap: 10px;
+}
+
+.light-chart svg {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.light-chart__legend {
+  display: flex;
+  gap: 18px;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.light-chart__legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.swatch--morning {
+  background: #8a9cf0;
+}
+
+.swatch--afternoon {
+  background: var(--cobalt);
+}
+
+.light-chart__grid {
+  stroke: var(--rule);
+  stroke-width: 1;
+}
+
+.light-chart__base {
+  stroke: var(--graphite);
+  stroke-width: 1.2;
+}
+
+.light-chart__axis {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  fill: var(--ink-soft);
+}
+
+.light-chart__morning {
+  fill: #8a9cf0;
+}
+
+.light-chart__afternoon {
+  fill: var(--cobalt);
+}
+
+.light-chart__hit {
+  fill: transparent;
+}
+
+.light-chart__value {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  fill: var(--graphite);
+  opacity: 0;
+  transition: opacity 0.2s var(--ease);
+}
+
+.light-chart__value.is-shown,
+.light-chart__bar:hover .light-chart__value,
+.light-chart__bar:focus .light-chart__value {
+  opacity: 1;
+}
+
+.light-chart__bar:hover .light-chart__hit,
+.light-chart__bar:focus .light-chart__hit {
+  fill: var(--cobalt-mist);
+}
+
+.light-chart__bar:focus {
+  outline: none;
+}
+
+.light-chart__table summary {
+  cursor: pointer;
+  color: var(--ink-soft);
+}
+
+.light-chart__table table {
+  margin-top: 12px;
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.light-chart__table th,
+.light-chart__table td {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--rule);
+  text-align: left;
+}
+
+.light-chart__table .num {
+  text-align: right;
+}
+
+/* ---------- Payment plans ---------- */
+
+.payplans {
+  display: grid;
+  gap: 24px;
+}
+
+@media (min-width: 1000px) {
+  .payplans {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    align-items: start;
+  }
+}
+
+.payplans__choices {
+  display: grid;
+  gap: 10px;
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.payplan strong {
+  display: block;
+  font-size: 17px;
+  margin-bottom: 4px;
+}
+
+.payplan .muted {
+  font-size: 14px;
+}
+
+.schedule-card {
+  border: 1px solid var(--rule-strong);
+  background: var(--plaster-hi);
+  box-shadow: var(--shadow-sheet);
+}
+
+.schedule-card__head {
+  padding: 20px 22px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.schedule-card__total {
+  font-size: clamp(28px, 3vw, 38px);
+  font-weight: 700;
+  font-stretch: 112%;
+  letter-spacing: -0.02em;
+}
+
+.schedule-card__saving {
+  color: var(--success);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.pay-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+
+.pay-table th,
+.pay-table td {
+  padding: 12px 22px;
+  border-bottom: 1px solid var(--rule);
+  text-align: left;
+  vertical-align: top;
+}
+
+.pay-table thead th {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.pay-table tbody th {
+  font-weight: 550;
+}
+
+.pay-table .num {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.pay-table__note {
+  display: block;
+  font-weight: 400;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.pay-table tfoot th,
+.pay-table tfoot td {
+  font-weight: 700;
+  border-bottom: 0;
+}
+
+@media (max-width: 599px) {
+  .pay-table th,
+  .pay-table td {
+    padding: 10px 14px;
+  }
+
+  .pay-table thead th:nth-child(3),
+  .pay-table tbody td:nth-child(3) {
+    display: none;
+  }
+
+  .pay-table tfoot th {
+    grid-column: auto;
+  }
+}
+
+.mortgage {
+  display: grid;
+  gap: 18px;
+  padding: 20px 22px;
+  border-top: 1px solid var(--rule-strong);
+  background: var(--cobalt-mist);
+}
+
+.mortgage__inputs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.mortgage__result {
+  display: grid;
+  gap: 4px;
+}
+
+.mortgage__monthly {
+  font-size: 30px;
+  font-weight: 700;
+  font-stretch: 110%;
+  letter-spacing: -0.02em;
+  color: var(--cobalt);
+}
+
+.mortgage__result .muted {
+  font-size: 14px;
+}
+
+/* ---------- Similar homes ---------- */
+
+.similar {
+  display: grid;
+  gap: 10px;
+}
+
+.similar__card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-rows: auto auto;
+  column-gap: 16px;
+  align-items: baseline;
+  padding: 14px 16px;
+  border: 1px solid var(--rule);
+  background: var(--plaster-hi);
+  text-decoration: none;
+  transition: border-color 0.2s var(--ease), transform 0.25s var(--ease-out);
+}
+
+.similar__card:hover {
+  border-color: var(--cobalt);
+  transform: translateX(4px);
+}
+
+.similar__id {
+  grid-row: 1 / 3;
+  font-size: 22px;
+  color: var(--cobalt);
+  align-self: center;
+}
+
+.similar__card .muted {
+  grid-column: 2;
+  font-size: 13px;
+}
+
+.similar__price {
+  grid-row: 1 / 3;
+  grid-column: 3;
+  align-self: center;
+  font-weight: 650;
+}
+
+.empty {
+  display: grid;
+  gap: 12px;
+  justify-items: start;
+  padding: 48px 0;
+}

@@ -52,7 +52,7 @@ export function mountHero(stageEl: HTMLElement): void {
   const view = (): IntroOptions => {
     stage.shift = wide.matches ? 0.21 : 0;
     stage.orbit.target.set(0, tower.height * 0.47, 0);
-    const distance = stage.fitDistance(tower.height + 4, 52, wide.matches ? 0.8 : 0.86);
+    const distance = stage.fitDistance(tower.height + 4, 52, wide.matches ? 0.76 : 0.84);
     return { azimuth: 152, elevation: 9, distance, restingLines: 0.07 };
   };
   let resting = view();

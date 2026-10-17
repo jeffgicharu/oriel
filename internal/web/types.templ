@@ -1,0 +1,87 @@
+package web
+
+import (
+	"strconv"
+
+	"github.com/jeffgicharu/oriel/internal/floorplan"
+	"github.com/jeffgicharu/oriel/internal/store"
+)
+
+templ TypePage(p Page, t store.TypeSummary, homes []store.Home) {
+	@Layout(p) {
+		<div class="wrap">
+			<nav class="breadcrumb label" aria-label="Breadcrumb">
+				<a href="/residences">Residences</a><span aria-hidden="true">/</span>
+				<span aria-current="page">Type { t.Code }</span>
+			</nav>
+			<header class="page-head page-head--split">
+				<div>
+					<p class="sheet-tag label">Type { t.Code } · { strconv.Itoa(t.Total) } homes</p>
+					<h1 class="h1">{ t.Name }.</h1>
+				</div>
+				<div class="page-head__aside">
+					<p class="lede">{ t.Summary }</p>
+					<dl class="mini-facts">
+						<div><dt class="label">Inside</dt><dd class="tnum">{ strconv.Itoa(t.Internal) } m²</dd></div>
+						<div><dt class="label">{ t.OutdoorName }</dt><dd class="tnum">{ strconv.Itoa(t.Outdoor) } m²</dd></div>
+						<div><dt class="label">Available</dt><dd class="tnum">{ strconv.Itoa(t.Available) } of { strconv.Itoa(t.Total) }</dd></div>
+						<div>
+							<dt class="label">From</dt>
+							<dd class="tnum">
+								if t.Available > 0 {
+									{ KESShort(t.From) }
+								} else {
+									Sold out
+								}
+							</dd>
+						</div>
+					</dl>
+				</div>
+			</header>
+			<section class="type-plan section--tight" aria-label="Plan">
+				<figure class="plan-figure" data-plan>
+					@planSVG(typePlan(t.Code), floorplan.Options{Title: "Floor plan of type " + t.Code + ", " + t.Name})
+					<figcaption class="label muted">The plan as drawn for the homes on the left of each pair; their neighbours are its mirror image. Not to scale.</figcaption>
+				</figure>
+				<ul class="ticks ticks--wide" role="list">
+					for _, f := range t.Features {
+						<li>{ f }</li>
+					}
+				</ul>
+			</section>
+			<section class="section--tight section--rule" aria-labelledby="homes-title">
+				<h2 class="h3" id="homes-title">Every type { t.Code } home</h2>
+				<table class="schedule schedule--compact">
+					<thead>
+						<tr>
+							<th scope="col">Home</th>
+							<th scope="col" class="num">Level</th>
+							<th scope="col">Faces</th>
+							<th scope="col" class="num">Sun a day</th>
+							<th scope="col" class="num">Price</th>
+							<th scope="col">Status</th>
+						</tr>
+					</thead>
+					<tbody>
+						for _, h := range homes {
+							<tr class={ "schedule__row", templ.KV("is-off", !h.ShowsPrice()) }>
+								<th scope="row" class="schedule__home"><a href={ templ.SafeURL(HomePath(h.ID)) }><span class="mono">{ h.ID }</span></a></th>
+								<td class="num mono" data-label="Level">{ LevelName(h.Level) }</td>
+								<td data-label="Faces">{ capitalise(h.Facings()) }</td>
+								<td class="num mono" data-label="Sun a day">{ sunHours(h.ID) } h</td>
+								<td class="num" data-label="Price">
+									if h.ShowsPrice() {
+										<span class="tnum schedule__price">{ KESShort(h.Price) }</span>
+									} else {
+										<span class="muted">—</span>
+									}
+								</td>
+								<td data-label="Status">@StatusBadge(h.Status)</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</section>
+		</div>
+	}
+}

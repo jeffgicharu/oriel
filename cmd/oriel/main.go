@@ -64,6 +64,9 @@ func serve() error {
 	if err != nil {
 		return err
 	}
+	if err := os.MkdirAll(cfg.DataDir, 0o750); err != nil {
+		return err
+	}
 	if err := assets.Check("css/site.css", "js/site.js", "css/desk.css", "js/desk.js", "fonts/MonaSans.woff2", "img/og-oriel.png"); err != nil {
 		return err
 	}
@@ -104,6 +107,7 @@ func serve() error {
 	if err := srv.Shutdown(ctx); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		return err
 	}
+	application.Shutdown()
 	return nil
 }
 
