@@ -377,7 +377,7 @@ export function mountExplorer(root: HTMLElement): void {
   controls.addEventListener("start", keepUpdating);
   controls.addEventListener("change", () => stage.requestRender());
   stage.onResize = () => {
-    stage.shift = wide.matches ? 0.14 : 0;
+    stage.shift = openLevel !== null ? (wide.matches ? -0.07 : 0) : wide.matches ? 0.14 : 0;
   };
 
   // The sun.
@@ -440,6 +440,20 @@ export function mountExplorer(root: HTMLElement): void {
     });
   };
 
+  const lens = { shift: stage.shift };
+  const tweenShift = (to: number) => {
+    lens.shift = stage.shift;
+    gsap.to(lens, {
+      shift: to,
+      duration: 1.1,
+      ease: "power3.inOut",
+      onUpdate: () => {
+        stage.shift = lens.shift;
+        stage.updateProjection();
+      },
+    });
+  };
+
   let openLevel: number | null = null;
   const showLevel = (l: number | null) => {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -470,10 +484,13 @@ export function mountExplorer(root: HTMLElement): void {
     openLevel = l;
     if (l === null) {
       const o = overview();
+      tweenShift(wide.matches ? 0.14 : 0);
       tweenCamera(o.target, o.distance, o.elevation);
     } else {
+      // The whole floor in view, left of centre so the home card never covers it.
       const lv = levelY.get(l)!;
-      tweenCamera(new THREE.Vector3(0, lv.y + 1.5, 0), wide.matches ? 78 : 92, 48);
+      tweenShift(wide.matches ? -0.07 : 0);
+      tweenCamera(new THREE.Vector3(0, lv.y + 1.5, 0), wide.matches ? 118 : 132, 42);
     }
     paintVolumes();
   };
