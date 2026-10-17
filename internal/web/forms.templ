@@ -2,7 +2,9 @@ package web
 
 import (
 	"strconv"
+	"strings"
 
+	"github.com/jeffgicharu/oriel/internal/floorplan"
 	"github.com/jeffgicharu/oriel/internal/plans"
 	"github.com/jeffgicharu/oriel/internal/store"
 )
@@ -32,11 +34,19 @@ templ honeypot() {
 	</div>
 }
 
-templ formErrorSummary(f Form) {
+// formErrorSummary lists what needs fixing, in the order of the form, each
+// linked to its field. The page moves to it when it loads.
+templ formErrorSummary(f Form, fields ...string) {
 	if f.HasErrors() {
-		<div class="notice notice--alert" role="alert">
+		<div class="notice notice--alert error-summary" role="alert" tabindex="-1" data-error-summary>
 			<strong>Please check the form.</strong>
-			<span>Something needs fixing before we can go on; it is marked below.</span>
+			<ul class="error-summary__list" role="list">
+				for _, name := range fields {
+					if f.Error(name) != "" {
+						<li><a href={ templ.SafeURL(errorAnchor(name)) }>{ f.Error(name) }</a></li>
+					}
+				}
+			</ul>
 		</div>
 	}
 }
@@ -51,14 +61,14 @@ templ Viewing(p Page, d ViewingData) {
 			</header>
 			<div class="form-grid">
 				<form class="form-main" method="post" action="/viewings" novalidate>
-					@formErrorSummary(d.Form)
+					@formErrorSummary(d.Form, "slot", "name", "phone", "email", "notes")
 					if d.Notice != "" {
 						<div class="notice notice--alert" role="alert">{ d.Notice }</div>
 					}
 					if d.Home != nil {
 						<input type="hidden" name="home" value={ d.Home.ID }/>
 						<div class="coming-to">
-							<span class="label">You're coming to see</span>
+							<span class="label">You’re coming to see</span>
 							<a href={ templ.SafeURL(HomePath(d.Home.ID)) }><span class="mono">{ d.Home.ID }</span> { HomeTitle(*d.Home) }</a>
 						</div>
 					}
@@ -66,7 +76,7 @@ templ Viewing(p Page, d ViewingData) {
 						<legend class="step__title"><span class="step__n mono">1</span> Choose a day</legend>
 						<div class="days" hx-get="/viewings/slots" hx-target="#slots" hx-swap="outerHTML" hx-trigger="change" hx-include="this">
 							for _, day := range d.Days {
-								<label class={ "day", templ.KV("is-closed", !day.Open || day.Free() == 0) } title={ day.Reason }>
+								<label class={ "day", templ.KV("is-closed", !day.Open || day.Free() == 0) } title={ dayNote(day) }>
 									<input type="radio" name="date" value={ DateValue(day.Date) } checked?={ DateValue(day.Date) == d.DayValue } disabled?={ !day.Open || day.Free() == 0 }/>
 									<span class="day__name">{ dayName(day.Date) }</span>
 									<span class="day__num">{ dayNumber(day.Date) }</span>
@@ -74,6 +84,13 @@ templ Viewing(p Page, d ViewingData) {
 								</label>
 							}
 						</div>
+						if notes := dayNotes(d.Days); len(notes) > 0 {
+							<ul class="days__notes" role="list">
+								for _, n := range notes {
+									<li><span class="mono">{ n.When }</span> { n.Text }</li>
+								}
+							</ul>
+						}
 						<noscript><button class="btn btn--small btn--line" type="submit" formmethod="get" formaction="/viewings/new">Show the times for that day</button></noscript>
 					</fieldset>
 					<fieldset class="step">
@@ -168,7 +185,7 @@ templ ViewingBooked(p Page, d ViewingDone) {
 					<h1 class="h1">Viewing cancelled.</h1>
 					<p class="lede">Your visit on { LongDateTime(d.Viewing.StartsAt) } is cancelled. You are welcome to book another time.</p>
 				} else if d.Viewing.Status == "booked" {
-					<h1 class="h1">You're booked, { firstName(d.Viewing.Name) }.</h1>
+					<h1 class="h1">You’re booked, { firstName(d.Viewing.Name) }.</h1>
 					<p class="lede">We look forward to showing you round on { LongDateTime(d.Viewing.StartsAt) }. Keep this page: it is your booking.</p>
 				} else {
 					<h1 class="h1">Thank you for visiting.</h1>
@@ -183,6 +200,9 @@ templ ViewingBooked(p Page, d ViewingDone) {
 						<div><dt class="label">Party</dt><dd>{ strconv.Itoa(d.Viewing.PartySize) } { plural(d.Viewing.PartySize, "person", "people") }</dd></div>
 						if d.Home != nil {
 							<div><dt class="label">Home</dt><dd><a href={ templ.SafeURL(HomePath(d.Home.ID)) }><span class="mono">{ d.Home.ID }</span>, { HomeTitle(*d.Home) }</a></dd></div>
+						}
+						if d.Viewing.Notes != "" {
+							<div><dt class="label">Your note</dt><dd class="booking-facts__note">{ d.Viewing.Notes }</dd></div>
 						}
 						<div><dt class="label">Reference</dt><dd class="mono">{ d.Viewing.Ref }</dd></div>
 						if d.Viewing.AgentName != "" {
@@ -204,14 +224,22 @@ templ ViewingBooked(p Page, d ViewingDone) {
 					}
 				</div>
 				<aside class="form-side">
-					<div class="side-card">
-						<h2 class="label">Before you come</h2>
-						<ul class="ticks" role="list">
-							<li>Explore the building in 3D to pick the floors you'd like to see.</li>
-							<li>Shortlist homes as you browse; we'll have their plans ready.</li>
-						</ul>
-						<a class="link-arrow" href="/explore">Explore in 3D @Arrow()</a>
-					</div>
+					if d.Viewing.Status == "booked" {
+						<div class="side-card">
+							<h2 class="label">Before you come</h2>
+							<ul class="ticks" role="list">
+								<li>Explore the building in 3D to pick the floors you’d like to see.</li>
+								<li>Shortlist homes as you browse; we’ll have their plans ready.</li>
+							</ul>
+							<a class="link-arrow" href="/explore">Explore in 3D @Arrow()</a>
+						</div>
+					} else {
+						<div class="side-card">
+							<h2 class="label">Still deciding?</h2>
+							<p>Ask the sales team about a home, prices or buying off-plan, and they will reply within one working day.</p>
+							<a class="link-arrow" href="/enquire">Ask a question @Arrow()</a>
+						</div>
+					}
 				</aside>
 			</div>
 		</div>
@@ -240,7 +268,11 @@ templ Reserve(p Page, d ReserveData) {
 			if !d.Home.OnSale() {
 				<div class="notice notice--alert" role="alert">
 					<strong>Home { d.Home.ID } is no longer available.</strong>
-					<span>It is { store.StatusName(d.Home.Status) }. These are close to it:</span>
+					if len(d.Similar) > 0 {
+						<span>It is { strings.ToLower(store.StatusName(d.Home.Status)) }. These are the closest still for sale:</span>
+					} else {
+						<span>It is { strings.ToLower(store.StatusName(d.Home.Status)) }, and no other home of its type is for sale just now. <a href="/residences">See every home for sale</a> or <a href="/enquire">ask to hear if one comes free</a>.</span>
+					}
 				</div>
 				<ul class="similar similar--wide" role="list">
 					for _, s := range d.Similar {
@@ -257,10 +289,10 @@ templ Reserve(p Page, d ReserveData) {
 			} else {
 				<div class="form-grid">
 					<form class="form-main" method="post" action={ templ.SafeURL("/reserve/" + d.Home.ID) } novalidate>
-						@formErrorSummary(d.Form)
+						@formErrorSummary(d.Form, "plan", "name", "phone", "email", "note", "agree")
 						<fieldset class="step">
-							<legend class="step__title"><span class="step__n mono">1</span> How you'll pay</legend>
-							<div class="payplans__choices">
+							<legend class="step__title"><span class="step__n mono">1</span> How you’ll pay</legend>
+							<div class="payplans__choices" id="plans">
 								for i, pl := range plans.Plans {
 									<label class="choice payplan">
 										<input type="radio" name="plan" value={ pl.Code } checked?={ pl.Code == d.Plan }/>
@@ -284,9 +316,9 @@ templ Reserve(p Page, d ReserveData) {
 								@field(d.Form, "name", "Full name, as it will appear on the letter of offer", "text", "name", "", true)
 								@field(d.Form, "phone", "Phone", "tel", "tel", "", true)
 								@field(d.Form, "email", "Email", "email", "email", "", true)
-								<div class="field">
-									<span class="field__label">Buying</span>
-									<div class="chips">
+								<div class="field" role="radiogroup" aria-labelledby="l-buying">
+									<span class="field__label" id="l-buying">Buying</span>
+									<div class="chips chips--field">
 										<label class="chip"><input type="radio" name="buying" value="home" checked?={ d.Form.Value("buying") != "investment" }/><span>To live in</span></label>
 										<label class="chip"><input type="radio" name="buying" value="investment" checked?={ d.Form.Value("buying") == "investment" }/><span>To let</span></label>
 									</div>
@@ -299,7 +331,7 @@ templ Reserve(p Page, d ReserveData) {
 						</fieldset>
 						<div class={ "field", templ.KV("field--error", d.Form.Error("agree") != "") }>
 							<label class="choice">
-								<input type="checkbox" name="agree" value="yes" checked?={ d.Form.Value("agree") == "yes" }/>
+								<input type="checkbox" id="f-agree" name="agree" value="yes" checked?={ d.Form.Value("agree") == "yes" }/>
 								<span>I understand this is a request. The home is held for 72 hours while the sales team confirms it with a letter of offer, and the 10% deposit is then paid by bank transfer.</span>
 							</label>
 							if d.Form.Error("agree") != "" {
@@ -313,6 +345,9 @@ templ Reserve(p Page, d ReserveData) {
 						<div class="side-card reserve-summary">
 							<p class="reserve-summary__id">{ d.Home.ID }</p>
 							<h2 class="h3">{ HomeTitle(d.Home) }</h2>
+							<div class="reserve-summary__plan">
+								@planSVG(PlanFor(d.Home.Unit), floorplan.Options{Plain: true, North: NorthFor(d.Home.Unit), ID: "rs-" + d.Home.ID, Title: "Plan of home " + d.Home.ID})
+							</div>
 							<p class="muted">Faces { d.Home.Facings() } · { strconv.Itoa(d.Home.Type.Internal) } m² · { d.Home.Type.OutdoorName } { strconv.Itoa(d.Home.Type.Outdoor) } m²</p>
 							<p class="reserve-summary__price tnum">{ KES(d.Home.Price) }</p>
 							<a class="link-arrow" href={ templ.SafeURL(HomePath(d.Home.ID)) }>Back to the home @Arrow()</a>
@@ -376,13 +411,16 @@ templ Reservation(p Page, d ReservationData) {
 							<a class="btn btn--cobalt" href={ templ.SafeURL("/reservations/" + d.Reservation.Ref + "/offer.pdf") }>Download the letter of offer (PDF)</a>
 						</div>
 					}
-					<h2 class="h3 schedule-title">Your payments on { d.Plan.Name }</h2>
+					<h2 class="h3 schedule-title">Your payments</h2>
 					@Schedule(d.Home, d.Schedule)
 				</div>
 				<aside class="form-side">
 					<div class="side-card reserve-summary">
 						<p class="reserve-summary__id">{ d.Home.ID }</p>
 						<h2 class="h3">{ HomeTitle(d.Home) }</h2>
+						<div class="reserve-summary__plan">
+							@planSVG(PlanFor(d.Home.Unit), floorplan.Options{Plain: true, North: NorthFor(d.Home.Unit), ID: "rv-" + d.Home.ID, Title: "Plan of home " + d.Home.ID})
+						</div>
 						<p class="muted">Faces { d.Home.Facings() } · { strconv.Itoa(d.Home.Type.Internal) } m²</p>
 						<dl class="booking-facts booking-facts--small">
 							<div><dt class="label">Reserved by</dt><dd>{ d.Reservation.Name }</dd></div>
@@ -421,7 +459,14 @@ templ Enquire(p Page, d EnquireData) {
 					</div>
 				} else {
 					<form class="form-main" method="post" action="/enquire" novalidate>
-						@formErrorSummary(d.Form)
+						if d.Home != nil {
+							<input type="hidden" name="home" value={ d.Home.ID }/>
+							<div class="coming-to">
+								<span class="label">Your question is about</span>
+								<a href={ templ.SafeURL(HomePath(d.Home.ID)) }><span class="mono">{ d.Home.ID }</span> { HomeTitle(*d.Home) }</a>
+							</div>
+						}
+						@formErrorSummary(d.Form, "name", "phone", "email", "message")
 						<div class="field-grid">
 							@field(d.Form, "name", "Full name", "text", "name", "", true)
 							@field(d.Form, "phone", "Phone", "tel", "tel", "", true)
@@ -429,8 +474,8 @@ templ Enquire(p Page, d EnquireData) {
 							<div class="field">
 								<label class="field__label" for="f-interest">Interested in</label>
 								<select class="select" id="f-interest" name="interest">
-									for _, opt := range []string{"Not sure yet", "1 bed", "2 bed", "3 bed", "3 bed + study", "Penthouse"} {
-										<option value={ opt } selected?={ d.Form.Value("interest") == opt }>{ opt }</option>
+									for i, opt := range d.Interests() {
+										<option value={ opt } selected?={ d.Form.Value("interest") == opt || (d.Form.Value("interest") == "" && i == 0) }>{ opt }</option>
 									}
 								</select>
 							</div>
@@ -464,7 +509,7 @@ templ Busy(p Page) {
 		<section class="section drawing-grid error-page">
 			<div class="wrap error-page__inner">
 				<p class="label label--cobalt">One moment</p>
-				<h1 class="h1">We're very busy just now.</h1>
+				<h1 class="h1">We’re very busy just now.</h1>
 				<p class="lede">Please go back and try again in a minute. Nothing you typed has been sent.</p>
 				<div class="hero__actions">
 					<a class="btn btn--cobalt" href="/">Back to the start</a>

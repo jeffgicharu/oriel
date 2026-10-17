@@ -97,7 +97,7 @@ func (c *Checker) formMistakes(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	if err := want(res, body, http.StatusUnprocessableEntity, "That email address doesn", "Please give a phone number, such as", "Please write your question.", "Release Check"); err != nil {
+	if err := want(res, body, http.StatusUnprocessableEntity, "That email address doesn’t look right.", "Please give a phone number, such as", "Please write your question.", "Release Check"); err != nil {
 		return err
 	}
 	for _, ck := range c.client.Jar.Cookies(c.baseURL()) {

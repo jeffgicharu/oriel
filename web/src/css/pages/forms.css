@@ -112,8 +112,20 @@
 /* The fortnight of days, as a strip to scroll on phones. */
 .days {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  grid-template-columns: repeat(8, minmax(0, 1fr));
   gap: 6px;
+}
+
+.days__notes {
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.days__notes .mono {
+  color: var(--graphite);
+  margin-right: 6px;
 }
 
 @media (max-width: 639px) {
@@ -375,7 +387,7 @@
 }
 
 .booking-facts--small > div {
-  grid-template-columns: 110px 1fr;
+  grid-template-columns: 136px 1fr;
   font-size: 14px;
 }
 
@@ -408,7 +420,8 @@
   gap: 8px;
 }
 
-.reserve-summary__id {
+/* Raised above the side card's own paragraph size. */
+.side-card.reserve-summary .reserve-summary__id {
   font-size: 56px;
   line-height: 0.85;
   font-weight: 330;
@@ -418,11 +431,65 @@
   font-variant-numeric: tabular-nums lining-nums;
 }
 
-.reserve-summary__price {
+.side-card.reserve-summary .reserve-summary__price {
   font-size: 26px;
   font-weight: 700;
   font-stretch: 110%;
   margin: 6px 0 4px;
+}
+
+.reserve-summary__plan {
+  margin: 6px 0;
+  border: 1px solid var(--rule);
+  background: #fbfbfa;
+  padding: 8px;
+}
+
+.reserve-summary__plan .fp-name {
+  font-size: 30px;
+}
+
+.reserve-summary__plan .fp-note {
+  display: none;
+}
+
+.booking-facts__note {
+  font-weight: 400;
+  color: var(--graphite-2);
+}
+
+/* The list of what needs fixing, each linked to its field. */
+.error-summary {
+  scroll-margin-top: calc(var(--header-h) + 16px);
+}
+
+.error-summary:focus {
+  outline: none;
+}
+
+.error-summary:focus-visible {
+  outline: 2px solid var(--alert);
+  outline-offset: 2px;
+}
+
+.error-summary__list {
+  display: grid;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.error-summary__list a {
+  color: var(--alert);
+  font-weight: 500;
+  text-underline-offset: 0.2em;
+}
+
+.field input,
+.field select,
+.field textarea,
+#slots,
+#plans {
+  scroll-margin-top: calc(var(--header-h) + 60px);
 }
 
 .similar--wide {
@@ -504,4 +571,9 @@
 
 .schedule-title {
   margin-top: 6px;
+}
+
+/* The schedule sits inside the booking card, so it drops its own sheet shadow. */
+.booking-card .schedule-card {
+  box-shadow: none;
 }

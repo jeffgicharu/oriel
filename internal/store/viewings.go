@@ -54,7 +54,10 @@ type Day struct {
 	Date   time.Time
 	Open   bool
 	Reason string
-	Slots  []Slot
+	// Blocked is a day closed by the desk or for a public holiday, rather
+	// than the suite's weekly day off.
+	Blocked bool
+	Slots   []Slot
 }
 
 // Free counts the places left on a day.
@@ -101,7 +104,7 @@ func (db *DB) Calendar(ctx context.Context, now time.Time) ([]Day, error) {
 		date := today.AddDate(0, 0, i)
 		d := Day{Date: date, Open: cfg.Opens(date)}
 		if reason, ok := blocked[date.Format("2006-01-02")]; ok {
-			d.Open, d.Reason = false, reason
+			d.Open, d.Reason, d.Blocked = false, reason, true
 		}
 		if d.Open {
 			for _, start := range cfg.SlotsOn(date) {

@@ -1,6 +1,7 @@
 .field {
   display: grid;
   gap: 8px;
+  align-content: start;
   min-width: 0;
 }
 
@@ -134,8 +135,28 @@
   outline-offset: 2px;
 }
 
+/* Chips standing in for a field: a two-part switch the height of an input. */
+.chips--field {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 0;
+}
+
+.chips--field .chip span {
+  width: 100%;
+  min-height: 50px;
+  border-radius: 0;
+}
+
+.chips--field .chip + .chip span {
+  border-left-width: 0;
+}
+
 .choice input {
   accent-color: var(--cobalt);
-  margin: 3px 0 0;
+  width: 18px;
+  height: 18px;
+  margin: 2px 0 0;
   flex: none;
 }

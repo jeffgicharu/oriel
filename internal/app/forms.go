@@ -35,7 +35,7 @@ func readContact(r *http.Request, errs formErrors) store.Contact {
 	if c.Email == "" {
 		errs["email"] = "Please give an email address."
 	} else if a, err := mail.ParseAddress(c.Email); err != nil || a.Address != c.Email || !strings.Contains(c.Email[strings.LastIndex(c.Email, "@")+1:], ".") || len(c.Email) > 120 {
-		errs["email"] = "That email address doesn't look right."
+		errs["email"] = "That email address doesn’t look right."
 	}
 	phone, ok := normalisePhone(c.Phone)
 	switch {
@@ -94,7 +94,7 @@ func intField(r *http.Request, name string, min, max, fallback int) int {
 
 // busyPage is shown when no private copy can be made just now.
 func (a *App) busy(w http.ResponseWriter, r *http.Request) {
-	p := a.page(web.Meta{Title: "One moment", Description: "Oriel is very busy just now. Please try again in a minute.", Path: r.URL.Path})
+	p := a.page(web.Meta{Title: "One moment", Description: "Oriel is very busy just now. Please try again in a minute.", Path: r.URL.Path, Quiet: true})
 	w.Header().Set("Retry-After", "60")
 	a.render(w, r, http.StatusServiceUnavailable, web.Busy(p))
 }

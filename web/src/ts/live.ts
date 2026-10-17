@@ -9,6 +9,15 @@ export function setUpConfirms(root: ParentNode = document): void {
   });
 }
 
+// A form sent back with mistakes opens at the list of them, so on a phone
+// the visitor sees at once what to fix rather than the top of the page.
+export function showFormErrors(): void {
+  const summary = document.querySelector<HTMLElement>("[data-error-summary]");
+  if (!summary) return;
+  summary.scrollIntoView({ block: "start" });
+  summary.focus({ preventScroll: true });
+}
+
 export function setUpLiveReservation(): void {
   const page = document.querySelector<HTMLElement>("[data-live-reservation]");
   if (!page || !("EventSource" in window)) return;

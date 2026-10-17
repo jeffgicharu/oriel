@@ -118,18 +118,7 @@ func (a *App) unit(w http.ResponseWriter, r *http.Request) {
 	}
 	schedule, code := a.scheduleFor(r, h)
 	study, _ := light.For(h.ID)
-	var similar []store.Home
-	for _, other := range c.Homes {
-		if other.ID != h.ID && other.Type.Code == h.Type.Code && other.Status == store.Available {
-			similar = append(similar, other)
-		}
-	}
-	sort.SliceStable(similar, func(i, j int) bool {
-		return abs(similar[i].Level-h.Level) < abs(similar[j].Level-h.Level)
-	})
-	if len(similar) > 3 {
-		similar = similar[:3]
-	}
+	similar := similarHomes(c, h, 3)
 	d := web.UnitData{
 		Home:     h,
 		Plan:     web.PlanFor(h.Unit),
@@ -249,4 +238,26 @@ func apartmentLD(site string, h store.Home) map[string]any {
 		}
 	}
 	return ld
+}
+
+// similarHomes are homes of the same type still for sale, nearest floors
+// first, and among those the ones facing the same way.
+func similarHomes(c *store.Catalog, h store.Home, n int) []store.Home {
+	var out []store.Home
+	for _, other := range c.Homes {
+		if other.ID != h.ID && other.Type.Code == h.Type.Code && other.OnSale() {
+			out = append(out, other)
+		}
+	}
+	sort.SliceStable(out, func(i, j int) bool {
+		di, dj := abs(out[i].Level-h.Level), abs(out[j].Level-h.Level)
+		if di != dj {
+			return di < dj
+		}
+		return out[i].Facings() == h.Facings() && out[j].Facings() != h.Facings()
+	})
+	if len(out) > n {
+		out = out[:n]
+	}
+	return out
 }

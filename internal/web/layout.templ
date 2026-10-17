@@ -108,13 +108,15 @@ templ Header(p Page) {
 templ Footer(p Page) {
 	<footer class="site-footer">
 		<div class="wrap">
-			<div class="footer-cta">
-				<h2 class="h2">See the light for yourself.</h2>
-				<div class="hero__actions">
-					<a class="btn btn--cobalt" href="/viewings/new">Book a viewing @Arrow()</a>
-					<a class="btn btn--line" href="/residences">Find a home</a>
+			if !p.Meta.Quiet {
+				<div class="footer-cta">
+					<h2 class="h2">See the light for yourself.</h2>
+					<div class="hero__actions">
+						<a class="btn btn--cobalt" href="/viewings/new">Book a viewing @Arrow()</a>
+						<a class="btn btn--line" href="/residences">Find a home</a>
+					</div>
 				</div>
-			</div>
+			}
 			<div class="footer-cols">
 				<div class="footer-col footer-col--visit">
 					<span class="label">Sales suite</span>

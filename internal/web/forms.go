@@ -3,6 +3,7 @@ package web
 import (
 	"time"
 
+	"github.com/jeffgicharu/oriel/internal/building"
 	"github.com/jeffgicharu/oriel/internal/plans"
 	"github.com/jeffgicharu/oriel/internal/store"
 )
@@ -63,6 +64,32 @@ type ReservationData struct {
 type EnquireData struct {
 	Form Form
 	Sent string
+	// Home is the home the question is about, when it was asked from its page.
+	Home *store.Home
+}
+
+// Interests are the choices for what a question is about.
+func (d EnquireData) Interests() []string {
+	out := []string{}
+	if d.Home != nil {
+		out = append(out, "Home "+d.Home.ID)
+	}
+	out = append(out, "Not sure yet")
+	for _, code := range []string{"A", "B", "C", "D", "P"} {
+		out = append(out, building.Types[code].Name)
+	}
+	return out
+}
+
+// errorAnchor is where an error in the summary links to.
+func errorAnchor(name string) string {
+	switch name {
+	case "slot":
+		return "#slots"
+	case "plan":
+		return "#plans"
+	}
+	return "#f-" + name
 }
 
 // DateValue is how a day is written in a form: 2026-10-20.
@@ -75,6 +102,32 @@ func dayName(t time.Time) string    { return t.In(Nairobi).Format("Mon") }
 func dayNumber(t time.Time) string  { return t.In(Nairobi).Format("2") }
 func monthShort(t time.Time) string { return t.In(Nairobi).Format("Jan") }
 func clock(t time.Time) string      { return t.In(Nairobi).Format("15:04") }
+
+// dayNote says why a day can't be chosen.
+func dayNote(d store.Day) string {
+	switch {
+	case !d.Open:
+		return d.Reason
+	case d.Free() == 0:
+		return "Fully booked"
+	}
+	return ""
+}
+
+// DayNote is a closure worth pointing out under the days: a holiday, a day
+// the desk has blocked, or a day already full. The weekly day off is not
+// listed; the opening hours say it.
+type DayNote struct{ When, Text string }
+
+func dayNotes(days []store.Day) []DayNote {
+	var out []DayNote
+	for _, d := range days {
+		if d.Blocked || (d.Open && d.Free() == 0) {
+			out = append(out, DayNote{When: d.Date.In(Nairobi).Format("Mon 2 Jan"), Text: dayNote(d)})
+		}
+	}
+	return out
+}
 
 // LongDate is "Tuesday 21 October 2026".
 func LongDate(t time.Time) string { return t.In(Nairobi).Format("Monday 2 January 2006") }
@@ -127,7 +180,7 @@ func HoursUntil(from, to time.Time) string {
 	if d <= 0 {
 		return "now"
 	}
-	h := int(d.Hours())
+	h := int(d.Hours() + 0.5)
 	if h >= 2 {
 		return "in " + itoa(h) + " hours"
 	}

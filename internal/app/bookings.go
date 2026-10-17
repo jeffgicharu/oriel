@@ -1,10 +1,12 @@
 package app
 
 import (
+	"crypto/hmac"
 	"database/sql"
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -56,6 +58,7 @@ func (a *App) viewingMeta() web.Meta {
 		Description: "Book a 45-minute visit to Oriel's sales suite in Riverside, Nairobi: the show apartments, the building model and the team. Open Tuesday to Sunday.",
 		Path:        "/viewings/new",
 		Sheet:       web.Sheet{Number: "A-700", Name: "Viewings"},
+		Quiet:       true,
 	}
 }
 
@@ -200,6 +203,7 @@ func (a *App) viewingPage(w http.ResponseWriter, r *http.Request) {
 		Description: "Your viewing at Oriel's sales suite in Riverside, Nairobi.",
 		Path:        "/viewings/" + v.Ref,
 		Sheet:       web.Sheet{Number: "A-701", Name: "Viewing " + v.Ref},
+		Quiet:       true,
 	})
 	w.Header().Set("Cache-Control", "no-store")
 	a.render(w, r, http.StatusOK, web.ViewingBooked(p, d))
@@ -273,11 +277,7 @@ func (a *App) reserveData(r *http.Request, c *store.Catalog, h store.Home, f web
 		}
 	}
 	if !h.OnSale() {
-		for _, other := range c.Homes {
-			if other.Type.Code == h.Type.Code && other.OnSale() && len(d.Similar) < 3 {
-				d.Similar = append(d.Similar, other)
-			}
-		}
+		d.Similar = similarHomes(c, h, 3)
 	}
 	return d
 }
@@ -288,6 +288,7 @@ func (a *App) reserveMeta(h store.Home) web.Meta {
 		Description: "Request a reservation on home " + h.ID + " at Oriel, Riverside. The home is held for 72 hours while the sales team confirms it with a letter of offer.",
 		Path:        "/reserve/" + h.ID,
 		Sheet:       web.Sheet{Number: "A-710", Name: "Reserve " + h.ID},
+		Quiet:       true,
 	}
 }
 
@@ -424,6 +425,7 @@ func (a *App) reservationPage(w http.ResponseWriter, r *http.Request) {
 		Description: "Your reservation on home " + res.UnitID + " at Oriel, Riverside.",
 		Path:        "/reservations/" + res.Ref,
 		Sheet:       web.Sheet{Number: "A-711", Name: "Reservation " + res.Ref},
+		Quiet:       true,
 	})
 	w.Header().Set("Cache-Control", "no-store")
 	a.render(w, r, http.StatusOK, web.Reservation(p, d))
@@ -437,11 +439,38 @@ func (a *App) enquireMeta() web.Meta {
 		Description: "Ask Oriel's sales team about a home, the building, prices or buying off-plan in Riverside, Nairobi.",
 		Path:        "/enquire",
 		Sheet:       web.Sheet{Number: "A-720", Name: "Questions"},
+		Quiet:       true,
 	}
 }
 
+// enquireHome is the home a question is about, if it was asked from its page.
+func (a *App) enquireHome(r *http.Request, id string) *store.Home {
+	if id == "" {
+		return nil
+	}
+	c, err := a.db(r).LoadCatalog(r.Context())
+	if err != nil {
+		return nil
+	}
+	if h, ok := c.Home(id); ok {
+		return &h
+	}
+	return nil
+}
+
 func (a *App) enquireForm(w http.ResponseWriter, r *http.Request) {
-	a.render(w, r, http.StatusOK, web.Enquire(a.page(a.enquireMeta()), web.EnquireData{Form: web.Form{Values: map[string]string{}}}))
+	d := web.EnquireData{Form: web.Form{Values: map[string]string{}}, Home: a.enquireHome(r, r.URL.Query().Get("home"))}
+	// After a question is sent the visitor lands here with a signed lead
+	// number, so the thanks can use their name without it being in the address.
+	if id, sig, ok := strings.Cut(r.URL.Query().Get("sent"), "."); ok && hmac.Equal([]byte(sig), []byte(a.sign("sent", id))) {
+		if n, err := strconv.ParseInt(id, 10, 64); err == nil {
+			if name, err := a.db(r).LeadName(r.Context(), n); err == nil && name != "" {
+				d.Sent = strings.Fields(name)[0]
+				w.Header().Set("Cache-Control", "no-store")
+			}
+		}
+	}
+	a.render(w, r, http.StatusOK, web.Enquire(a.page(a.enquireMeta()), d))
 }
 
 func (a *App) enquire(w http.ResponseWriter, r *http.Request) {
@@ -463,11 +492,14 @@ func (a *App) enquire(w http.ResponseWriter, r *http.Request) {
 		errs["message"] = "Please keep your question under 1,500 characters."
 	}
 	values := map[string]string{"name": r.PostFormValue("name"), "email": r.PostFormValue("email"), "phone": r.PostFormValue("phone"), "interest": r.PostFormValue("interest"), "message": message}
-	if len(errs) > 0 || !a.formAllowed(r) {
-		if len(errs) == 0 {
-			errs["message"] = "You have sent several forms in a short time. Please wait a minute and try again."
-		}
-		a.render(w, r, http.StatusUnprocessableEntity, web.Enquire(a.page(a.enquireMeta()), web.EnquireData{Form: web.Form{Values: values, Errors: errs}}))
+	home := a.enquireHome(r, r.PostFormValue("home"))
+	if len(errs) > 0 {
+		a.render(w, r, http.StatusUnprocessableEntity, web.Enquire(a.page(a.enquireMeta()), web.EnquireData{Form: web.Form{Values: values, Errors: errs}, Home: home}))
+		return
+	}
+	if !a.formAllowed(r) {
+		errs["message"] = "You have sent several forms in a short time. Please wait a minute and try again."
+		a.render(w, r, http.StatusTooManyRequests, web.Enquire(a.page(a.enquireMeta()), web.EnquireData{Form: web.Form{Values: values, Errors: errs}, Home: home}))
 		return
 	}
 	db, err := a.writable(w, r)
@@ -479,12 +511,17 @@ func (a *App) enquire(w http.ResponseWriter, r *http.Request) {
 		a.serverError(w, r)
 		return
 	}
-	c.Interest = r.PostFormValue("interest")
-	if _, err := db.Enquire(r.Context(), c, message, a.now()); err != nil {
+	c.Interest = strings.TrimSpace(r.PostFormValue("interest"))
+	if r := []rune(c.Interest); len(r) > 80 {
+		c.Interest = string(r[:80])
+	}
+	leadID, err := db.Enquire(r.Context(), c, message, a.now())
+	if err != nil {
 		a.log.Error("saving an enquiry", "err", err)
 		a.serverError(w, r)
 		return
 	}
 	a.broker.publish(visitorFrom(r.Context()).copyID, event{Type: "lead", Text: c.Name + " sent a question"})
-	a.render(w, r, http.StatusOK, web.Enquire(a.page(a.enquireMeta()), web.EnquireData{Sent: strings.Fields(c.Name)[0]}))
+	id := strconv.FormatInt(leadID, 10)
+	http.Redirect(w, r, "/enquire?sent="+id+"."+a.sign("sent", id), http.StatusSeeOther)
 }

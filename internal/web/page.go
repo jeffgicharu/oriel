@@ -48,7 +48,10 @@ type Meta struct {
 	Nav string
 	// HeaderOver lays the header over the page's opening picture.
 	HeaderOver bool
-	BodyClass  string
+	// Quiet leaves out the footer's invitation to book, on the pages where a
+	// visitor is already booking or has just booked.
+	Quiet     bool
+	BodyClass string
 	// Modules are extra script entries the page needs, by manifest name.
 	Modules []string
 	// Status is the HTTP status the page is sent with; zero means 200.

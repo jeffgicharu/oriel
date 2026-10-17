@@ -308,7 +308,7 @@ func (c *Checker) notFound(ctx context.Context) error {
 	if res.StatusCode != http.StatusNotFound {
 		return fmt.Errorf("status %d, want 404", res.StatusCode)
 	}
-	if !strings.Contains(body, "isn&#39;t on the plans") && !strings.Contains(body, "isn't on the plans") {
+	if !strings.Contains(body, "isn’t on the plans") {
 		return errors.New("not Oriel's own not-found page")
 	}
 	return nil

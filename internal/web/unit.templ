@@ -2,6 +2,7 @@ package web
 
 import (
 	"strconv"
+	"strings"
 
 	"github.com/jeffgicharu/oriel/internal/floorplan"
 	"github.com/jeffgicharu/oriel/internal/light"
@@ -46,6 +47,7 @@ templ Unit(p Page, d UnitData) {
 						if d.Home.Status == store.Held {
 							<p class="unit-head__note">A reservation on this home is waiting to be confirmed. You can still book a viewing, and we will tell you if it comes free.</p>
 						}
+						<a class="link-arrow unit-head__ask" href={ templ.SafeURL("/enquire?home=" + d.Home.ID) }>Ask about this home @Arrow()</a>
 					</div>
 				</header>
 				<dl class="unit-facts">
@@ -100,7 +102,7 @@ templ Unit(p Page, d UnitData) {
 					<div>
 						<p class="sheet-tag label">Light study</p>
 						<h2 class="h3" id="light-title">{ MorningOrEvening(d.Light) }</h2>
-						<p class="muted">{ LightSummary(d.Light) } Worked out from the sun's path over Riverside, the slab edge over each window and the fins on the east and west faces.</p>
+						<p class="muted">{ LightSummary(d.Light) } Worked out from the sun’s path over Riverside, the slab edge over each window and the fins on the east and west faces.</p>
 					</div>
 					@LightChart(d.Light)
 				</div>
@@ -117,7 +119,7 @@ templ Unit(p Page, d UnitData) {
 					if d.Home.ShowsPrice() {
 						@PaymentPlans(d.Home, d.Schedule, d.PlanCode)
 					} else {
-						<p class="notice">This home is { store.StatusName(d.Home.Status) }. The same plans apply to every home still available: <a href={ templ.SafeURL("/residences?beds=" + strconv.Itoa(Bedrooms(d.Home.Type.Code))) }>see similar homes</a>.</p>
+						<p class="notice">This home is { strings.ToLower(store.StatusName(d.Home.Status)) }. The same plans apply to every home still available: <a href={ templ.SafeURL("/residences?beds=" + strconv.Itoa(Bedrooms(d.Home.Type.Code))) }>see similar homes</a>.</p>
 					}
 				</div>
 			</section>

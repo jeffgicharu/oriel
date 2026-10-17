@@ -153,6 +153,13 @@ var nairobi = func() *time.Location {
 // Nairobi is the time zone everything is shown in.
 func Nairobi() *time.Location { return nairobi }
 
+// LeadName is a lead's name.
+func (db *DB) LeadName(ctx context.Context, id int64) (string, error) {
+	var name string
+	err := db.QueryRowContext(ctx, `SELECT name FROM leads WHERE id = ?`, id).Scan(&name)
+	return name, err
+}
+
 // Enquire records a question from the website.
 func (db *DB) Enquire(ctx context.Context, c Contact, message string, at time.Time) (int64, error) {
 	var leadID int64
