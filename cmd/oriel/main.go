@@ -3,6 +3,7 @@
 //	oriel serve                 run the web server (settings come from the environment)
 //	oriel version               print the release's commit id
 //	oriel check-release ...     walk a running release before it goes live
+//	oriel desk-links ...        print the one-click sign-in links for the sales desk
 package main
 
 import (
@@ -44,6 +45,8 @@ func main() {
 		fmt.Println(release)
 	case "check-release":
 		err = checkRelease(os.Args[2:])
+	case "desk-links":
+		err = deskLinks(os.Args[2:])
 	default:
 		usage()
 		os.Exit(64)
@@ -108,6 +111,29 @@ func serve() error {
 		return err
 	}
 	application.Shutdown()
+	return nil
+}
+
+// deskLinks prints the two one-click links into the sales desk, one for each
+// role. They are signed with the desk key; the key itself is never printed.
+func deskLinks(args []string) error {
+	fs := flag.NewFlagSet("desk-links", flag.ContinueOnError)
+	envFile := fs.String("env-file", "", "read settings from this KEY=VALUE file")
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
+	if *envFile != "" {
+		if err := config.LoadEnvFile(*envFile); err != nil {
+			return err
+		}
+	}
+	cfg, err := config.FromEnv()
+	if err != nil {
+		return err
+	}
+	for _, role := range []string{"manager", "agent"} {
+		fmt.Printf("%s: %s/desk/enter/%s/%s\n", role, cfg.SiteURL, role, app.EnterSignature(cfg.DeskKey, role))
+	}
 	return nil
 }
 
