@@ -30,15 +30,10 @@ func TestKESShort(t *testing.T) {
 	}
 }
 
-func TestElevationHasEveryResidentialFloor(t *testing.T) {
-	bays := 0
-	for _, line := range elevationLines() {
-		if line.Class == "bay" {
-			bays++
-		}
-	}
-	// Three bays on the south face of each of levels 2 to 15.
-	if bays != 14*3 {
-		t.Fatalf("drew %d bays, want %d", bays, 14*3)
+func TestElevationHasEveryBay(t *testing.T) {
+	// Three south-facing bays on each of levels 2 to 15, and the two
+	// penthouse bays.
+	if got := elevationBays(); got != 14*3+2 {
+		t.Fatalf("drew %d bays, want %d", got, 14*3+2)
 	}
 }

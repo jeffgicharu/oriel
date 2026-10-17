@@ -265,3 +265,40 @@
     margin-top: calc(var(--header-h) * -1);
   }
 }
+
+/* ---------- The flat drawing ---------- */
+
+.hero__drawing .faint {
+  stroke-width: 0.7;
+  stroke-opacity: 0.38;
+}
+
+.hero__drawing .bay {
+  stroke: var(--cobalt);
+}
+
+.hero__drawing .fill {
+  fill: var(--cobalt);
+  stroke: none;
+}
+
+.hero__drawing .glass {
+  fill: rgb(31 59 209 / 0.05);
+  stroke-width: 0.7;
+}
+
+.hero__drawing .tree,
+.hero__drawing .leaf {
+  stroke-width: 0.9;
+  stroke: #6f7d68;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero__drawing .fill {
+    animation: drawing-in 0.8s var(--ease) 4.2s backwards;
+  }
+
+  .hero--flat .hero__drawing .fill {
+    animation-delay: 2s;
+  }
+}

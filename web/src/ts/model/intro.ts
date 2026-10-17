@@ -25,7 +25,8 @@ export function showFinished(stage: Stage, tower: Tower, opt: IntroOptions): voi
   stage.applyCamera();
 }
 
-export function playIntro(stage: Stage, tower: Tower, opt: IntroOptions): Promise<void> {
+/** The opening as a paused timeline, to play or to step through frame by frame. */
+export function buildIntro(stage: Stage, tower: Tower, opt: IntroOptions): gsap.core.Timeline {
   const geometry = tower.lines.geometry;
   const total = tower.levelEnds[tower.levelEnds.length - 1] ?? geometry.getAttribute("position").count;
   const state = {
@@ -36,10 +37,6 @@ export function playIntro(stage: Stage, tower: Tower, opt: IntroOptions): Promis
     elevation: opt.elevation + 7,
     distance: opt.distance * 0.82,
   };
-  geometry.setDrawRange(0, 0);
-  stage.clip.constant = state.rise;
-  tower.lineMaterial.opacity = 1;
-
   const apply = () => {
     const count = Math.floor(state.drawn);
     geometry.setDrawRange(0, count - (count % 2));
@@ -51,22 +48,23 @@ export function playIntro(stage: Stage, tower: Tower, opt: IntroOptions): Promis
     stage.applyCamera();
   };
   apply();
+  return gsap
+    .timeline({ paused: true, onUpdate: apply })
+    .to(state, { drawn: total, duration: 3.2, ease: "power1.inOut" }, 0)
+    .to(state, { rise: tower.height + 0.5, duration: 3.0, ease: "power2.inOut" }, 2.0)
+    .to(state, { lines: opt.restingLines, duration: 1.6, ease: "power1.out" }, 4.4)
+    .to(state, { azimuth: opt.azimuth, elevation: opt.elevation, distance: opt.distance, duration: 6.2, ease: "power3.out" }, 0);
+}
 
+/** Plays the opening, keeping the stage drawing every frame while it runs. */
+export function playIntro(stage: Stage, timeline: gsap.core.Timeline): Promise<void> {
   return new Promise((resolve) => {
     let running = true;
     stage.addTicker(() => running);
-    gsap
-      .timeline({
-        onUpdate: apply,
-        onComplete: () => {
-          apply();
-          running = false;
-          resolve();
-        },
-      })
-      .to(state, { drawn: total, duration: 3.2, ease: "power1.inOut" }, 0)
-      .to(state, { rise: tower.height + 0.5, duration: 3.0, ease: "power2.inOut" }, 2.0)
-      .to(state, { lines: opt.restingLines, duration: 1.6, ease: "power1.out" }, 4.4)
-      .to(state, { azimuth: opt.azimuth, elevation: opt.elevation, distance: opt.distance, duration: 6.2, ease: "power3.out" }, 0);
+    timeline.eventCallback("onComplete", () => {
+      running = false;
+      resolve();
+    });
+    timeline.play(0);
   });
 }

@@ -61,7 +61,7 @@ export class Stage {
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.02;
     this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.shadowMap.type = THREE.PCFShadowMap;
     this.renderer.localClippingEnabled = true;
 
     this.scene.background = new THREE.Color(PLASTER);
@@ -91,6 +91,7 @@ export class Stage {
     cam.bottom = -75;
     cam.near = 10;
     cam.far = 460;
+    this.sun.shadow.radius = options.lite ? 1.5 : 3;
     this.sun.shadow.bias = -0.0004;
     this.sun.shadow.normalBias = 0.04;
     this.scene.add(this.sun, this.sun.target);
@@ -221,6 +222,12 @@ export class Stage {
     else this.lastFrame = 0;
   }
 
+  /** Draws one frame now, whatever the loop is doing. */
+  renderNow(): void {
+    this.dirty = false;
+    this.renderer.render(this.scene, this.camera);
+  }
+
   dispose(): void {
     if (this.frame) cancelAnimationFrame(this.frame);
     this.tickers.clear();
@@ -239,6 +246,26 @@ export function supportsWebGL(): boolean {
   } catch {
     return false;
   }
+}
+
+/** The name of the device's graphics renderer, if the browser shares it. */
+export function rendererName(): string {
+  try {
+    const canvas = document.createElement("canvas");
+    const gl = (canvas.getContext("webgl2") || canvas.getContext("webgl")) as WebGLRenderingContext | null;
+    if (!gl) return "";
+    const info = gl.getExtension("WEBGL_debug_renderer_info");
+    const name = String(info ? gl.getParameter(info.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER));
+    gl.getExtension("WEBGL_lose_context")?.loseContext();
+    return name;
+  } catch {
+    return "";
+  }
+}
+
+/** Whether 3D would be drawn by the processor instead of a graphics chip. */
+export function isSoftwareRenderer(name: string): boolean {
+  return /swiftshader|llvmpipe|softpipe|software|basic render/i.test(name);
 }
 
 /** A lighter scene for phones and modest machines. */

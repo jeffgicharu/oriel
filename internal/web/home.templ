@@ -5,7 +5,7 @@ import "github.com/jeffgicharu/oriel/internal/building"
 // ElevationDrawing is the line drawing of the tower's south face. Each line
 // traces itself when the page first paints.
 templ ElevationDrawing(class string) {
-	<svg class={ class } viewBox="0 120 420 770" fill="none" stroke="currentColor" stroke-width="1.15" stroke-linecap="square" aria-hidden="true" focusable="false">
+	<svg class={ class } viewBox="0 -12 600 668" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round" aria-hidden="true" focusable="false">
 		for _, line := range elevationLines() {
 			<path d={ line.D } class={ line.Class } data-draw></path>
 		}

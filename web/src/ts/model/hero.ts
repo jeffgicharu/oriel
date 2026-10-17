@@ -1,24 +1,33 @@
 // The building on the home page. It draws itself, rises, and then turns
 // slowly while it is on screen. Nothing runs while it is scrolled away or the
 // tab is hidden, and it lets go of the graphics memory when the page goes.
+//
+// Devices that would have to draw 3D without a graphics processor get the
+// flat drawing instead, because the scene would crawl there.
 
 import { buildContext } from "./context";
 import { readModel } from "./data";
-import { playIntro, showFinished, type IntroOptions } from "./intro";
-import { preferLite, Stage, supportsWebGL } from "./stage";
+import { buildIntro, playIntro, showFinished, type IntroOptions } from "./intro";
+import { isSoftwareRenderer, preferLite, rendererName, Stage, supportsWebGL } from "./stage";
 import { nairobiTime } from "./sun";
 import { buildTower } from "./tower";
+
+const TURN_DEGREES_PER_SECOND = 3.2;
 
 export function mountHero(stageEl: HTMLElement): void {
   const hero = stageEl.closest<HTMLElement>(".hero");
   const model = readModel();
   const nav = navigator as Navigator & { connection?: { saveData?: boolean } };
-  if (!hero || !model || !supportsWebGL() || nav.connection?.saveData) {
-    hero?.classList.add("hero--flat");
-    return;
-  }
+  const options = new URLSearchParams(location.hash.slice(1));
+  // #capture steps the opening frame by frame for recording it, and draws
+  // even where the device has no graphics processor.
+  const capture = options.has("capture");
+  const renderer = rendererName();
+  const flat = () => hero?.classList.add("hero--flat");
+  if (!hero || !model || !supportsWebGL() || nav.connection?.saveData) return flat();
+  if (!capture && isSoftwareRenderer(renderer)) return flat();
 
-  const lite = preferLite();
+  const lite = !capture && preferLite();
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const canvas = document.createElement("canvas");
   canvas.className = "hero__canvas";
@@ -30,8 +39,7 @@ export function mountHero(stageEl: HTMLElement): void {
     stage = new Stage(canvas, { lite });
   } catch {
     canvas.remove();
-    hero.classList.add("hero--flat");
-    return;
+    return flat();
   }
   const tower = buildTower(model);
   const context = buildContext(model, lite);
@@ -48,15 +56,16 @@ export function mountHero(stageEl: HTMLElement): void {
   };
   let resting = view();
   let introDone = false;
+  let disposed = false;
   stage.onResize = () => {
-    resting = view();
-    if (introDone) {
-      stage.orbit.distance = resting.distance;
-    }
+    const next = view();
+    resting.distance = next.distance;
+    if (introDone) stage.orbit.distance = resting.distance;
   };
 
   hero.classList.add("hero--3d");
-  let disposed = false;
+  const intro = buildIntro(stage, tower, resting);
+  const introLength = intro.duration();
 
   // Once settled, the building turns slowly; the pointer leans it a little.
   let lean = 0;
@@ -66,7 +75,7 @@ export function mountHero(stageEl: HTMLElement): void {
     stage.addTicker((_, now) => {
       const dt = Math.min(0.1, (now - last) / 1000);
       last = now;
-      resting.azimuth += dt * 3.2;
+      resting.azimuth += dt * TURN_DEGREES_PER_SECOND;
       lean += (leanTarget - lean) * Math.min(1, dt * 3);
       stage.orbit.azimuth = resting.azimuth + lean;
       stage.applyCamera();
@@ -80,11 +89,46 @@ export function mountHero(stageEl: HTMLElement): void {
     });
   }
 
+  const debug = window as unknown as Record<string, unknown>;
+  if (capture || options.has("stats")) {
+    debug.__orielStats = () => ({
+      renderer,
+      lite,
+      calls: stage.renderer.info.render.calls,
+      triangles: stage.renderer.info.render.triangles,
+      lines: stage.renderer.info.render.lines,
+      geometries: stage.renderer.info.memory.geometries,
+      textures: stage.renderer.info.memory.textures,
+      programs: stage.renderer.info.programs?.length ?? 0,
+      pixelRatio: stage.renderer.getPixelRatio(),
+    });
+  }
+
+  if (capture) {
+    // Shows the scene exactly as it is t seconds into the opening.
+    const base = resting.azimuth;
+    debug.__orielSeek = (t: number) =>
+      new Promise<void>((resolve) => {
+        intro.seek(Math.min(t, introLength), false);
+        if (t > introLength) {
+          stage.orbit.azimuth = base + (t - introLength) * TURN_DEGREES_PER_SECOND;
+          stage.applyCamera();
+        }
+        stage.renderNow();
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+      });
+    debug.__orielIntroLength = introLength;
+    intro.seek(0, false);
+    stage.renderNow();
+    document.documentElement.dataset.capture = "ready";
+    return;
+  }
+
   if (reduced) {
     showFinished(stage, tower, resting);
     introDone = true;
   } else {
-    playIntro(stage, tower, resting).then(() => {
+    playIntro(stage, intro).then(() => {
       introDone = true;
       turn();
     });
@@ -96,19 +140,16 @@ export function mountHero(stageEl: HTMLElement): void {
   const onVisibility = () => stage.setVisible(!document.hidden && isOnScreen(stageEl));
   document.addEventListener("visibilitychange", onVisibility);
 
-  window.addEventListener(
-    "pagehide",
-    (event) => {
-      if (event.persisted) return;
-      disposed = true;
-      observer.disconnect();
-      document.removeEventListener("visibilitychange", onVisibility);
-      tower.dispose();
-      context.dispose();
-      stage.dispose();
-    },
-    { once: false },
-  );
+  window.addEventListener("pagehide", (event) => {
+    if (event.persisted) return;
+    disposed = true;
+    intro.kill();
+    observer.disconnect();
+    document.removeEventListener("visibilitychange", onVisibility);
+    tower.dispose();
+    context.dispose();
+    stage.dispose();
+  });
 }
 
 function isOnScreen(el: HTMLElement): boolean {
