@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/http/cookiejar"
 	"regexp"
 	"strings"
 	"time"
@@ -54,19 +53,24 @@ var pages = []struct {
 type Checker struct {
 	Base    string
 	Release string
-	client  *http.Client
-	out     io.Writer
+	// Token marks the checker's requests as the release gate's, so the copy
+	// it writes to is thrown away and its forms skip the per-address limits.
+	Token  string
+	client *http.Client
+	out    io.Writer
+	// reservation is the one the checker made, for the steps after.
+	reservation string
 }
 
 // New makes a checker with its own cookie jar, as a fresh visitor would have.
-func New(base, release string, out io.Writer) *Checker {
-	jar, _ := cookiejar.New(nil)
+func New(base, release, token string, out io.Writer) *Checker {
 	return &Checker{
 		Base:    strings.TrimRight(base, "/"),
 		Release: release,
+		Token:   token,
 		out:     out,
 		client: &http.Client{
-			Jar:     jar,
+			Jar:     newJar(),
 			Timeout: 20 * time.Second,
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
 				if len(via) >= 5 {
@@ -90,6 +94,17 @@ func (c *Checker) Run(ctx context.Context) error {
 		{"robots.txt, the sitemap and the web manifest load", c.metadataFiles},
 		{"an unknown address gets Oriel's own not-found page", c.notFound},
 		{"the live-update stream opens", c.stream},
+		{"a form with mistakes is shown again with each one explained", c.formMistakes},
+		{"a visitor books a viewing, adds it to a calendar and cancels it", c.bookViewing},
+		{"a visitor requests a reservation, and the held home can't be reserved twice", func(ctx context.Context) (err error) {
+			c.reservation, err = c.reserve(ctx)
+			return err
+		}},
+		{"a visitor's question reaches their open pages live", c.liveQuestion},
+		{"a reservation is seen by the visitor who made it and nobody else", func(ctx context.Context) error {
+			return c.privateCopy(ctx, c.reservation)
+		}},
+		{"the checker's own copy is deleted", c.forget},
 	}
 	for _, step := range steps {
 		start := time.Now()
@@ -107,8 +122,20 @@ func (c *Checker) get(ctx context.Context, path string) (*http.Response, string,
 	if err != nil {
 		return nil, "", err
 	}
+	return c.do(c.client, req)
+}
+
+// mark labels a request as the release gate's.
+func (c *Checker) mark(req *http.Request) {
 	req.Header.Set("User-Agent", "oriel-release-check")
-	res, err := c.client.Do(req)
+	if c.Token != "" {
+		req.Header.Set("X-Oriel-Check", c.Token)
+	}
+}
+
+func (c *Checker) do(client *http.Client, req *http.Request) (*http.Response, string, error) {
+	c.mark(req)
+	res, err := client.Do(req)
 	if err != nil {
 		return nil, "", err
 	}
@@ -294,6 +321,7 @@ func (c *Checker) stream(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	c.mark(req)
 	res, err := c.client.Do(req)
 	if err != nil {
 		return err

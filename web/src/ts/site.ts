@@ -5,6 +5,7 @@
 import htmx from "htmx.org";
 import { setUpPlans } from "./plans";
 import { setUpShortlist } from "./shortlist";
+import { setUpConfirms, setUpLiveReservation } from "./live";
 
 declare global {
   interface Window {
@@ -84,6 +85,8 @@ setUpHeader();
 measureDrawings();
 setUpPlans();
 setUpShortlist();
+setUpConfirms();
+setUpLiveReservation();
 loadModel();
 
 // Parts of a page swapped in by htmx get the same treatment.

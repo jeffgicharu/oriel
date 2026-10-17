@@ -25,6 +25,7 @@ type App struct {
 	now     func() time.Time
 
 	copies      *copies.Store
+	broker      *broker
 	copyLimiter *limiter
 	formLimiter *limiter
 
@@ -50,6 +51,7 @@ func New(cfg config.Config, release string, log *slog.Logger) (*App, error) {
 		log:         log,
 		now:         time.Now,
 		copies:      store,
+		broker:      newBroker(),
 		copyLimiter: newLimiter(20, 6),
 		formLimiter: newLimiter(60, 12),
 		streams:     streams,

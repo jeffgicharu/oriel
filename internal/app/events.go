@@ -35,6 +35,14 @@ func (a *App) events(w http.ResponseWriter, r *http.Request) {
 	lifetime := time.NewTimer(streamLifetime)
 	defer lifetime.Stop()
 
+	// Changes reach only browsers sharing the visitor's own copy.
+	var updates chan []byte
+	if v := visitorFrom(r.Context()); v != nil && v.copyID != "" {
+		ch, unsubscribe := a.broker.subscribe(v.copyID)
+		defer unsubscribe()
+		updates = ch
+	}
+
 	for {
 		select {
 		case <-r.Context().Done():
@@ -43,6 +51,9 @@ func (a *App) events(w http.ResponseWriter, r *http.Request) {
 			return
 		case <-lifetime.C:
 			return
+		case body := <-updates:
+			fmt.Fprintf(w, "event: change\ndata: %s\n\n", body)
+			flusher.Flush()
 		case <-heartbeat.C:
 			fmt.Fprint(w, ": still here\n\n")
 			flusher.Flush()

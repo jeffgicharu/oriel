@@ -13,7 +13,7 @@ import (
 
 // publicPaths are the pages listed in the sitemap.
 func (a *App) publicPaths() []string {
-	paths := []string{"/", "/explore", "/residences"}
+	paths := []string{"/", "/explore", "/residences", "/viewings/new", "/enquire"}
 	for _, code := range building.TypeOrder {
 		paths = append(paths, "/residences/types/"+code)
 	}

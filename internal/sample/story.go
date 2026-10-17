@@ -179,7 +179,7 @@ type Story struct {
 	today     time.Time
 	slots     map[string]int
 	usedNames map[string]bool
-	nextOffer int
+	nextOffer map[int]int // by year: letters of offer are numbered from one each year
 	refs      map[string]bool
 }
 
@@ -198,6 +198,7 @@ func Tell(now time.Time) *Story {
 		today:     time.Date(local.Year(), local.Month(), local.Day(), 0, 0, 0, 0, nairobi),
 		slots:     map[string]int{},
 		usedNames: map[string]bool{},
+		nextOffer: map[int]int{},
 		refs:      map[string]bool{},
 	}
 	s.Launch = s.today.AddDate(0, 0, -DaysSinceLaunch).Add(10 * time.Hour)
@@ -575,11 +576,12 @@ func (s *Story) request(l *Lead, unit string, at time.Time, fromWebsite bool) *R
 }
 
 func (s *Story) confirm(l *Lead, r *Reservation, at time.Time) {
-	s.nextOffer++
+	year := at.In(nairobi).Year()
+	s.nextOffer[year]++
 	r.Status = "confirmed"
 	r.DecidedAt = at
 	r.DecidedBy = 1
-	r.OfferNumber = fmt.Sprintf("OR-%d-%04d", at.In(nairobi).Year(), s.nextOffer)
+	r.OfferNumber = fmt.Sprintf("OR-%d-%04d", year, s.nextOffer[year])
 	s.setStatus(r.UnitID, at, 1, "reserved", "Reservation "+r.Ref+" confirmed")
 	s.event(l, at, 1, "reservation_confirmed", "Letter of offer "+r.OfferNumber+" issued", r.UnitID)
 	s.Activity = append(s.Activity, Activity{At: at, StaffID: 1, Actor: "staff", Action: "confirmed a reservation", Subject: r.UnitID, Detail: l.Name + " · " + r.OfferNumber, Link: "/desk/reservations"})

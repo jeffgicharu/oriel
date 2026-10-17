@@ -132,7 +132,11 @@ func checkRelease(args []string) error {
 	if *base == "" || *want == "" {
 		return errors.New("check-release needs --base and --release")
 	}
+	secret := os.Getenv("ORIEL_SECRET")
+	if len(secret) < 32 {
+		return errors.New("check-release needs ORIEL_SECRET, from the environment or --env-file")
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
-	return check.New(*base, *want, os.Stdout).Run(ctx)
+	return check.New(*base, *want, app.ReleaseCheckToken([]byte(secret)), os.Stdout).Run(ctx)
 }

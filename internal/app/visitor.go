@@ -107,11 +107,17 @@ func (a *App) writable(w http.ResponseWriter, r *http.Request) (*store.DB, error
 	return v.db, nil
 }
 
-func (a *App) sign(purpose, value string) string {
-	mac := hmac.New(sha256.New, a.cfg.Secret)
+func (a *App) sign(purpose, value string) string { return sign(a.cfg.Secret, purpose, value) }
+
+func sign(secret []byte, purpose, value string) string {
+	mac := hmac.New(sha256.New, secret)
 	mac.Write([]byte(purpose + ":" + value))
 	return base64.RawURLEncoding.EncodeToString(mac.Sum(nil)[:18])
 }
+
+// ReleaseCheckToken is what the release gate sends in X-Oriel-Check, so its
+// copies are marked as throwaway and its forms skip the per-address limits.
+func ReleaseCheckToken(secret []byte) string { return sign(secret, "check", "release") }
 
 func (a *App) copyCookieFor(id string) *http.Cookie {
 	return &http.Cookie{
@@ -152,6 +158,24 @@ func (a *App) readCopyCookie(r *http.Request) (string, bool) {
 func (a *App) isReleaseCheck(r *http.Request) bool {
 	got := r.Header.Get("X-Oriel-Check")
 	return got != "" && hmac.Equal([]byte(got), []byte(a.sign("check", "release")))
+}
+
+// forget deletes the release gate's own copy the moment it has finished.
+// Only the gate can call it, and only on a copy it made.
+func (a *App) forget(w http.ResponseWriter, r *http.Request) {
+	v := visitorFrom(r.Context())
+	if !a.isReleaseCheck(r) || v == nil || !strings.HasPrefix(v.copyID, "chk") {
+		a.notFound(w, r)
+		return
+	}
+	id := v.copyID
+	for _, release := range v.releases {
+		release()
+	}
+	v.releases, v.copyID, v.db = nil, "", a.copies.Sample()
+	a.copies.Delete(id)
+	http.SetCookie(w, a.expiredCopyCookie())
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // clientIP is the visitor's address, as nginx passes it on from Cloudflare.

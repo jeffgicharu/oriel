@@ -1,0 +1,507 @@
+/* ---------- Booking, reserving and asking ---------- */
+
+.form-page {
+  padding-bottom: clamp(64px, 8vw, 120px);
+}
+
+.form-grid {
+  display: grid;
+  gap: 28px;
+  align-items: start;
+}
+
+@media (min-width: 1000px) {
+  .form-grid {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 4fr);
+    gap: 56px;
+  }
+
+  .form-side {
+    position: sticky;
+    top: calc(var(--header-h) + 24px);
+  }
+}
+
+.form-main {
+  display: grid;
+  gap: 26px;
+  min-width: 0;
+}
+
+.form-side {
+  display: grid;
+  gap: 14px;
+}
+
+.form-side .side-card p {
+  font-size: 15px;
+}
+
+.form-small {
+  font-size: 13px;
+}
+
+.form-small a {
+  color: inherit;
+}
+
+.step {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 0 0 26px;
+  border: 0;
+  border-bottom: 1px solid var(--rule);
+  min-width: 0;
+}
+
+.step__title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0;
+  margin-bottom: 14px;
+  font-size: 19px;
+  font-weight: 650;
+  font-stretch: 106%;
+}
+
+.step__n {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--graphite);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.field-grid {
+  display: grid;
+  gap: 16px;
+}
+
+@media (min-width: 640px) {
+  .field-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.coming-to {
+  display: grid;
+  gap: 4px;
+  padding: 14px 16px;
+  border-left: 3px solid var(--cobalt);
+  background: var(--cobalt-mist);
+}
+
+.coming-to .label {
+  color: var(--ink-soft);
+}
+
+.coming-to a {
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.coming-to .mono {
+  color: var(--cobalt);
+  margin-right: 6px;
+}
+
+/* The fortnight of days, as a strip to scroll on phones. */
+.days {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  gap: 6px;
+}
+
+@media (max-width: 639px) {
+  .days {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    margin-inline: calc(var(--gutter) * -1);
+    padding: 2px var(--gutter) 8px;
+    scrollbar-width: none;
+  }
+
+  .days::-webkit-scrollbar {
+    display: none;
+  }
+
+  .day {
+    flex: 0 0 64px;
+    scroll-snap-align: start;
+  }
+}
+
+.day {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 10px 4px;
+  border: 1px solid var(--rule-strong);
+  background: var(--plaster-hi);
+  cursor: pointer;
+  transition: border-color 0.2s var(--ease), background-color 0.2s var(--ease), color 0.2s var(--ease);
+}
+
+.day input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  margin: 0;
+  cursor: pointer;
+}
+
+.day:hover {
+  border-color: var(--graphite);
+}
+
+.day__name,
+.day__month {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.day__num {
+  font-size: 22px;
+  font-weight: 650;
+  line-height: 1.1;
+}
+
+.day:has(input:checked) {
+  background: var(--graphite);
+  border-color: var(--graphite);
+  color: var(--plaster-hi);
+}
+
+.day:has(input:checked) .day__name,
+.day:has(input:checked) .day__month {
+  color: var(--stone);
+}
+
+.day:has(input:focus-visible) {
+  outline: 2px solid var(--cobalt);
+  outline-offset: 2px;
+}
+
+.day.is-closed {
+  cursor: not-allowed;
+  border-style: dashed;
+  background: transparent;
+  color: var(--ink-faint);
+}
+
+.day.is-closed input {
+  cursor: not-allowed;
+}
+
+.slots {
+  display: grid;
+  gap: 12px;
+}
+
+.slots__day {
+  font-weight: 600;
+}
+
+.slots__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 8px;
+}
+
+.slot {
+  position: relative;
+  display: grid;
+  gap: 2px;
+  padding: 12px 14px;
+  border: 1px solid var(--rule-strong);
+  background: var(--plaster-hi);
+  cursor: pointer;
+  transition: border-color 0.2s var(--ease), background-color 0.2s var(--ease);
+}
+
+.slot input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  margin: 0;
+  cursor: pointer;
+}
+
+.slot:hover {
+  border-color: var(--graphite);
+}
+
+.slot__time {
+  font-size: 18px;
+}
+
+.slot__left {
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.slot:has(input:checked) {
+  border-color: var(--cobalt);
+  background: var(--cobalt-mist);
+  box-shadow: inset 0 0 0 1px var(--cobalt);
+}
+
+.slot:has(input:checked) .slot__time {
+  color: var(--cobalt);
+}
+
+.slot:has(input:focus-visible) {
+  outline: 2px solid var(--cobalt);
+  outline-offset: 2px;
+}
+
+.slot.is-full {
+  cursor: not-allowed;
+  border-style: dashed;
+  background: transparent;
+  color: var(--ink-faint);
+}
+
+.slots.htmx-request {
+  opacity: 0.5;
+}
+
+.hours {
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.hours > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 6px;
+}
+
+@media (max-width: 639px) {
+  .btn--wide-phone {
+    width: 100%;
+  }
+}
+
+.payplan__deposit {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--graphite-2);
+}
+
+/* ---------- Done pages ---------- */
+
+.done-head {
+  position: relative;
+}
+
+.done-mark {
+  width: 56px;
+  height: 56px;
+  fill: none;
+  stroke: var(--cobalt);
+  stroke-width: 3;
+  stroke-linecap: square;
+}
+
+.done-mark.is-cancelled {
+  stroke: var(--ink-soft);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .done-mark rect,
+  .done-mark path {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: plan-line 0.9s var(--ease-in-out) forwards;
+  }
+
+  .done-mark path {
+    animation-delay: 0.6s;
+  }
+}
+
+.booking-card {
+  display: grid;
+  gap: 22px;
+  padding: clamp(18px, 3vw, 28px);
+  border: 1px solid var(--rule-strong);
+  background: var(--plaster-hi);
+  box-shadow: var(--shadow-sheet);
+  min-width: 0;
+}
+
+.booking-facts {
+  display: grid;
+  gap: 0;
+}
+
+.booking-facts > div {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.booking-facts dt {
+  color: var(--ink-soft);
+  padding-top: 3px;
+}
+
+.booking-facts dd {
+  font-weight: 550;
+}
+
+.booking-facts a {
+  text-decoration: none;
+}
+
+.booking-facts .mono {
+  color: var(--cobalt);
+}
+
+.booking-facts--small > div {
+  grid-template-columns: 110px 1fr;
+  font-size: 14px;
+}
+
+@media (max-width: 479px) {
+  .booking-facts > div {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+}
+
+.booking-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.link-button {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: var(--alert);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.22em;
+  cursor: pointer;
+}
+
+.reserve-summary {
+  gap: 8px;
+}
+
+.reserve-summary__id {
+  font-size: 56px;
+  line-height: 0.85;
+  font-weight: 330;
+  font-stretch: 112%;
+  letter-spacing: -0.04em;
+  color: var(--cobalt);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.reserve-summary__price {
+  font-size: 26px;
+  font-weight: 700;
+  font-stretch: 110%;
+  margin: 6px 0 4px;
+}
+
+.similar--wide {
+  margin-top: 18px;
+  max-width: 720px;
+}
+
+/* The reservation's progress. */
+.steps {
+  display: grid;
+  gap: 0;
+}
+
+.steps__item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  gap: 14px;
+  padding-bottom: 22px;
+}
+
+.steps__item:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  left: 13px;
+  top: 26px;
+  bottom: 0;
+  width: 1.5px;
+  background: var(--rule-strong);
+}
+
+.steps__item.is-done:not(:last-child)::before {
+  background: var(--cobalt);
+}
+
+.steps__dot {
+  width: 28px;
+  height: 28px;
+  border: 1.5px solid var(--rule-strong);
+  background: var(--plaster-hi);
+}
+
+.is-done .steps__dot {
+  background: var(--cobalt);
+  border-color: var(--cobalt);
+}
+
+.is-current .steps__dot {
+  border-color: var(--cobalt);
+  background: repeating-linear-gradient(45deg, var(--cobalt) 0 2px, transparent 2px 6px);
+}
+
+.is-stopped .steps__dot {
+  background: var(--graphite);
+  border-color: var(--graphite);
+}
+
+.steps__title {
+  font-weight: 650;
+  font-size: 17px;
+}
+
+.steps__when {
+  font-size: 12px;
+  color: var(--ink-soft);
+  margin-top: 2px;
+}
+
+.steps__note {
+  color: var(--graphite-2);
+  font-size: 15px;
+  margin-top: 4px;
+}
+
+.is-todo .steps__title,
+.is-todo .steps__note {
+  color: var(--ink-faint);
+}
+
+.schedule-title {
+  margin-top: 6px;
+}

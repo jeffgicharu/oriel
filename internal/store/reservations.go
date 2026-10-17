@@ -244,9 +244,12 @@ func (db *DB) ConfirmReservation(ctx context.Context, ref string, staffID int64,
 		if status != "requested" {
 			return fmt.Errorf("only a waiting request can be confirmed")
 		}
+		// Letters of offer are numbered from one each year.
 		year := now.In(nairobi).Year()
 		var n int
-		tx.QueryRowContext(ctx, `SELECT count(*) FROM reservations WHERE offer_number IS NOT NULL`).Scan(&n)
+		if err := tx.QueryRowContext(ctx, `SELECT count(*) FROM reservations WHERE offer_number LIKE ?`, fmt.Sprintf("OR-%d-%%", year)).Scan(&n); err != nil {
+			return err
+		}
 		offer := fmt.Sprintf("OR-%d-%04d", year, n+1)
 		if _, err := tx.ExecContext(ctx, `UPDATE reservations SET status = 'confirmed', decided_at = ?, decided_by = ?, offer_number = ? WHERE id = ?`, now.Unix(), staffID, offer, id); err != nil {
 			return err
