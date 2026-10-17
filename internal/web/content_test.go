@@ -142,3 +142,29 @@ func TestFunnelCountsEveryLeadAsNew(t *testing.T) {
 		t.Fatalf("lost: %+v", last)
 	}
 }
+
+func TestTheElevationDrawsInAFewStrokes(t *testing.T) {
+	strokes := elevationStrokes()
+	lines := elevationLines()
+	if len(strokes) < 10 || len(strokes) > 120 {
+		t.Fatalf("%d strokes for %d lines; the drawing should trace itself in a few dozen", len(strokes), len(lines))
+	}
+	want, got := 0, 0
+	for _, l := range lines {
+		want += strings.Count(l.D, "M")
+	}
+	last := 0
+	for _, s := range strokes {
+		if s.Order < last {
+			t.Fatalf("strokes are out of order: storey %d after %d", s.Order, last)
+		}
+		last = s.Order
+		got += strings.Count(s.D, "M")
+	}
+	if got != want {
+		t.Fatalf("the strokes hold %d subpaths, the lines %d", got, want)
+	}
+	if last < 15 {
+		t.Fatalf("the strokes reach storey %d; the tower has seventeen", last)
+	}
+}

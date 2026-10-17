@@ -2,7 +2,10 @@ package web
 
 import (
 	"fmt"
+	"sort"
 	"strings"
+
+	"github.com/a-h/templ"
 
 	"github.com/jeffgicharu/oriel/internal/building"
 )
@@ -196,4 +199,47 @@ func elevationBays() int {
 		}
 	}
 	return n
+}
+
+// elevationStroke is the lines of one kind on one storey, drawn as a single
+// path, so the drawing traces itself in a few dozen strokes, not hundreds.
+type elevationStroke struct {
+	D     string
+	Class string
+	Order int // the storey, counted up from the ground: strokes draw in this order
+}
+
+// elevationStrokes groups the drawing's lines by the storey they start on and
+// their kind. Every kind on a storey is drawn at once, storey by storey upward.
+func elevationStrokes() []elevationStroke {
+	type key struct {
+		storey int
+		class  string
+	}
+	var order []key
+	groups := map[key][]string{}
+	storeyHeight := building.FloorHeight * elevScale
+	for _, l := range elevationLines() {
+		var x, y float64
+		fmt.Sscanf(l.D, "M%f %f", &x, &y)
+		storey := int((elevGround - y) / storeyHeight)
+		if storey < 0 {
+			storey = 0
+		}
+		k := key{storey, l.Class}
+		if _, seen := groups[k]; !seen {
+			order = append(order, k)
+		}
+		groups[k] = append(groups[k], l.D)
+	}
+	sort.SliceStable(order, func(i, j int) bool { return order[i].storey < order[j].storey })
+	out := make([]elevationStroke, 0, len(order))
+	for _, k := range order {
+		out = append(out, elevationStroke{D: strings.Join(groups[k], ""), Class: k.class, Order: k.storey})
+	}
+	return out
+}
+
+func strokeOrder(i int) templ.SafeCSS {
+	return templ.SafeCSS(fmt.Sprintf("--i: %d", i))
 }

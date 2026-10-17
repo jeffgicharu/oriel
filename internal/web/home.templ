@@ -8,12 +8,13 @@ import (
 	"github.com/jeffgicharu/oriel/internal/store"
 )
 
-// ElevationDrawing is the line drawing of the tower's south face. Each line
-// traces itself when the page first paints.
+// ElevationDrawing is the line drawing of the tower's south face. It traces
+// itself floor by floor when the page first paints; pathLength="1" lets each
+// stroke be drawn without measuring it in script.
 templ ElevationDrawing(class string) {
 	<svg class={ class } viewBox="0 -12 600 668" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round" aria-hidden="true" focusable="false">
-		for _, line := range elevationLines() {
-			<path d={ line.D } class={ line.Class } data-draw></path>
+		for _, s := range elevationStrokes() {
+			<path d={ s.D } class={ s.Class } pathLength="1" style={ strokeOrder(s.Order) } data-draw></path>
 		}
 	</svg>
 }

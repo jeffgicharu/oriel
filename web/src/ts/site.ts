@@ -57,7 +57,8 @@ function setUpHeader(): void {
 
 // Each line of a drawing is given its own length, so it can trace itself.
 function measureDrawings(): void {
-  document.querySelectorAll<SVGGeometryElement>("[data-draw]").forEach((path, index) => {
+  // Strokes drawn with pathLength="1" need no measuring.
+  document.querySelectorAll<SVGGeometryElement>("[data-draw]:not([pathLength])").forEach((path, index) => {
     const length = Math.ceil(path.getTotalLength?.() ?? 1200);
     path.style.setProperty("--len", String(length));
     if (!path.style.getPropertyValue("--i")) path.style.setProperty("--i", String(index));

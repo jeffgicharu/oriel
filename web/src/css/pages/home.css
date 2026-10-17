@@ -166,13 +166,14 @@
   }
 }
 
-/* The drawing traces itself once, on first paint. */
+/* The drawing traces itself once, floor by floor, on first paint. Each
+   stroke has pathLength="1", so a dash of 1 is its whole length. */
 @media (prefers-reduced-motion: no-preference) {
   .hero__drawing [data-draw] {
-    stroke-dasharray: var(--len, 1200);
-    stroke-dashoffset: var(--len, 1200);
-    animation: draw-line 2.4s var(--ease-in-out) forwards;
-    animation-delay: calc(var(--i, 0) * 45ms + 150ms);
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: draw-line 1.3s var(--ease-in-out) forwards;
+    animation-delay: calc(var(--i, 0) * 80ms + 150ms);
   }
 }
 
@@ -251,11 +252,11 @@
 
 @media (prefers-reduced-motion: no-preference) {
   .hero__drawing [data-draw] {
-    animation-delay: calc(var(--i, 0) * 45ms + 2.5s);
+    animation-delay: calc(var(--i, 0) * 80ms + 2.5s);
   }
 
   .hero--flat .hero__drawing [data-draw] {
-    animation-delay: calc(var(--i, 0) * 45ms + 0.15s);
+    animation-delay: calc(var(--i, 0) * 80ms + 0.15s);
   }
 }
 
