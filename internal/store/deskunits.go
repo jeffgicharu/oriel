@@ -344,3 +344,79 @@ func (db *DB) UnitReservation(ctx context.Context, unitID string) (*Reservation,
 	}
 	return &r, nil
 }
+
+// ReservationGroups are the tabs of the reservations page.
+var ReservationGroups = map[string][]string{
+	"waiting":   {"requested"},
+	"confirmed": {"confirmed"},
+	"completed": {"completed"},
+	"closed":    {"declined", "lapsed", "cancelled"},
+}
+
+// ReservationsIn lists reservations in a group, for one agent's leads or all.
+func (db *DB) ReservationsIn(ctx context.Context, group string, agentID int64) ([]Reservation, error) {
+	statuses := ReservationGroups[group]
+	if len(statuses) == 0 {
+		return nil, fmt.Errorf("unknown group %q", group)
+	}
+	q := `SELECT ` + reservationColumns + reservationJoins + ` WHERE r.status IN (?` + strings.Repeat(", ?", len(statuses)-1) + `)`
+	var args []any
+	for _, s := range statuses {
+		args = append(args, s)
+	}
+	if agentID > 0 {
+		q += ` AND l.agent_id = ?`
+		args = append(args, agentID)
+	}
+	if group == "waiting" {
+		q += ` ORDER BY r.hold_expires_at, r.id`
+	} else {
+		q += ` ORDER BY COALESCE(r.decided_at, r.requested_at) DESC, r.id DESC LIMIT 200`
+	}
+	rows, err := db.QueryContext(ctx, q, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []Reservation
+	for rows.Next() {
+		r, err := scanReservation(rows)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, r)
+	}
+	return out, rows.Err()
+}
+
+// ReservationGroupCounts is how many reservations each tab holds.
+func (db *DB) ReservationGroupCounts(ctx context.Context, agentID int64) (map[string]int, error) {
+	q := `SELECT r.status, count(*) FROM reservations r JOIN leads l ON l.id = r.lead_id`
+	var args []any
+	if agentID > 0 {
+		q += ` WHERE l.agent_id = ?`
+		args = append(args, agentID)
+	}
+	q += ` GROUP BY r.status`
+	rows, err := db.QueryContext(ctx, q, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	byStatus := map[string]int{}
+	for rows.Next() {
+		var s string
+		var n int
+		if err := rows.Scan(&s, &n); err != nil {
+			return nil, err
+		}
+		byStatus[s] = n
+	}
+	out := map[string]int{}
+	for g, statuses := range ReservationGroups {
+		for _, s := range statuses {
+			out[g] += byStatus[s]
+		}
+	}
+	return out, rows.Err()
+}

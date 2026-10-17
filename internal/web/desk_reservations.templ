@@ -1,0 +1,113 @@
+package web
+
+import (
+	"strconv"
+	"time"
+
+	"github.com/jeffgicharu/oriel/internal/store"
+)
+
+// DeskReservationsData is the reservations page.
+type DeskReservationsData struct {
+	Tab     string
+	Counts  map[string]int
+	List    []store.Reservation
+	Now     time.Time
+	Problem string
+	Focus   string // the reservation a problem belongs to
+}
+
+var reservationTabs = []struct{ Key, Label string }{
+	{"waiting", "Waiting"}, {"confirmed", "Awaiting deposit"}, {"completed", "Sold"}, {"closed", "Closed"},
+}
+
+templ DeskReservations(d DeskPage, x DeskReservationsData) {
+	@DeskLayout(d) {
+		@deskHeader("Reservations", "Requests from the website hold a home for 72 hours. Confirm one to issue the letter of offer and reserve the home; record the deposit to sell it.")
+		<nav class="desk-tabs" aria-label="Reservations">
+			for _, t := range reservationTabs {
+				<a href={ templ.SafeURL("/desk/reservations?tab=" + t.Key) } { current(x.Tab == t.Key)... }>{ t.Label }<span class="tnum">{ strconv.Itoa(x.Counts[t.Key]) }</span></a>
+			}
+		</nav>
+		if len(x.List) == 0 {
+			<p class="desk-empty">
+				switch x.Tab {
+					case "waiting":
+						No requests are waiting. New ones from the website appear here at once.
+					case "confirmed":
+						No reservation is waiting for its deposit.
+					default:
+						Nothing here yet.
+				}
+			</p>
+		}
+		<ol class="res-list" role="list">
+			for _, r := range x.List {
+				<li class="res-card" id={ r.Ref }>
+					<div class="res-card__home">
+						<a class="res-card__id mono" href={ templ.SafeURL("/desk/stack?home=" + r.UnitID) }>{ r.UnitID }</a>
+						<span class="res-card__ref mono">{ r.Ref }</span>
+					</div>
+					<div class="res-card__main">
+						<p class="res-card__buyer"><a href={ templ.SafeURL("/desk/leads/" + strconv.FormatInt(r.LeadID, 10)) }>{ r.Name }</a></p>
+						<p class="res-card__meta">{ planName(r.Plan) } · <span class="tnum">{ KES(r.Price) }</span> · { r.Phone }</p>
+						if r.BuyerNote != "" {
+							<p class="res-card__note">“{ r.BuyerNote }”</p>
+						}
+						<p class="res-card__when">
+							Requested { When(r.RequestedAt, x.Now) }
+							if r.AgentName != "" {
+								· { r.AgentName }
+							}
+						</p>
+					</div>
+					<div class="res-card__state">
+						switch r.Status {
+							case "requested":
+								<span class={ "res-card__hold", templ.KV("is-soon", r.HoldExpiresAt.Sub(x.Now) < 12*time.Hour) }>{ Lapses(x.Now, r.HoldExpiresAt) }</span>
+							case "confirmed":
+								<span class="res-card__offer">Offer <span class="mono">{ r.OfferNumber }</span></span>
+								<span class="desk-small">confirmed { When(r.DecidedAt, x.Now) } by { r.DecidedBy }</span>
+							case "completed":
+								<span class="res-card__offer">Deposit <span class="tnum">{ KES(r.DepositAmount) }</span></span>
+								<span class="desk-small">received { When(r.DepositAt, x.Now) }</span>
+							default:
+								<span class="res-card__closed">{ store.ReservationStatusName(r.Status) }</span>
+								if r.DeclineReason != "" {
+									<span class="desk-small">{ r.DeclineReason }</span>
+								}
+						}
+					</div>
+					if x.Focus == r.Ref && x.Problem != "" {
+						<div class="notice notice--alert res-card__problem" role="alert">{ x.Problem }</div>
+					}
+					if d.Staff.Manager() && (r.Status == "requested" || r.Status == "confirmed") {
+						<div class="res-card__actions">
+							if r.Status == "requested" {
+								<form method="post" action={ templ.SafeURL("/desk/reservations/" + r.Ref + "/confirm") } data-confirm={ "Confirm reservation " + r.Ref + " and issue the letter of offer for home " + r.UnitID + "?" }>
+									<button class="btn btn--cobalt btn--small" type="submit">Confirm and issue the offer</button>
+								</form>
+							} else {
+								<form class="res-card__deposit" method="post" action={ templ.SafeURL("/desk/reservations/" + r.Ref + "/deposit") }>
+									<label class="visually-hidden" for={ "dep-" + r.Ref }>Deposit received, in KES</label>
+									<input class="input tnum" id={ "dep-" + r.Ref } name="amount" type="text" inputmode="numeric" value={ thousandsWeb(r.Price / 10) }/>
+									<button class="btn btn--cobalt btn--small" type="submit">Record the deposit</button>
+								</form>
+							}
+							<details class="res-card__decline">
+								<summary>Decline</summary>
+								<form method="post" action={ templ.SafeURL("/desk/reservations/" + r.Ref + "/decline") }>
+									<label class="field__label" for={ "why-" + r.Ref }>Reason, which the buyer will see</label>
+									<input class="input" id={ "why-" + r.Ref } name="reason" type="text" maxlength="200" required/>
+									<button class="btn btn--small btn--danger" type="submit">Decline and free the home</button>
+								</form>
+							</details>
+						</div>
+					} else if !d.Staff.Manager() && (r.Status == "requested" || r.Status == "confirmed") {
+						<p class="desk-small res-card__actions">The sales manager confirms reservations and records deposits.</p>
+					}
+				</li>
+			}
+		</ol>
+	}
+}

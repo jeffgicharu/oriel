@@ -495,3 +495,7 @@
 .desk-dialog::backdrop {
   background: rgb(26 29 31 / 0.4);
 }
+
+.desk-form > .btn {
+  justify-self: start;
+}

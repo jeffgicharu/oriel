@@ -70,7 +70,17 @@ func (a *App) deskPage(r *http.Request, nav, title string) web.DeskPage {
 	var waiting int
 	db.QueryRowContext(r.Context(), `SELECT count(*) FROM reservations WHERE status = 'requested'`).Scan(&waiting)
 	p := a.page(web.Meta{Title: title, Path: r.URL.Path})
-	return web.DeskPage{Page: p, Staff: staffFrom(r.Context()), Nav: nav, Waiting: waiting, Notice: r.URL.Query().Get("done")}
+	notice := ""
+	if q := r.URL.Query(); q.Get("done") != "" && hmac.Equal([]byte(q.Get("ds")), []byte(a.sign("done", q.Get("done")))) {
+		notice = q.Get("done")
+	}
+	return web.DeskPage{Page: p, Staff: staffFrom(r.Context()), Nav: nav, Waiting: waiting, Notice: notice}
+}
+
+// doneQuery is the query that carries a notice to the next page, signed so
+// that only the desk itself can put words there.
+func (a *App) doneQuery(msg string) string {
+	return "done=" + url.QueryEscape(msg) + "&ds=" + url.QueryEscape(a.sign("done", msg))
 }
 
 func (a *App) deskCookieFor(token string) *http.Cookie {

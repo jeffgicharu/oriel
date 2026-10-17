@@ -227,3 +227,174 @@
   font-size: 12.5px;
   color: var(--ink-soft);
 }
+
+/* Words on a hatched cell sit on a plain ground so they stay readable. */
+.stack-cell.is-held > span,
+.stack-cell.is-reserved > span {
+  justify-self: start;
+  padding: 0 3px;
+  background: var(--plaster-hi);
+}
+
+/* Reservations */
+.res-list {
+  display: grid;
+  gap: 12px;
+}
+
+.res-card {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 12px 18px;
+  padding: 16px 18px;
+  border: 1px solid var(--rule-strong);
+  background: var(--plaster-hi);
+  scroll-margin-top: 80px;
+}
+
+.res-card:target {
+  border-color: var(--cobalt);
+  box-shadow: inset 3px 0 0 var(--cobalt);
+}
+
+.res-card__home {
+  display: grid;
+  gap: 4px;
+  align-content: start;
+}
+
+.res-card__id {
+  font-size: 26px;
+  font-weight: 500;
+  color: var(--cobalt);
+  text-decoration: none;
+  line-height: 1;
+}
+
+.res-card__ref {
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+
+.res-card__main {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.res-card__buyer {
+  font-size: 17px;
+  font-weight: 650;
+}
+
+.res-card__buyer a {
+  text-decoration: none;
+}
+
+.res-card__meta,
+.res-card__when {
+  font-size: 13.5px;
+  color: var(--graphite-2);
+}
+
+.res-card__when {
+  color: var(--ink-soft);
+}
+
+.res-card__note {
+  font-size: 14px;
+  font-style: italic;
+  color: var(--graphite-2);
+}
+
+.res-card__state {
+  grid-column: 2;
+  display: grid;
+  gap: 2px;
+  justify-items: start;
+}
+
+.res-card__hold {
+  padding: 3px 8px;
+  border: 1px solid var(--rule-strong);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.res-card__hold.is-soon {
+  border-color: var(--amber);
+  color: var(--amber);
+}
+
+.res-card__offer {
+  font-weight: 600;
+}
+
+.res-card__closed {
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.res-card__problem,
+.res-card__actions {
+  grid-column: 1 / -1;
+}
+
+.res-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: start;
+  gap: 10px 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--rule);
+}
+
+.res-card__deposit {
+  display: flex;
+  gap: 8px;
+}
+
+.res-card__deposit .input {
+  width: 150px;
+  min-height: 40px;
+  padding: 8px 10px;
+  font-size: 14px;
+}
+
+.res-card__decline summary {
+  padding: 9px 4px;
+  color: var(--alert);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.res-card__decline form {
+  display: grid;
+  gap: 8px;
+  width: min(380px, 100%);
+  margin-top: 6px;
+}
+
+.res-card__decline .input {
+  min-height: 40px;
+  padding: 8px 10px;
+  font-size: 14px;
+}
+
+.res-card__decline .btn {
+  justify-self: start;
+}
+
+@media (min-width: 900px) {
+  .res-card {
+    grid-template-columns: 110px minmax(0, 1fr) minmax(180px, auto);
+  }
+
+  .res-card__state {
+    grid-column: 3;
+    grid-row: 1;
+    justify-items: end;
+    text-align: right;
+  }
+}
