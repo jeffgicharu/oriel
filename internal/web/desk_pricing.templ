@@ -48,6 +48,7 @@ templ DeskPricing(d DeskPage, x DeskPricingData) {
 					<span class="desk-small">In force: list { strconv.FormatInt(x.Current.ID, 10) }, { When(x.Current.PublishedAt, x.Now) }</span>
 				</div>
 				@formErrorSummary(x.Form, "A", "B", "C", "D", "P", "floor", "river")
+				<div class="pricing__wrap">
 				<table class="desk-table pricing__bases">
 					<thead><tr><th scope="col">Type</th><th scope="col" class="num">In force</th><th scope="col">New base price (KES)</th></tr></thead>
 					<tbody>
@@ -63,6 +64,7 @@ templ DeskPricing(d DeskPage, x DeskPricingData) {
 						}
 					</tbody>
 				</table>
+				</div>
 				<div class="field-grid">
 					<div class="field">
 						<label class="field__label" for="f-floor">Floor premium, % a floor <span class="label">Now { pricing.Percent(x.Current.List.FloorBP) }</span></label>

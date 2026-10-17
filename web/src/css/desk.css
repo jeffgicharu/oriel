@@ -35,12 +35,16 @@ body.desk {
   background: var(--graphite);
   color: var(--plaster);
   transform: translateX(-102%);
-  transition: transform 0.3s var(--ease-out);
+  /* Closed, the menu is hidden from the keyboard and screen readers too. */
+  visibility: hidden;
+  transition: transform 0.3s var(--ease-out), visibility 0s linear 0.3s;
   overflow-y: auto;
 }
 
 .desk-side.is-open {
   transform: none;
+  visibility: visible;
+  transition: transform 0.3s var(--ease-out);
   box-shadow: 0 0 0 100vmax rgb(26 29 31 / 0.4);
 }
 
@@ -51,6 +55,7 @@ body.desk {
     height: 100svh;
     width: auto;
     transform: none;
+    visibility: visible;
     transition: none;
   }
 

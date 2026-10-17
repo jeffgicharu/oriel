@@ -362,6 +362,10 @@
   font-size: 14px;
 }
 
+.res-card__decline[open] {
+  flex-basis: 100%;
+}
+
 .res-card__decline summary {
   padding: 9px 4px;
   color: var(--alert);
@@ -811,6 +815,40 @@
 @media (min-width: 1200px) {
   .pricing {
     grid-template-columns: minmax(0, 3fr) minmax(300px, 2fr);
+  }
+}
+
+.pricing__wrap {
+  overflow-x: auto;
+}
+
+@media (max-width: 639px) {
+  /* On a phone the type and the price in force share a line above the box. */
+  .pricing__bases thead {
+    display: none;
+  }
+
+  .pricing__bases tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 6px 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .pricing__bases th,
+  .pricing__bases td {
+    padding: 0;
+    border: 0;
+    white-space: normal;
+  }
+
+  .pricing__bases td:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .pricing__bases .input {
+    max-width: none;
   }
 }
 
