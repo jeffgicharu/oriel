@@ -286,11 +286,13 @@
     display: block;
   }
 
+  /* Each home is a small card: number and price, type and status, then
+     four facts side by side. */
   .schedule__row {
     display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 6px 16px;
-    padding: 16px 4px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px 10px;
+    padding: 16px 2px;
     border-bottom: 1px solid var(--rule);
   }
 
@@ -299,6 +301,7 @@
     padding: 0;
     border: 0;
     text-align: left;
+    min-width: 0;
   }
 
   .schedule .num {
@@ -306,51 +309,64 @@
   }
 
   .schedule__home {
-    grid-column: 1;
+    grid-column: 1 / 4;
+    grid-row: 1;
   }
 
   .schedule td[data-label="Price"] {
-    grid-column: 2;
+    grid-column: 4;
     grid-row: 1;
     text-align: right;
     font-size: 17px;
   }
 
-  .schedule td[data-label="Status"] {
-    grid-column: 2;
+  .schedule td[data-label="Type"] {
+    grid-column: 1 / 4;
     grid-row: 2;
-    justify-self: end;
   }
 
-  .schedule td[data-label="Type"] {
-    grid-column: 1;
+  .schedule td[data-label="Status"] {
+    grid-column: 3 / 5;
     grid-row: 2;
+    justify-self: end;
   }
 
   .schedule td[data-label="Level"],
   .schedule td[data-label="Size"],
   .schedule td[data-label="Faces"],
   .schedule td[data-label="Sun a day"] {
-    grid-column: 1 / -1;
-    display: inline;
-    color: var(--ink-soft);
+    grid-row: 3;
+    display: grid;
+    gap: 2px;
     font-size: 13px;
+    color: var(--graphite-2);
   }
 
   .schedule td[data-label="Level"]::before,
   .schedule td[data-label="Size"]::before,
   .schedule td[data-label="Faces"]::before,
   .schedule td[data-label="Sun a day"]::before {
-    content: attr(data-label) " ";
+    content: attr(data-label);
     font-family: var(--font-mono);
-    font-size: 10px;
+    font-size: 9px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--ink-faint);
   }
 
-  .schedule__row {
-    grid-template-areas: none;
+  .schedule--compact td[data-label="Level"],
+  .schedule--compact td[data-label="Faces"],
+  .schedule--compact td[data-label="Sun a day"] {
+    grid-row: 2;
+  }
+
+  .schedule--compact td[data-label="Status"] {
+    grid-row: 1;
+    grid-column: 3 / 5;
+  }
+
+  .schedule--compact td[data-label="Price"] {
+    grid-row: 2;
   }
 }
 
@@ -534,6 +550,27 @@
   font-family: var(--font-mono);
   font-size: 18px;
   fill: var(--graphite);
+}
+
+/* On phones the plan keeps a readable size and slides sideways. */
+.plan-scroll {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+.plan-hint {
+  display: none;
+}
+
+@media (max-width: 699px) {
+  .plan-scroll .floorplan {
+    min-width: 620px;
+  }
+
+  .plan-hint {
+    display: block;
+    color: var(--ink-soft);
+  }
 }
 
 .plan-figure.hide-furniture .fp-items {
@@ -840,6 +877,10 @@
   gap: 24px;
 }
 
+.payplans > * {
+  min-width: 0;
+}
+
 @media (min-width: 1000px) {
   .payplans {
     grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
@@ -934,19 +975,51 @@
   border-bottom: 0;
 }
 
+/* On phones each payment is a row of its own: what, then when and how much. */
 @media (max-width: 599px) {
-  .pay-table th,
-  .pay-table td {
-    padding: 10px 14px;
+  .pay-table,
+  .pay-table tbody,
+  .pay-table tfoot {
+    display: block;
   }
 
-  .pay-table thead th:nth-child(3),
+  .pay-table thead {
+    display: none;
+  }
+
+  .pay-table tr {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 4px 16px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .pay-table th,
+  .pay-table td {
+    padding: 0;
+    border: 0;
+  }
+
+  .pay-table tbody th {
+    grid-column: 1 / -1;
+  }
+
   .pay-table tbody td:nth-child(3) {
     display: none;
   }
 
+  .pay-table tbody td.mono {
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+
+  .pay-table tfoot tr {
+    border-bottom: 0;
+  }
+
   .pay-table tfoot th {
-    grid-column: auto;
+    grid-column: 1;
   }
 }
 

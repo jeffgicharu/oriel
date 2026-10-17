@@ -89,17 +89,17 @@ templ Residences(p Page, d ResidencesData) {
 						<span class="label">Side</span>
 						<select class="select select--small" name="side">
 							<option value="" selected?={ d.Filter.Side == "" }>Both sides</option>
-							<option value="river" selected?={ d.Filter.Side == "river" }>River, facing north</option>
-							<option value="garden" selected?={ d.Filter.Side == "garden" }>Garden, facing south</option>
+							<option value="river" selected?={ d.Filter.Side == "river" }>River side</option>
+							<option value="garden" selected?={ d.Filter.Side == "garden" }>Garden side</option>
 						</select>
 					</label>
 					<label class="filter">
 						<span class="label">Sort by</span>
 						<select class="select select--small" name="sort">
-							<option value="price" selected?={ d.Filter.Sort == "price" }>Price, lowest first</option>
-							<option value="price-desc" selected?={ d.Filter.Sort == "price-desc" }>Price, highest first</option>
-							<option value="floor" selected?={ d.Filter.Sort == "floor" }>Floor, highest first</option>
-							<option value="size" selected?={ d.Filter.Sort == "size" }>Size, largest first</option>
+							<option value="price" selected?={ d.Filter.Sort == "price" }>Lowest price</option>
+							<option value="price-desc" selected?={ d.Filter.Sort == "price-desc" }>Highest price</option>
+							<option value="floor" selected?={ d.Filter.Sort == "floor" }>Highest floor</option>
+							<option value="size" selected?={ d.Filter.Sort == "size" }>Largest first</option>
 						</select>
 					</label>
 					<label class="filter filter--toggle">

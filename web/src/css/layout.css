@@ -409,16 +409,18 @@ body.menu-open {
   min-width: 0;
 }
 
-.title-block > div + div {
-  padding-left: 16px;
-}
-
 .title-block > div:nth-child(2n) {
+  padding-left: 16px;
   border-right: 0;
 }
 
 .title-block > div:nth-child(n + 3) {
   border-top: 1px solid var(--rule-light);
+}
+
+.title-block > div:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+  border-right: 0;
 }
 
 .title-block dt {
@@ -438,7 +440,9 @@ body.menu-open {
   }
 
   .title-block > div,
-  .title-block > div:nth-child(2n) {
+  .title-block > div:nth-child(2n),
+  .title-block > div:last-child:nth-child(odd) {
+    grid-column: auto;
     border-right: 1px solid var(--rule-light);
     border-top: 0;
     padding-left: 16px;

@@ -42,7 +42,10 @@ templ TypePage(p Page, t store.TypeSummary, homes []store.Home) {
 			</header>
 			<section class="type-plan section--tight" aria-label="Plan">
 				<figure class="plan-figure" data-plan>
-					@planSVG(typePlan(t.Code), floorplan.Options{Title: "Floor plan of type " + t.Code + ", " + t.Name})
+					<p class="plan-hint label">Slide sideways to see the whole plan</p>
+					<div class="plan-scroll">
+						@planSVG(typePlan(t.Code), floorplan.Options{Title: "Floor plan of type " + t.Code + ", " + t.Name})
+					</div>
 					<figcaption class="label muted">The plan as drawn for the homes on the left of each pair; their neighbours are its mirror image. Not to scale.</figcaption>
 				</figure>
 				<ul class="ticks ticks--wide" role="list">

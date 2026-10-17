@@ -60,6 +60,33 @@
   }
 }
 
+/* On phones the types are a row to swipe through. */
+@media (max-width: 699px) {
+  .types__list {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: var(--gutter);
+    margin-inline: calc(var(--gutter) * -1);
+    padding: 2px var(--gutter) 10px;
+    scrollbar-width: none;
+  }
+
+  .types__list::-webkit-scrollbar {
+    display: none;
+  }
+
+  .types__list > li {
+    flex: 0 0 72%;
+    scroll-snap-align: start;
+  }
+
+  .type-card__plan {
+    aspect-ratio: 16 / 9;
+  }
+}
+
 .type-card {
   display: flex;
   flex-direction: column;

@@ -69,7 +69,10 @@ templ Unit(p Page, d UnitData) {
 							</label>
 						</div>
 						<figure class="plan-figure" data-plan>
-							@planSVG(d.Plan, floorplan.Options{North: NorthFor(d.Home.Unit), Title: "Floor plan of home " + d.Home.ID + ", " + d.Home.Type.Name})
+							<p class="plan-hint label">Slide sideways to see the whole plan</p>
+							<div class="plan-scroll">
+								@planSVG(d.Plan, floorplan.Options{North: NorthFor(d.Home.Unit), Title: "Floor plan of home " + d.Home.ID + ", " + d.Home.Type.Name})
+							</div>
 							<figcaption class="label muted">
 								if d.Home.Position.Handed {
 									Drawn as built: the mirror image of the type B plan.
