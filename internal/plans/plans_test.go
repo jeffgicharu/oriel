@@ -61,10 +61,25 @@ func TestStagedPlanSplits(t *testing.T) {
 	if last.Amount != 5_280_000 || !last.Due.Equal(Completion) {
 		t.Errorf("completion %d on %s", last.Amount, last.Due)
 	}
-	// 30 days after 17 Oct 2026 is 16 Nov 2026; quarters from Feb 2026 to Nov 2028.
-	quarters := len(s.Instalments) - 3
-	if quarters != 8 {
-		t.Errorf("%d construction instalments, want 8", quarters)
+	// Signing is 30 days after 17 Oct 2026: 16 Nov 2026. Quarters run from
+	// 16 Feb 2027 to 16 Aug 2028; 16 Nov 2028 falls inside the last month
+	// before completion, so it is not one of them.
+	quarters := s.Instalments[2 : len(s.Instalments)-1]
+	if len(quarters) != 7 {
+		t.Fatalf("%d construction instalments, want 7", len(quarters))
+	}
+	if first := quarters[0].Due.Format("2006-01-02"); first != "2027-02-16" {
+		t.Errorf("first construction instalment due %s", first)
+	}
+	if last := quarters[len(quarters)-1].Due.Format("2006-01-02"); last != "2028-08-16" {
+		t.Errorf("last construction instalment due %s", last)
+	}
+	var during int64
+	for _, q := range quarters {
+		during += q.Amount
+	}
+	if during != 7_040_000 {
+		t.Errorf("construction instalments add to %d, want 40%% = 7,040,000", during)
 	}
 }
 
