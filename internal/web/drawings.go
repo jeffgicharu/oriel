@@ -20,6 +20,12 @@ type pen struct{ strings.Builder }
 
 func (p *pen) f(format string, args ...any) { fmt.Fprintf(&p.Builder, format, args...) }
 
+// metres writes a length as a person would read it off a drawing: 1.2, 0.45.
+func metres(v float64) string {
+	s := strings.TrimRight(fmt.Sprintf("%.2f", v), "0")
+	return strings.TrimSuffix(s, ".")
+}
+
 func n1(v float64) string {
 	s := fmt.Sprintf("%.1f", v)
 	s = strings.TrimSuffix(s, ".0")
@@ -123,8 +129,8 @@ func drawSunPath() string {
 			}
 			x, y := project(pos)
 			p.f(`<circle class="sp-hour %s" cx="%s" cy="%s" r="3.5"/>`, day.class, n1(x), n1(y))
-			if day.class == "sp-equinox" && h%2 == 1 {
-				p.f(`<text class="sp-hour-label" x="%s" y="%s" dominant-baseline="middle">%02d:00</text>`, n1(x+9), n1(y), h)
+			if day.class == "sp-june" && h%2 == 0 {
+				p.f(`<text class="sp-hour-label" x="%s" y="%s" text-anchor="middle">%02d:00</text>`, n1(x), n1(y-12), h)
 			}
 		}
 	}
@@ -143,84 +149,106 @@ func BaySection() templ.Component {
 
 func drawBaySection() string {
 	const k = 100.0 // pixels a metre
-	floor := 360.0
+	floor := 420.0
 	y := func(h float64) float64 { return floor - h*k }
 	facade := 330.0
 	outer := facade + building.BayProjection*k
-	slab := 0.3
+	slab := 0.32 // as in the 3D model
 	ceiling := building.FloorHeight - slab
+	seatTop, seatLeft := y(building.BaySeatHeight), facade-40
 	var p pen
-	p.f(`<svg class="baysection" viewBox="0 0 680 440" role="img" aria-labelledby="bs-title bs-desc" xmlns="http://www.w3.org/2000/svg">`)
+	p.f(`<svg class="baysection" viewBox="0 0 680 500" role="img" aria-labelledby="bs-title bs-desc" xmlns="http://www.w3.org/2000/svg">`)
 	p.f(`<title id="bs-title">Section through a bay</title>`)
-	p.f(`<desc id="bs-desc">The bay projects %s metres from the façade. Its glass runs from a window seat %s metres above the floor to %s metres, under a cobalt band %s metres deep. Low morning sun reaches deep into the room; the high midday sun is held off by the band and the slab.</desc>`,
-		n1(building.BayProjection), n1(building.BaySeatHeight), n1(building.BayHeadHeight), n1(ceiling-building.BayHeadHeight+0.05))
-	// Sun first, so the building draws over it.
-	morning := 18.0 * math.Pi / 180
-	gx, gy := outer-2, y(building.BaySeatHeight+1.1)
+	p.f(`<desc id="bs-desc">The bay projects %.2f metres from the façade. Its glass runs from a window seat %.2f metres above the floor to %.2f metres, under a cobalt band %.2f metres deep. Low morning sun reaches deep into the room; the high midday sun is held off by the band and the slab.</desc>`,
+		building.BayProjection, building.BaySeatHeight, building.BayHeadHeight, ceiling-building.BayHeadHeight)
+
+	// The morning sun, low in the east: two rays through the glass, one to
+	// the floor deep in the room and one onto the seat, and the patch of
+	// light between them on the floor.
+	low := 30.0 * math.Pi / 180
+	cot := 1 / math.Tan(low)
+	land := func(h float64) (float64, float64) {
+		gy := y(h)
+		if x := outer - 3 - (seatTop-gy)*cot; x >= seatLeft {
+			return x, seatTop
+		}
+		return outer - 3 - (floor-gy)*cot, floor
+	}
 	p.f(`<g class="bs-sun">`)
-	p.f(`<line class="bs-ray bs-ray--low" x1="%s" y1="%s" x2="%s" y2="%s"/>`, n1(gx+220*math.Cos(morning)), n1(gy-220*math.Sin(morning)), n1(gx), n1(gy))
-	reach := (gy - y(building.BaySeatHeight)) / math.Tan(morning)
-	p.f(`<line class="bs-ray bs-ray--low" x1="%s" y1="%s" x2="%s" y2="%s"/>`, n1(gx), n1(gy), n1(gx-reach), n1(y(building.BaySeatHeight)))
-	p.f(`<line class="bs-ray bs-ray--low" x1="%s" y1="%s" x2="%s" y2="%s"/>`, n1(facade), n1(y(building.BaySeatHeight)), n1(facade-150), n1(floor))
-	high := 78.0 * math.Pi / 180
-	hx, hy := outer+8, y(ceiling)
-	p.f(`<line class="bs-ray bs-ray--high" x1="%s" y1="%s" x2="%s" y2="%s"/>`, n1(hx+150*math.Cos(high)), n1(hy-150*math.Sin(high)), n1(hx), n1(hy))
-	p.f(`<text class="bs-note bs-note--cobalt" x="560" y="%s" text-anchor="end">Midday sun, high</text>`, n1(y(ceiling)-150))
-	p.f(`<text class="bs-note bs-note--cobalt" x="672" y="%s" text-anchor="end">Morning sun, low</text>`, n1(gy-220*math.Sin(morning)-10))
+	var fx float64
+	for i, h := range []float64{2.2, 1.2} {
+		gy := y(h)
+		x, ly := land(h)
+		if i == 0 {
+			fx = x
+		}
+		p.f(`<line class="bs-ray bs-ray--low" x1="%s" y1="%s" x2="%s" y2="%s"/>`, n1(outer+150), n1(gy-150*math.Tan(low)), n1(outer-3), n1(gy))
+		p.f(`<line class="bs-ray bs-ray--low bs-ray--in" x1="%s" y1="%s" x2="%s" y2="%s"/>`, n1(outer-3), n1(gy), n1(x), n1(ly))
+	}
+	p.f(`<rect class="bs-patch" x="%s" y="%s" width="%s" height="4"/>`, n1(fx), n1(floor-4), n1(seatLeft-fx))
+	p.f(`<text class="bs-note bs-note--sun" x="676" y="%s" text-anchor="end">Morning sun, low</text>`, n1(y(2.2)-150*math.Tan(low)-12))
+	// The midday sun, almost overhead, stopped by the band and the slab.
+	high := 80.0 * math.Pi / 180
+	ray := func(x, yy float64) {
+		p.f(`<line class="bs-ray bs-ray--high" x1="%s" y1="%s" x2="%s" y2="%s"/>`, n1(x+90*math.Cos(high)), n1(yy-90*math.Sin(high)), n1(x), n1(yy))
+	}
+	ray(outer-20, y(building.FloorHeight))              // onto the slab above
+	ray(outer+1, y((ceiling+building.BayHeadHeight)/2)) // onto the band
+	p.f(`<text class="bs-note" x="%s" y="28">Midday sun, high</text>`, n1(outer+24))
 	p.f(`</g>`)
 
 	p.f(`<g class="bs-build">`)
-	// Slabs: the floor of this level and the one above, cantilevered under and over the bay.
+	// Slabs: the floor of this level and the one above, carried out under and over the bay.
 	p.f(`<rect class="bs-cut" x="20" y="%s" width="%s" height="%s"/>`, n1(floor), n1(outer-20), n1(slab*k))
 	p.f(`<rect class="bs-cut" x="20" y="%s" width="%s" height="%s"/>`, n1(y(building.FloorHeight)), n1(outer-20), n1(slab*k))
-	// The wall the bay steps out of, above and below.
+	// The line of the wall the bay steps out of.
 	p.f(`<line class="bs-hidden" x1="%s" y1="%s" x2="%s" y2="%s"/>`, n1(facade), n1(y(ceiling)), n1(facade), n1(floor))
 	// Oak window seat.
-	p.f(`<rect class="bs-oak" x="%s" y="%s" width="%s" height="%s"/>`, n1(facade-40), n1(y(building.BaySeatHeight)), n1(outer-facade+40-10), n1(building.BaySeatHeight*k))
-	// Cobalt band and the soffit behind it.
+	p.f(`<rect class="bs-oak" x="%s" y="%s" width="%s" height="%s"/>`, n1(seatLeft), n1(seatTop), n1(outer-10-seatLeft), n1(building.BaySeatHeight*k))
+	// Cobalt band outside, and the lowered soffit inside.
 	p.f(`<rect class="bs-band" x="%s" y="%s" width="14" height="%s"/>`, n1(outer-14), n1(y(ceiling)), n1((ceiling-building.BayHeadHeight)*k))
-	p.f(`<rect class="bs-soffit" x="%s" y="%s" width="%s" height="%s"/>`, n1(facade-40), n1(y(ceiling)), n1(outer-14-facade+40), n1((ceiling-building.BayHeadHeight)*k*0.55))
+	p.f(`<rect class="bs-soffit" x="%s" y="%s" width="%s" height="%s"/>`, n1(seatLeft), n1(y(ceiling)), n1(outer-14-seatLeft), n1((ceiling-building.BayHeadHeight)*k*0.55))
 	// Glass, double, in a graphite frame.
-	gt, gb := y(building.BayHeadHeight), y(building.BaySeatHeight)
+	gt, gb := y(building.BayHeadHeight), seatTop
 	p.f(`<rect class="bs-frame" x="%s" y="%s" width="12" height="9"/>`, n1(outer-12), n1(gt))
 	p.f(`<rect class="bs-frame" x="%s" y="%s" width="12" height="9"/>`, n1(outer-12), n1(gb-9))
 	p.f(`<line class="bs-glass" x1="%s" y1="%s" x2="%s" y2="%s"/><line class="bs-glass" x1="%s" y1="%s" x2="%s" y2="%s"/>`,
 		n1(outer-9), n1(gt+9), n1(outer-9), n1(gb-9), n1(outer-3), n1(gt+9), n1(outer-3), n1(gb-9))
-	// Ground line outside and the room's floor finish inside.
-	p.f(`<line class="bs-finish" x1="20" y1="%s" x2="%s" y2="%s"/>`, n1(floor-1), n1(facade-40), n1(floor-1))
+	// The oak floor inside.
+	p.f(`<line class="bs-finish" x1="20" y1="%s" x2="%s" y2="%s"/>`, n1(floor-1), n1(seatLeft), n1(floor-1))
 	p.f(`</g>`)
 
 	// Dimensions, outside the bay.
 	dimX := outer + 52.0
-	dim := func(h0, h1 float64, text string) {
+	dim := func(h0, h1 float64) {
 		y0, y1 := y(h0), y(h1)
 		p.f(`<g class="bs-dim"><line x1="%s" y1="%s" x2="%s" y2="%s"/>`, n1(dimX), n1(y0), n1(dimX), n1(y1))
 		for _, yy := range []float64{y0, y1} {
 			p.f(`<line x1="%s" y1="%s" x2="%s" y2="%s"/><line class="bs-tick" x1="%s" y1="%s" x2="%s" y2="%s"/>`, n1(outer+6), n1(yy), n1(dimX+6), n1(yy), n1(dimX-5), n1(yy+5), n1(dimX+5), n1(yy-5))
 		}
-		p.f(`<text x="%s" y="%s" dominant-baseline="middle">%s</text></g>`, n1(dimX+12), n1((y0+y1)/2), text)
+		p.f(`<text x="%s" y="%s" dominant-baseline="middle">%.2f</text></g>`, n1(dimX+12), n1((y0+y1)/2), h1-h0)
 	}
-	dim(0, building.BaySeatHeight, fmt.Sprintf("%.2f", building.BaySeatHeight))
-	dim(building.BaySeatHeight, building.BayHeadHeight, fmt.Sprintf("%.2f", building.BayHeadHeight-building.BaySeatHeight))
-	dim(building.BayHeadHeight, ceiling, fmt.Sprintf("%.2f", ceiling-building.BayHeadHeight))
+	dim(0, building.BaySeatHeight)
+	dim(building.BaySeatHeight, building.BayHeadHeight)
+	dim(building.BayHeadHeight, ceiling)
 	by := floor + slab*k + 26
 	p.f(`<g class="bs-dim"><line x1="%s" y1="%s" x2="%s" y2="%s"/>`, n1(facade), n1(by), n1(outer), n1(by))
 	for _, xx := range []float64{facade, outer} {
-		p.f(`<line class="bs-tick" x1="%s" y1="%s" x2="%s" y2="%s"/>`, n1(xx-5), n1(by+5), n1(xx+5), n1(by-5))
+		p.f(`<line x1="%s" y1="%s" x2="%s" y2="%s"/><line class="bs-tick" x1="%s" y1="%s" x2="%s" y2="%s"/>`, n1(xx), n1(floor+slab*k+4), n1(xx), n1(by+6), n1(xx-5), n1(by+5), n1(xx+5), n1(by-5))
 	}
-	p.f(`<text x="%s" y="%s" text-anchor="middle">%s</text></g>`, n1((facade+outer)/2), n1(by+18), fmt.Sprintf("%.2f", building.BayProjection))
+	p.f(`<text x="%s" y="%s" text-anchor="middle">%.2f</text></g>`, n1((facade+outer)/2), n1(by+18), building.BayProjection)
 
 	// Labels with leaders, inside the room.
 	label := func(x, yy, tx, ty float64, text string) {
 		p.f(`<g class="bs-label"><line x1="%s" y1="%s" x2="%s" y2="%s"/><circle cx="%s" cy="%s" r="2.5"/><text x="%s" y="%s" text-anchor="end" dominant-baseline="middle">%s</text></g>`,
 			n1(tx+6), n1(ty), n1(x), n1(yy), n1(x), n1(yy), n1(tx), n1(ty), text)
 	}
-	label(facade+20, y(building.BaySeatHeight/2), 200, y(0.62), "Oak window seat")
-	label(outer-6, y(1.6), 200, y(1.6), "Double glazing, graphite frame")
-	label(outer-7, y(ceiling-0.2), 200, y(2.62), "Cobalt band")
-	label(facade-20, y(building.FloorHeight-slab/2), 200, y(3.32), "Slab edge")
-	p.f(`<text class="bs-room" x="40" y="%s">Living room</text>`, n1(y(1.1)))
-	p.f(`<text class="bs-room" x="%s" y="%s" text-anchor="middle">Façade</text>`, n1(facade), n1(y(ceiling)-10+slab*k+18))
+	label(facade+40, y(building.BaySeatHeight/2), 200, y(0.75), "Oak window seat")
+	label(outer-6, y(1.75), 200, y(1.75), "Double glazing, graphite frame")
+	label(outer-7, y((ceiling+building.BayHeadHeight)/2), 200, y(2.6), "Cobalt band")
+	label(facade-60, y(building.FloorHeight-slab/2), 200, y(3.42), "Slab edge")
+	p.f(`<text class="bs-room" x="40" y="%s">Living room</text>`, n1(y(1.3)))
+	p.f(`<text class="bs-room" x="%s" y="%s" text-anchor="end">Line of façade</text>`, n1(facade-8), n1(by+4))
 	p.f(`</svg>`)
 	return p.String()
 }
@@ -243,7 +271,7 @@ type MapPlace struct {
 var Places = []MapPlace{
 	{Name: "Westlands", Lat: -1.2650, Lon: 36.8105, Minutes: "5", How: "by car", Anchor: "start"},
 	{Name: "City centre", Lat: -1.2850, Lon: 36.8235, Minutes: "12", How: "by car", Anchor: "start"},
-	{Name: "Nairobi Arboretum", Lat: -1.2752, Lon: 36.8088, Minutes: "10", How: "on foot", Anchor: "start"},
+	{Name: "Nairobi Arboretum", Lat: -1.2752, Lon: 36.8088, Minutes: "10", How: "on foot", Anchor: "end"},
 	{Name: "University of Nairobi", Lat: -1.2797, Lon: 36.8172, Minutes: "8", How: "by car", Anchor: "start"},
 	{Name: "Karura Forest", Lat: -1.2420, Lon: 36.8335, Minutes: "15", How: "by car", Anchor: "start"},
 	{Name: "Gigiri", Lat: -1.2335, Lon: 36.8150, Minutes: "18", How: "by car", Anchor: "end"},
@@ -255,7 +283,7 @@ var Places = []MapPlace{
 }
 
 // The site, as a point on a diagram; no plot is named.
-const siteLat, siteLon = -1.2702, 36.8030
+const siteLat, siteLon = -1.2711, 36.8030
 
 // LocationMap is a diagram of the neighbourhood, not to scale in detail.
 func LocationMap() templ.Component {
@@ -301,7 +329,7 @@ func drawLocationMap() string {
 	p.f(`<path class="map-river" d="%s"/>`, path([][2]float64{{-1.2805, 36.7550}, {-1.2770, 36.7700}, {-1.2745, 36.7860}, {-1.2728, 36.7980}, {-1.2722, 36.8060}, {-1.2748, 36.8140}, {-1.2795, 36.8220}, {-1.2835, 36.8330}, {-1.2860, 36.8480}, {-1.2880, 36.8650}}))
 	p.f(`<path class="map-road map-road--major" d="%s"/>`, path([][2]float64{{-1.2585, 36.7550}, {-1.2625, 36.7800}, {-1.2660, 36.8000}, {-1.2676, 36.8100}, {-1.2735, 36.8160}, {-1.2830, 36.8195}, {-1.2950, 36.8230}, {-1.3080, 36.8310}, {-1.3150, 36.8450}, {-1.3200, 36.8650}}))
 	p.f(`<path class="map-road" d="%s"/>`, path([][2]float64{{-1.2676, 36.8100}, {-1.2600, 36.8160}, {-1.2450, 36.8165}, {-1.2220, 36.8160}}))
-	p.f(`<path class="map-road" d="%s"/>`, path([][2]float64{{-1.2735, 36.8160}, {-1.2700, 36.8080}, {-1.2690, 36.7980}, {-1.2700, 36.7850}, {-1.2760, 36.7700}}))
+	p.f(`<path class="map-road" d="%s"/>`, path([][2]float64{{-1.2735, 36.8160}, {-1.2690, 36.8085}, {-1.2680, 36.7980}, {-1.2695, 36.7850}, {-1.2760, 36.7700}}))
 	p.f(`<path class="map-road" d="%s"/>`, path([][2]float64{{-1.2830, 36.8195}, {-1.2880, 36.8000}, {-1.2870, 36.7800}, {-1.2840, 36.7550}}))
 	p.f(`<path class="map-road" d="%s"/>`, path([][2]float64{{-1.2830, 36.8195}, {-1.3020, 36.8100}, {-1.3120, 36.8080}}))
 	p.f(`</g>`)

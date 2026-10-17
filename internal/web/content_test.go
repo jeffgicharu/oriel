@@ -104,3 +104,26 @@ func TestPlacesSitOnTheMap(t *testing.T) {
 		}
 	}
 }
+
+func TestPlanRowsAddUp(t *testing.T) {
+	for _, s := range PlanExamples(day(2026, 10, 17)) {
+		var share, amount int64
+		for _, r := range PlanRows(s) {
+			share += r.ShareBP
+			amount += r.Amount
+		}
+		if share != 10000 || amount != s.Total() {
+			t.Errorf("%s: rows add to %d bp and %d, want 10000 bp and %d", s.Plan.Name, share, amount, s.Total())
+		}
+	}
+	rows := PlanRows(PlanExamples(day(2026, 10, 17))[0])
+	folded := 0
+	for _, r := range rows {
+		if r.Each > 0 {
+			folded++
+		}
+	}
+	if folded != 1 {
+		t.Errorf("the staged plan should fold its construction instalments into one row, got %d", folded)
+	}
+}

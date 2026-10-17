@@ -32,7 +32,7 @@ func (a *App) locationPage(w http.ResponseWriter, r *http.Request) {
 		Sheet:       web.Sheet{Number: "A-400", Name: "Location"},
 		Nav:         "location",
 	})
-	a.render(w, r, http.StatusOK, web.LocationPage(p))
+	a.render(w, r, http.StatusOK, web.LocationPage(p, !a.now().Before(web.ShowFlatsOpen)))
 }
 
 func (a *App) progressPage(w http.ResponseWriter, r *http.Request) {

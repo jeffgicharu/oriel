@@ -17,6 +17,9 @@ import (
 
 func day(y int, m time.Month, d int) time.Time { return time.Date(y, m, d, 0, 0, 0, 0, Nairobi) }
 
+// ShowFlatsOpen is when viewings move from the sales suite into the building.
+var ShowFlatsOpen = day(2027, 9, 15)
+
 var (
 	groundBroken = day(2026, 2, 9)
 	frameStarts  = day(2026, 6, 15) // the ground-floor slab is poured
@@ -41,7 +44,7 @@ var Milestones = []Milestone{
 	{Start: day(2027, 2, 1), End: day(2027, 11, 30), Title: "Façade, bays and windows", Note: "The bays go on from the bottom up, closing in each floor as the frame moves ahead."},
 	{Start: toppingOut, Title: "Topping out", Note: "The roof slab poured, seventeen storeys up."},
 	{Start: day(2027, 6, 1), End: day(2028, 9, 30), Title: "Services and fit-out", Note: "Power, water and air, then kitchens, bathrooms, floors and joinery."},
-	{Start: day(2027, 9, 15), Title: "Show apartments open in the building", Note: "Viewings move from the sales suite to finished homes on level 3."},
+	{Start: ShowFlatsOpen, Title: "Show apartments open in the building", Note: "Viewings move from the sales suite to finished homes on level 3."},
 	{Start: day(2028, 8, 1), End: day(2028, 10, 31), Title: "Lifts, pool and gardens", Note: "Commissioning and testing, and the planting of the gardens."},
 	{Start: plans.Completion, Title: "Completion", Note: "Handover of the first homes begins."},
 }

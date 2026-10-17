@@ -43,7 +43,7 @@ templ BuildingPage(p Page, types []store.TypeSummary) {
 			<dl class="content-facts">
 				<div><dt class="label">Storeys</dt><dd>17</dd></div>
 				<div><dt class="label">Homes</dt><dd>86</dd></div>
-				<div><dt class="label">Homes a floor</dt><dd>6</dd></div>
+				<div><dt class="label">Homes per floor</dt><dd>6</dd></div>
 				<div><dt class="label">Floor to floor</dt><dd class="tnum">{ n1(building.FloorHeight) } m</dd></div>
 				<div><dt class="label">Completion</dt><dd>Dec 2028</dd></div>
 			</dl>
@@ -56,8 +56,8 @@ templ BuildingPage(p Page, types []store.TypeSummary) {
 						<h2 class="h2" id="bay-title">A window you can sit in.</h2>
 					</div>
 					<div class="prose">
-						<p>Every home has a bay at its corner: a glazed box that steps { n1(building.BayProjection) } metres out from the wall, so you can see along the façade as well as straight out. Corner bays look two ways.</p>
-						<p>The glass starts at a solid oak seat { n1(building.BaySeatHeight) } metres off the floor, with storage under it, and stops under a cobalt band. The band and the slab above shade the glass from the high midday sun, while the low light of early morning reaches far into the room.</p>
+						<p>Every home has a bay at its corner: a glazed box that steps { metres(building.BayProjection) } metres out from the wall, so you can see along the façade as well as straight out. Corner bays look two ways.</p>
+						<p>The glass starts at a solid oak seat { metres(building.BaySeatHeight) } metres off the floor, with storage under it, and stops under a cobalt band. The band and the slab above shade the glass from the high midday sun, while the low light of early morning reaches far into the room.</p>
 						<p>From the street the bays read as a column of blue-capped lanterns up each corner of the tower. That is the building’s signature, and its name: an oriel is a window that projects from a wall to catch more light and more view.</p>
 					</div>
 				</div>
@@ -80,7 +80,7 @@ templ BuildingPage(p Page, types []store.TypeSummary) {
 				<div class="content-split__text">
 					<div class="content-section__head">
 						<p class="sheet-tag label">A-302 · Sun and shade</p>
-						<h2 class="h2" id="sun-title">Shaped by a sun that passes overhead.</h2>
+						<h2 class="h2" id="sun-title">Shaped by an overhead sun.</h2>
 					</div>
 					<div class="prose">
 						<p>Riverside is a degree and a quarter south of the equator, so the sun climbs almost straight up and comes down almost straight. It tracks a little north of overhead in June and a little south in December.</p>
@@ -175,7 +175,7 @@ templ BuildingPage(p Page, types []store.TypeSummary) {
 
 // ---------- Location ----------
 
-templ LocationPage(p Page) {
+templ LocationPage(p Page, showFlatsOpen bool) {
 	@Layout(p) {
 		<div class="wrap content-page">
 			@contentHead("A-400 · Location", "Between the forest and the city.", "Riverside is a quiet, green neighbourhood on the river between Westlands and the city centre: five minutes from one, twelve from the other, and fifteen from Karura Forest.")
@@ -207,7 +207,7 @@ templ LocationPage(p Page) {
 					<h2 class="h2" id="around-title">Everything close, nothing loud.</h2>
 				</div>
 				<ul class="nearby" role="list">
-					<li><span class="label">Green space</span><p>The Arboretum is a ten-minute walk; Karura Forest, with forty kilometres of trails and a waterfall, is fifteen minutes’ drive.</p></li>
+					<li><span class="label">Green space</span><p>The Arboretum is a ten-minute walk; Karura Forest, with some fifty kilometres of trails and a waterfall, is fifteen minutes’ drive.</p></li>
 					<li><span class="label">Schools</span><p>Four international schools and several of Nairobi’s best-known Kenyan schools are within fifteen minutes.</p></li>
 					<li><span class="label">Health</span><p>Two of the city’s main private hospitals are within ten minutes, and a pharmacy and clinic in Westlands.</p></li>
 					<li><span class="label">Shopping</span><p>Westlands’ shopping centres, markets and restaurants are five minutes away; there is a grocer on Riverside Drive.</p></li>
@@ -232,7 +232,11 @@ templ LocationPage(p Page) {
 					<div class="prose">
 						<p>The sales suite is on site, off Riverside Drive: look for the Oriel hoarding and the blue gate. There is visitor parking inside the gate.</p>
 						<p>By taxi or ride-hailing app, ask for the Oriel sales suite on Riverside Drive. By matatu, the Riverside Drive stop is a three-minute walk.</p>
-						<p>From September 2027 viewings move into the building itself, to finished show apartments on level 3.</p>
+						if showFlatsOpen {
+							<p>Viewings are now held in the building itself, in finished show apartments on level 3.</p>
+						} else {
+							<p>From September 2027 viewings move into the building itself, to finished show apartments on level 3.</p>
+						}
 					</div>
 				</div>
 				<div class="side-card here-card">
@@ -361,11 +365,16 @@ templ BuyingPage(p Page, examples []plans.Schedule) {
 								}
 							</header>
 							<ol class="plan-card__list" role="list">
-								for _, in := range s.Instalments {
+								for _, row := range PlanRows(s) {
 									<li>
-										<span class="plan-card__share mono">{ percent(in.PercentBP) }</span>
-										<span class="plan-card__label">{ in.Label }</span>
-										<span class="plan-card__amount tnum">{ KESShort(in.Amount) }</span>
+										<span class="plan-card__share mono">{ percent(row.ShareBP) }</span>
+										<span class="plan-card__label">
+											{ row.Label }
+											if row.Each > 0 {
+												<span class="plan-card__each">{ KESShort(row.Each) } each</span>
+											}
+										</span>
+										<span class="plan-card__amount tnum">{ KESShort(row.Amount) }</span>
 									</li>
 								}
 							</ol>
@@ -382,7 +391,7 @@ templ BuyingPage(p Page, examples []plans.Schedule) {
 						<p class="sheet-tag label">A-602 · Costs</p>
 						<h2 class="h2" id="costs-title">What you pay beyond the price.</h2>
 					</div>
-					<p class="muted">Our prices include VAT where it applies. These are the costs a buyer usually meets on top; your advocate will confirm them for your purchase.</p>
+					<p class="muted">These are the costs a buyer usually meets on top of the price. Your advocate will confirm them for your purchase.</p>
 				</div>
 				<table class="costs">
 					<caption class="visually-hidden">Costs of buying beyond the price</caption>

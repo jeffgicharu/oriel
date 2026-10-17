@@ -1,6 +1,9 @@
 package web
 
 import (
+	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/jeffgicharu/oriel/internal/plans"
@@ -87,7 +90,7 @@ var BuyingSteps = []BuyingStep{
 	{Title: "Request a reservation", When: "Day 1", Text: "Choose a payment plan online. The home is held for you for 72 hours while the sales team checks it is free and prepares a letter of offer."},
 	{Title: "Pay the deposit", When: "Within 7 days", Text: "Pay 10% by bank transfer to the project’s escrow account. The home is then yours, and it comes off the market."},
 	{Title: "Sign the sale agreement", When: "Within 30 days", Text: "Your advocate reviews the agreement for sale; you sign and pay the next instalment as your plan sets out."},
-	{Title: "Pay as it rises", When: "Until completion", Text: "Instalments fall due as the building goes up. You can follow every stage on the progress page."},
+	{Title: "Pay the instalments", When: "Until completion", Text: "As your plan sets out: in stages as the building rises, within 90 days if you pay cash, or from your bank at completion. You can follow every stage on the progress page."},
 	{Title: "Collect your keys", When: "December 2028", Text: "We walk through the home with you, fix anything on the snagging list, and hand over the keys and your title."},
 }
 
@@ -130,4 +133,56 @@ func PlanExamples(now time.Time) []plans.Schedule {
 		}
 	}
 	return out
+}
+
+// PlanRow is a line of a plan card: one payment, or a run of equal
+// construction instalments shown together.
+type PlanRow struct {
+	ShareBP int64
+	Label   string
+	Amount  int64
+	Each    int64 // set on a run: the amount of each payment
+}
+
+// PlanRows folds a schedule's construction instalments into one line.
+func PlanRows(s plans.Schedule) []PlanRow {
+	var out []PlanRow
+	run := -1
+	for _, in := range s.Instalments {
+		if strings.HasPrefix(in.Label, "Construction instalment") {
+			if run < 0 {
+				out = append(out, PlanRow{Each: in.Amount})
+				run = len(out) - 1
+			}
+			r := &out[run]
+			r.Amount += in.Amount
+			// The run's share from its money, so seven payments of 5.71%
+			// read as the 40% they make, not 39.97%.
+			if total := s.Total(); total > 0 {
+				r.ShareBP = (r.Amount*10000 + total/2) / total
+			}
+			r.Label = fmt.Sprintf("%s quarterly instalments while it rises", numberWord(countRun(s)))
+			continue
+		}
+		out = append(out, PlanRow{ShareBP: in.PercentBP, Label: in.Label, Amount: in.Amount})
+	}
+	return out
+}
+
+func countRun(s plans.Schedule) int {
+	n := 0
+	for _, in := range s.Instalments {
+		if strings.HasPrefix(in.Label, "Construction instalment") {
+			n++
+		}
+	}
+	return n
+}
+
+func numberWord(n int) string {
+	words := []string{"No", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve"}
+	if n >= 0 && n < len(words) {
+		return words[n]
+	}
+	return strconv.Itoa(n)
 }
