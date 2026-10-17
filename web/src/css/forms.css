@@ -136,7 +136,7 @@
 }
 
 /* Chips standing in for a field: a two-part switch the height of an input. */
-.chips--field {
+.chips.chips--field {
   display: grid;
   grid-auto-flow: column;
   grid-auto-columns: minmax(0, 1fr);

@@ -81,7 +81,8 @@ func (p Plan) SVG(opt Options) string {
 	bounds := p.Bounds()
 	left, top, right, bottom := 0.7, 1.35, 1.25, 0.9
 	if opt.Plain {
-		left, top, right, bottom = 0.3, 0.3, 0.3, 0.6
+		// The north arrow stands in the right margin, clear of the plan.
+		left, top, right, bottom = 0.3, 0.3, 1.15, 0.6
 	}
 	vx := bounds.X0 - left
 	vy := bounds.Y0 - top
@@ -474,7 +475,7 @@ func (b *svgBuilder) north(bounds Rect, opt Options) {
 	x := bounds.X1 + 0.55
 	y := bounds.Y0 - 0.85
 	if opt.Plain {
-		x, y = bounds.X1-0.1, bounds.Y0+0.1
+		x, y = bounds.X1+0.6, bounds.Y0+0.7
 	}
 	b.f(`<g class="fp-north" transform="translate(%s %s) rotate(%s)"><circle r="34"/><path d="M0 -30L11 14L0 6L-11 14Z"/><text y="-40" text-anchor="middle" transform="rotate(%s 0 -48)">N</text></g>`,
 		c(x), c(y), trim(opt.North), trim(-opt.North))

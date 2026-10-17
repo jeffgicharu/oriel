@@ -133,6 +133,7 @@
     display: flex;
     overflow-x: auto;
     scroll-snap-type: x proximity;
+    scroll-padding-inline: var(--gutter);
     margin-inline: calc(var(--gutter) * -1);
     padding: 2px var(--gutter) 8px;
     scrollbar-width: none;
