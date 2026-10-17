@@ -274,7 +274,7 @@ type MapPlace struct {
 var Places = []MapPlace{
 	{Name: "Westlands", Lat: -1.2650, Lon: 36.8105, Minutes: "5", How: "by car", Anchor: "start"},
 	{Name: "City centre", Lat: -1.2850, Lon: 36.8235, Minutes: "12", How: "by car", Anchor: "start"},
-	{Name: "Nairobi Arboretum", Lat: -1.2752, Lon: 36.8088, Minutes: "10", How: "on foot", Anchor: "end"},
+	{Name: "Nairobi Arboretum", Lat: -1.2752, Lon: 36.8088, Minutes: "10", How: "on foot", Anchor: "end", DY: 4},
 	{Name: "University of Nairobi", Lat: -1.2797, Lon: 36.8172, Minutes: "8", How: "by car", Anchor: "end", DY: 8},
 	{Name: "Karura Forest", Lat: -1.2420, Lon: 36.8335, Minutes: "15", How: "by car", Anchor: "start"},
 	{Name: "Gigiri", Lat: -1.2335, Lon: 36.8150, Minutes: "18", How: "by car", Anchor: "end"},

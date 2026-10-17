@@ -376,8 +376,19 @@ export function mountExplorer(root: HTMLElement): void {
   };
   controls.addEventListener("start", keepUpdating);
   controls.addEventListener("change", () => stage.requestRender());
+  // An open floor sits in the part of the stage the home card leaves clear,
+  // at the size that fits it there, so a picked home is never under the card.
+  const cardRoom = 400; // the card, its margin and a gap beside it
+  const plateSpan = Math.hypot(model.plate[2] - model.plate[0] + 4, model.plate[3] - model.plate[1] + 4);
+  const floorClear = () => Math.max(stage.box.width - cardRoom, stage.box.width * 0.45);
+  const floorShift = () => (wide.matches ? (floorClear() - stage.box.width) / 2 / stage.box.width : 0);
+  const floorDistance = () => {
+    if (!wide.matches) return 132;
+    const vTan = Math.tan(THREE.MathUtils.degToRad(stage.camera.fov / 2));
+    return (plateSpan * stage.box.height) / (2 * vTan * 0.82 * floorClear());
+  };
   stage.onResize = () => {
-    stage.shift = openLevel !== null ? (wide.matches ? -0.07 : 0) : wide.matches ? 0.14 : 0;
+    stage.shift = openLevel !== null ? floorShift() : wide.matches ? 0.14 : 0;
   };
 
   // The sun.
@@ -487,10 +498,9 @@ export function mountExplorer(root: HTMLElement): void {
       tweenShift(wide.matches ? 0.14 : 0);
       tweenCamera(o.target, o.distance, o.elevation);
     } else {
-      // The whole floor in view, left of centre so the home card never covers it.
       const lv = levelY.get(l)!;
-      tweenShift(wide.matches ? -0.07 : 0);
-      tweenCamera(new THREE.Vector3(0, lv.y + 1.5, 0), wide.matches ? 118 : 132, 42);
+      tweenShift(floorShift());
+      tweenCamera(new THREE.Vector3(0, lv.y + 1.5, 0), floorDistance(), 42);
     }
     paintVolumes();
   };

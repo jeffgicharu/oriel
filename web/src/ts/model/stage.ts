@@ -178,6 +178,11 @@ export class Stage {
     return Math.max(byHeight, byWidth);
   }
 
+  /** The stage's size in CSS pixels. */
+  get box(): { width: number; height: number } {
+    return { width: this.width, height: this.height };
+  }
+
   get aspect(): number {
     return this.width / this.height;
   }
