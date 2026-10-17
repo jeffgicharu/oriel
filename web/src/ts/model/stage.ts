@@ -2,7 +2,6 @@
 // something is moving and the scene can be seen.
 
 import * as THREE from "three";
-import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { sunDirection, sunPosition, type SunPosition } from "./sun";
 
 export interface StageOptions {
@@ -67,13 +66,14 @@ export class Stage {
     this.scene.background = new THREE.Color(PLASTER);
     this.scene.fog = new THREE.Fog(PLASTER, 280, 720);
 
+    // The glass reflects a soft sky: blue above, a pale horizon, the ground below.
     const pmrem = new THREE.PMREMGenerator(this.renderer);
-    const room = new RoomEnvironment();
-    this.envTexture = pmrem.fromScene(room, 0.04).texture;
-    room.dispose();
+    const sky = skyScene();
+    this.envTexture = pmrem.fromScene(sky.scene, 0.02).texture;
+    sky.dispose();
     pmrem.dispose();
     this.scene.environment = this.envTexture;
-    this.scene.environmentIntensity = 0.55;
+    this.scene.environmentIntensity = 0.85;
 
     this.camera = new THREE.PerspectiveCamera(28, 1, 1, 1600);
 
@@ -237,6 +237,32 @@ export class Stage {
     this.renderer.dispose();
     this.renderer.forceContextLoss();
   }
+}
+
+function skyScene(): { scene: THREE.Scene; dispose(): void } {
+  const scene = new THREE.Scene();
+  const geometry = new THREE.SphereGeometry(10, 48, 24);
+  const material = new THREE.ShaderMaterial({
+    side: THREE.BackSide,
+    depthWrite: false,
+    uniforms: {
+      zenith: { value: new THREE.Color(0x7fa6c9) },
+      horizon: { value: new THREE.Color(0xf3f1ea) },
+      ground: { value: new THREE.Color(0xa8a59c) },
+    },
+    vertexShader: "varying vec3 vDir; void main() { vDir = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }",
+    fragmentShader:
+      "uniform vec3 zenith; uniform vec3 horizon; uniform vec3 ground; varying vec3 vDir;" +
+      "void main() { float h = vDir.y; vec3 c = h > 0.0 ? mix(horizon, zenith, pow(h, 0.55)) : mix(horizon, ground, pow(-h, 0.35)); gl_FragColor = vec4(c, 1.0); }",
+  });
+  scene.add(new THREE.Mesh(geometry, material));
+  return {
+    scene,
+    dispose() {
+      geometry.dispose();
+      material.dispose();
+    },
+  };
 }
 
 export function supportsWebGL(): boolean {

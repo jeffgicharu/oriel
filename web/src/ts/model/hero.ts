@@ -45,7 +45,8 @@ export function mountHero(stageEl: HTMLElement): void {
   const context = buildContext(model, lite);
   for (const material of Object.values(tower.materials)) material.clippingPlanes = [stage.clip];
   stage.scene.add(context.group, tower.group);
-  stage.setSun(nairobiTime(8, 40), model.lat, model.lon);
+  // Late afternoon: the sun from the west throws the shadow towards the viewer.
+  stage.setSun(nairobiTime(16, 10), model.lat, model.lon);
 
   const wide = window.matchMedia("(min-width: 900px)");
   const view = (): IntroOptions => {

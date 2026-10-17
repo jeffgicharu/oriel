@@ -259,10 +259,19 @@
   }
 }
 
-/* On wide screens the scene runs up behind the transparent header. */
+/* On wide screens the scene runs up behind the transparent header, and
+   fades out behind the words so they stay easy to read. */
 @media (min-width: 900px) {
   .hero__stage {
     margin-top: calc(var(--header-h) * -1);
+  }
+
+  .hero--3d .hero__stage::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(90deg, var(--plaster) 0%, rgb(236 237 234 / 0.94) 30%, rgb(236 237 234 / 0.55) 44%, rgb(236 237 234 / 0) 58%);
   }
 }
 

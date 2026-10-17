@@ -28,8 +28,8 @@ export function makeMaterials(): Record<Part, THREE.MeshStandardMaterial> {
   const m = (params: THREE.MeshStandardMaterialParameters) => new THREE.MeshStandardMaterial(params);
   return {
     concrete: m({ color: 0xe9e8e3, roughness: 0.9, metalness: 0 }),
-    glass: m({ color: 0x7f95a6, roughness: 0.08, metalness: 0.35, envMapIntensity: 1.25 }),
-    bayGlass: m({ color: 0xa9bfcf, roughness: 0.05, metalness: 0.3, envMapIntensity: 1.6 }),
+    glass: m({ color: 0x5d7486, roughness: 0.04, metalness: 0.55, envMapIntensity: 1.5 }),
+    bayGlass: m({ color: 0x8aa3b6, roughness: 0.03, metalness: 0.5, envMapIntensity: 1.8 }),
     frame: m({ color: 0x2c3135, roughness: 0.55, metalness: 0.3 }),
     accent: m({ color: 0x1f3bd1, roughness: 0.42, metalness: 0.1 }),
     balustrade: m({ color: 0xd4e0e8, roughness: 0.05, metalness: 0.1, transparent: true, opacity: 0.38, depthWrite: false }),

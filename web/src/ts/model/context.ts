@@ -103,20 +103,20 @@ export function buildContext(model: BuildingModel, lite: boolean): Context {
   const spots: [number, number, number][] = [];
   const along = (zAt: (x: number) => number, from: number, to: number, step: number, jitter: number) => {
     for (let x = from; x <= to; x += step + rnd() * step * 0.6) {
-      spots.push([x + (rnd() - 0.5) * jitter, zAt(x) + (rnd() - 0.5) * jitter, 3.2 + rnd() * 2.2]);
+      spots.push([x + (rnd() - 0.5) * jitter, zAt(x) + (rnd() - 0.5) * jitter, 2.3 + rnd() * 1.6]);
     }
   };
   const stretch = lite ? 200 : 320;
   along((x) => riverZ(x) + width(x) / 2 + 4, -stretch, stretch, 9, 3);
   along((x) => riverZ(x) - width(x) / 2 - 4, -stretch, stretch, 11, 3);
   along(() => roadZ - 9, -stretch, stretch, 12, 1.5);
-  along(() => roadZ + 9, -stretch, stretch, 12, 1.5);
+  along(() => roadZ + 9, -stretch, stretch, 22, 1.5);
   for (let i = 0; i < (lite ? 10 : 18); i++) {
     const side = i % 2 ? 1 : -1;
-    spots.push([side * (x1 + 18 + rnd() * 6), z0 - 6 + rnd() * (z1 - z0 + 24), 2.6 + rnd() * 1.6]);
+    spots.push([side * (x1 + 18 + rnd() * 6), z0 - 6 + rnd() * (z1 - z0 + 24), 2.0 + rnd() * 1.2]);
   }
   for (let i = 0; i < (lite ? 6 : 12); i++) {
-    spots.push([x0 - 10 + rnd() * (x1 - x0 + 20), z0 - 18 - rnd() * 12, 2.8 + rnd() * 1.8]);
+    spots.push([x0 - 10 + rnd() * (x1 - x0 + 20), z0 - 18 - rnd() * 12, 2.2 + rnd() * 1.3]);
   }
 
   const crownGeometry = new THREE.IcosahedronGeometry(1, 1);
