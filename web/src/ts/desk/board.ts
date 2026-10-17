@@ -41,6 +41,10 @@ export function setUpBoard(board: HTMLElement): void {
     Sortable.create(list, {
       group: "leads",
       animation: 160,
+      // Pointer-driven dragging behaves the same with a mouse, a pen or a finger.
+      forceFallback: true,
+      fallbackOnBody: true,
+      fallbackTolerance: 4,
       delay: 120,
       delayOnTouchOnly: true,
       ghostClass: "is-ghost",

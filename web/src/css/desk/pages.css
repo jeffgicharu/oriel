@@ -583,3 +583,10 @@
 .new-lead {
   max-width: 860px;
 }
+
+/* The card that follows the pointer while dragging. */
+.sortable-fallback {
+  opacity: 0.95 !important;
+  box-shadow: 0 16px 34px -12px rgb(26 29 31 / 0.6);
+  transform: rotate(1.5deg);
+}
