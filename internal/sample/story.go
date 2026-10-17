@@ -397,7 +397,8 @@ func (s *Story) newLead(wantType string, created time.Time) *Lead {
 		email = parts[0] + parts[1][:1] + fmt.Sprint(10+s.rng.IntN(89))
 	}
 	email += "@" + emailDomains[s.rng.IntN(len(emailDomains))]
-	phone := fmt.Sprintf("+254 7%02d %03d %03d", s.rng.IntN(100), s.rng.IntN(1000), s.rng.IntN(1000))
+	// Every sample number sits in one made-up block, so none rings a real person.
+	phone := fmt.Sprintf("+254 700 555 %03d", s.rng.IntN(1000))
 
 	source := sources[0].name
 	total := 0

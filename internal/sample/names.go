@@ -19,7 +19,9 @@ var lastNames = []string{
 	"Ngugi", "Owino", "Kimani", "Barasa", "Simiyu", "Kemboi", "Langat", "Nduta", "Maina", "Wairimu",
 }
 
-var emailDomains = []string{"gmail.com", "gmail.com", "gmail.com", "yahoo.com", "outlook.com", "icloud.com", "hotmail.com"}
+// emailDomains are the domains reserved for examples, so no address in the
+// sample can reach a real person.
+var emailDomains = []string{"example.com", "example.com", "example.net", "example.org"}
 
 // Where people heard about Oriel, with how often each happens.
 var sources = []struct {

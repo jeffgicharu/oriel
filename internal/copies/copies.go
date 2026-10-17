@@ -50,6 +50,9 @@ type Options struct {
 	MaxOpen int
 	// RebuildAt is the time of day (UTC) the sample is rebuilt.
 	RebuildHour, RebuildMinute int
+	// SampleVersion is the sample story this release expects; a sample made
+	// from another story is rebuilt when the store opens.
+	SampleVersion string
 }
 
 // DefaultOptions are the limits agreed for the server.
@@ -136,6 +139,12 @@ func (s *Store) loadSample() error {
 	db, err := store.OpenReadOnly(target)
 	if err != nil {
 		return err
+	}
+	if want := s.opt.SampleVersion; want != "" && s.sample == nil {
+		if got := db.Setting(context.Background(), "sample.version", ""); got != want {
+			db.Close()
+			return fmt.Errorf("the sample tells story %q, this release expects %q", got, want)
+		}
 	}
 	s.mu.Lock()
 	old := s.sample

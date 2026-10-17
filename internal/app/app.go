@@ -40,7 +40,9 @@ type App struct {
 // expired copies.
 func New(cfg config.Config, release string, log *slog.Logger) (*App, error) {
 	streams, stop := context.WithCancel(context.Background())
-	store, err := copies.Open(streams, cfg.DataDir, copies.DefaultOptions(), sample.Build, log)
+	opt := copies.DefaultOptions()
+	opt.SampleVersion = sample.Version
+	store, err := copies.Open(streams, cfg.DataDir, opt, sample.Build, log)
 	if err != nil {
 		stop()
 		return nil, err
