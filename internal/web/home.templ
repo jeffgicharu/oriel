@@ -1,0 +1,48 @@
+package web
+
+// ElevationDrawing is the line drawing of the tower's south face. Each line
+// traces itself when the page first paints.
+templ ElevationDrawing(class string) {
+	<svg class={ class } viewBox="0 120 420 770" fill="none" stroke="currentColor" stroke-width="1.15" stroke-linecap="square" aria-hidden="true" focusable="false">
+		for _, line := range elevationLines() {
+			<path d={ line.D } class={ line.Class } data-draw></path>
+		}
+	</svg>
+}
+
+templ Home(p Page) {
+	@Layout(p) {
+		<section class="hero drawing-grid" aria-labelledby="hero-title">
+			<div class="hero__stage">
+				@ElevationDrawing("hero__drawing")
+			</div>
+			<div class="wrap hero__content">
+				<p class="label label--cobalt">Riverside, Nairobi · Completing December 2028</p>
+				<h1 class="display hero__title" id="hero-title">Homes designed around the light.</h1>
+				<p class="lede">Eighty-six apartments over sixteen floors. Every one has a glazed bay that reaches out for the morning sun and the long view over the river.</p>
+				<div class="hero__actions">
+					<a class="btn btn--cobalt" href="/explore">Explore the building @Arrow()</a>
+					<a class="btn btn--line" href="/viewings/new">Book a viewing</a>
+				</div>
+			</div>
+			<div class="hero__strip">
+				<dl class="wrap hero__facts">
+					<div><dt class="label">Homes</dt><dd>86</dd></div>
+					<div><dt class="label">Bedrooms</dt><dd>1 to 3 and penthouses</dd></div>
+					<div><dt class="label">From</dt><dd class="tnum">KES 11.4M</dd></div>
+					<div><dt class="label">Completion</dt><dd>December 2028</dd></div>
+				</dl>
+			</div>
+		</section>
+		<section class="section">
+			<div class="wrap intro">
+				<p class="sheet-tag label">A-001 · The idea</p>
+				<div class="intro__body">
+					<p>An oriel is a window that projects from a wall to catch more light and more view. <span class="accent">Every home at Oriel has one.</span></p>
+					<p>Close to the equator the sun climbs high and crosses the sky fast, so the building is shaded by deep fins and balconies and opened up where the low morning and evening light comes in.</p>
+					<a class="link-arrow" href="/building">How the building works @Arrow()</a>
+				</div>
+			</div>
+		</section>
+	}
+}

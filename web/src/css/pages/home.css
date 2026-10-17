@@ -1,0 +1,162 @@
+/* ---------- Home: opening ---------- */
+
+.hero {
+  position: relative;
+  min-height: 100svh;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  padding-top: var(--header-h);
+  overflow: hidden;
+}
+
+.hero__stage {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.hero__drawing {
+  position: absolute;
+  right: clamp(-40px, 2vw, 80px);
+  bottom: 0;
+  height: min(86%, 820px);
+  width: auto;
+  color: var(--graphite);
+}
+
+.hero__drawing .bay {
+  color: var(--cobalt);
+}
+
+.hero__content {
+  position: relative;
+  z-index: 1;
+  align-self: end;
+  display: grid;
+  gap: clamp(22px, 3vw, 36px);
+  padding-bottom: clamp(40px, 6vw, 88px);
+  pointer-events: none;
+}
+
+.hero__content > * {
+  pointer-events: auto;
+}
+
+.hero__title {
+  max-width: 9.5ch;
+}
+
+.hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.hero__strip {
+  position: relative;
+  z-index: 1;
+  border-top: 1px solid var(--rule);
+  background: rgb(236 237 234 / 0.72);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.hero__facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.hero__facts > div {
+  padding: 16px 16px 16px 0;
+  display: grid;
+  gap: 4px;
+}
+
+.hero__facts > div:nth-child(n + 3) {
+  border-top: 1px solid var(--rule);
+}
+
+.hero__facts > div:nth-child(2n) {
+  padding-left: 16px;
+  border-left: 1px solid var(--rule);
+}
+
+.hero__facts dd {
+  font-size: clamp(20px, 2vw, 28px);
+  font-weight: 650;
+  font-stretch: 110%;
+  letter-spacing: -0.02em;
+}
+
+.hero__facts dt {
+  color: var(--ink-soft);
+}
+
+@media (min-width: 900px) {
+  .hero__facts {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .hero__facts > div,
+  .hero__facts > div:nth-child(2n) {
+    padding: 22px 24px;
+    border-top: 0;
+    border-left: 1px solid var(--rule);
+  }
+
+  .hero__facts > div:first-child {
+    border-left: 0;
+    padding-left: 0;
+  }
+
+  .hero__facts > div:nth-child(n + 3) {
+    border-top: 0;
+  }
+}
+
+/* The drawing traces itself once, on first paint. */
+@media (prefers-reduced-motion: no-preference) {
+  .hero__drawing [data-draw] {
+    stroke-dasharray: var(--len, 1200);
+    stroke-dashoffset: var(--len, 1200);
+    animation: draw-line 2.4s var(--ease-in-out) forwards;
+    animation-delay: calc(var(--i, 0) * 45ms + 150ms);
+  }
+}
+
+@keyframes draw-line {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* ---------- Home: introduction ---------- */
+
+.intro {
+  display: grid;
+  gap: clamp(32px, 5vw, 64px);
+}
+
+@media (min-width: 900px) {
+  .intro {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    align-items: start;
+  }
+}
+
+.intro__body {
+  display: grid;
+  gap: 28px;
+}
+
+.intro__body p {
+  font-size: clamp(22px, 2.3vw, 34px);
+  line-height: 1.28;
+  font-weight: 460;
+  letter-spacing: -0.012em;
+  text-wrap: pretty;
+}
+
+.intro__body p .accent {
+  color: var(--cobalt);
+}

@@ -1,0 +1,413 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-padding-top: calc(var(--header-h) + 16px);
+  background: var(--plaster);
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--plaster);
+  color: var(--graphite);
+  font-family: var(--font-sans);
+  font-size: 17px;
+  line-height: 1.55;
+  font-weight: 400;
+  font-optical-sizing: auto;
+  font-kerning: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: clip;
+}
+
+img,
+svg,
+video,
+canvas {
+  display: block;
+  max-width: 100%;
+}
+
+img {
+  height: auto;
+}
+
+h1,
+h2,
+h3,
+h4,
+p,
+figure,
+blockquote,
+dl,
+dd,
+ol,
+ul {
+  margin: 0;
+}
+
+ol[role="list"],
+ul[role="list"] {
+  list-style: none;
+  padding: 0;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+a {
+  color: inherit;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.22em;
+}
+
+:focus-visible {
+  outline: 2px solid var(--cobalt);
+  outline-offset: 3px;
+}
+
+::selection {
+  background: var(--cobalt);
+  color: var(--plaster-hi);
+}
+
+[hidden] {
+  display: none !important;
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  left: 16px;
+  top: -60px;
+  z-index: 100;
+  background: var(--graphite);
+  color: var(--plaster-hi);
+  padding: 10px 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.skip-link:focus {
+  top: 12px;
+}
+
+/* ---------- Type ---------- */
+
+.display {
+  font-size: clamp(52px, 10.4vw, 168px);
+  line-height: 0.88;
+  font-weight: 760;
+  font-stretch: 125%;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+}
+
+.h1 {
+  font-size: clamp(40px, 6.4vw, 96px);
+  line-height: 0.95;
+  font-weight: 740;
+  font-stretch: 118%;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.h2 {
+  font-size: clamp(30px, 4.2vw, 60px);
+  line-height: 1;
+  font-weight: 720;
+  font-stretch: 112%;
+  letter-spacing: -0.028em;
+  text-wrap: balance;
+}
+
+.h3 {
+  font-size: clamp(21px, 1.8vw, 26px);
+  line-height: 1.15;
+  font-weight: 640;
+  font-stretch: 104%;
+  letter-spacing: -0.012em;
+}
+
+.lede {
+  font-size: clamp(19px, 1.65vw, 24px);
+  line-height: 1.45;
+  font-weight: 420;
+  color: var(--graphite-2);
+  text-wrap: pretty;
+  max-width: 38ch;
+}
+
+.prose {
+  max-width: 64ch;
+  text-wrap: pretty;
+}
+
+.prose > * + * {
+  margin-top: 1em;
+}
+
+.prose h2,
+.prose h3 {
+  margin-top: 1.8em;
+}
+
+.muted {
+  color: var(--ink-soft);
+}
+
+/* The notes on a drawing: unit numbers, areas, levels, prices. */
+.mono,
+.label {
+  font-family: var(--font-mono);
+  font-feature-settings: "zero" 0, "tnum" 1;
+  font-stretch: 100%;
+}
+
+.label {
+  font-size: 11px;
+  line-height: 1.3;
+  font-weight: 500;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.label--cobalt {
+  color: var(--cobalt);
+}
+
+.figure-num {
+  font-family: var(--font-mono);
+  font-feature-settings: "tnum" 1;
+  font-weight: 450;
+  letter-spacing: -0.02em;
+}
+
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Drawing details ---------- */
+
+.rule {
+  border: 0;
+  border-top: 1px solid var(--rule);
+  margin: 0;
+}
+
+.drawing-grid {
+  background-image:
+    linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+  background-size: 48px 48px;
+  background-position: -1px -1px;
+}
+
+/* A dimension line: |<———— text ————>| */
+.dim {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+
+.dim::before,
+.dim::after {
+  content: "";
+  flex: 1;
+  height: 9px;
+  border-top: 1px solid currentColor;
+  transform: translateY(4px);
+}
+
+.dim::before {
+  border-left: 1px solid currentColor;
+}
+
+.dim::after {
+  border-right: 1px solid currentColor;
+}
+
+/* Crop marks around a picture, as on a presentation board. */
+.crop {
+  position: relative;
+}
+
+.crop::before,
+.crop::after {
+  content: "";
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.crop::before {
+  left: -9px;
+  top: -9px;
+  border-left: 1px solid var(--rule-strong);
+  border-top: 1px solid var(--rule-strong);
+}
+
+.crop::after {
+  right: -9px;
+  bottom: -9px;
+  border-right: 1px solid var(--rule-strong);
+  border-bottom: 1px solid var(--rule-strong);
+}
+
+/* ---------- Buttons and links ---------- */
+
+.btn {
+  --btn-bg: var(--graphite);
+  --btn-fg: var(--plaster-hi);
+  --btn-bd: var(--graphite);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 0 22px;
+  border: 1px solid var(--btn-bd);
+  border-radius: var(--radius);
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+  font-size: 15px;
+  font-weight: 600;
+  font-stretch: 104%;
+  letter-spacing: 0.005em;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background-color 0.25s var(--ease),
+    color 0.25s var(--ease),
+    border-color 0.25s var(--ease),
+    transform 0.25s var(--ease);
+}
+
+.btn:hover {
+  --btn-bg: var(--graphite-2);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn--cobalt {
+  --btn-bg: var(--cobalt);
+  --btn-bd: var(--cobalt);
+  --btn-fg: #fff;
+}
+
+.btn--cobalt:hover {
+  --btn-bg: var(--cobalt-lo);
+  --btn-bd: var(--cobalt-lo);
+}
+
+.btn--line {
+  --btn-bg: transparent;
+  --btn-fg: var(--graphite);
+  --btn-bd: var(--rule-strong);
+}
+
+.btn--line:hover {
+  --btn-bg: var(--graphite);
+  --btn-fg: var(--plaster-hi);
+  --btn-bd: var(--graphite);
+}
+
+.btn--small {
+  min-height: 38px;
+  padding: 0 14px;
+  font-size: 14px;
+  gap: 8px;
+}
+
+.btn--wide {
+  width: 100%;
+}
+
+.btn[disabled],
+.btn[aria-disabled="true"] {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.btn .arrow {
+  width: 18px;
+  height: 10px;
+  transition: transform 0.3s var(--ease-out);
+}
+
+.btn:hover .arrow {
+  transform: translateX(4px);
+}
+
+.link-arrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 1px solid var(--rule-strong);
+  padding-bottom: 4px;
+  transition: border-color 0.25s var(--ease), color 0.25s var(--ease);
+}
+
+.link-arrow:hover {
+  border-color: var(--cobalt);
+  color: var(--cobalt);
+}
+
+.link-arrow .arrow {
+  width: 16px;
+  height: 9px;
+  transition: transform 0.3s var(--ease-out);
+}
+
+.link-arrow:hover .arrow {
+  transform: translateX(4px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

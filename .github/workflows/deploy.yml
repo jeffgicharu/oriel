@@ -1,0 +1,165 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# One deploy at a time. A newer push waits for the running deploy to finish.
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Test and build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: web/package.json
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+
+      - name: Install browser dependencies
+        working-directory: web
+        run: pnpm install --frozen-lockfile
+
+      - name: Type-check the browser code
+        working-directory: web
+        run: pnpm typecheck
+
+      - name: Build scripts, styles, fonts and pictures
+        working-directory: web
+        run: pnpm build
+
+      - name: Generate templates
+        run: go tool templ generate
+
+      - name: Check formatting
+        run: |
+          unformatted="$(gofmt -l .)"
+          if [ -n "$unformatted" ]; then echo "Not gofmt-ed:"; echo "$unformatted"; exit 1; fi
+
+      - run: go vet ./...
+
+      - run: go test -race -count=1 ./...
+
+      # A static binary for the server's processor, which only has the
+      # baseline x86-64 instructions.
+      - name: Build the server
+        env:
+          CGO_ENABLED: "0"
+          GOOS: linux
+          GOARCH: amd64
+          GOAMD64: v1
+        run: go build -trimpath -ldflags "-s -w -X main.release=$GITHUB_SHA" -o release/oriel ./cmd/oriel
+
+      - name: Assemble the release
+        run: |
+          cp deploy/unavailable.html release/
+          printf '%s' "$GITHUB_SHA" > release/REVISION
+          cp -r internal/assets/dist/assets release/assets
+          ls -la release release/assets
+          du -sh release
+
+      # The same gate the server runs, here first: start the release with
+      # throwaway settings and walk it.
+      - name: Walk the release
+        run: |
+          data="$(mktemp -d)"
+          export ORIEL_ADDR=127.0.0.1:8400 ORIEL_DATA="$data" ORIEL_SITE_URL=https://oriel.jeffgicharu.com
+          export ORIEL_SECRET="ci-only-$(openssl rand -hex 24)" ORIEL_DESK_KEY="ci-only-$(openssl rand -hex 12)"
+          ./release/oriel serve > serve.log 2>&1 &
+          for i in $(seq 1 30); do curl -fs http://127.0.0.1:8400/healthz >/dev/null && break; sleep 0.5; done
+          status=0
+          ./release/oriel check-release --base http://127.0.0.1:8400 --release "$GITHUB_SHA" || status=$?
+          kill %1 || true
+          echo "--- server log"; cat serve.log
+          exit $status
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release
+          path: release
+          if-no-files-found: error
+          retention-days: 7
+
+  deploy:
+    name: Deploy to oriel.jeffgicharu.com
+    needs: build
+    runs-on: ubuntu-24.04
+    environment:
+      name: production
+      url: https://oriel.jeffgicharu.com
+    env:
+      VPS_HOST: ${{ secrets.VPS_HOST }}
+      VPS_USER: ${{ secrets.VPS_USER }}
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: release
+          path: release
+
+      - name: Configure SSH
+        env:
+          ORIEL_UPLOAD_KEY: ${{ secrets.ORIEL_UPLOAD_KEY }}
+          ORIEL_ACTIVATE_KEY: ${{ secrets.ORIEL_ACTIVATE_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$ORIEL_UPLOAD_KEY" > ~/.ssh/upload_key
+          printf '%s\n' "$ORIEL_ACTIVATE_KEY" > ~/.ssh/activate_key
+          chmod 600 ~/.ssh/upload_key ~/.ssh/activate_key
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 755 release/oriel
+
+      # The upload key can only write into the releases directory, so the
+      # remote path is relative to it. Only the one key is ever offered, so a
+      # wrong key never counts against the server's login limit.
+      - name: Upload the release
+        run: |
+          rsync -az --delete --delay-updates \
+            -e "ssh -i $HOME/.ssh/upload_key -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes" \
+            release/ "$VPS_USER@$VPS_HOST:./$GITHUB_SHA/"
+
+      # The activate key can run one script on the server and nothing else. It
+      # starts the release beside the live one, makes it pass the same walk
+      # there, and only then sends visitors to it.
+      - name: Activate the release
+        run: ssh -i "$HOME/.ssh/activate_key" -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes "$VPS_USER@$VPS_HOST" "$GITHUB_SHA"
+
+      - name: Check the live site serves this release
+        run: |
+          for attempt in 1 2 3 4 5 6; do
+            if curl -fsSI https://oriel.jeffgicharu.com/healthz | grep -qi "^x-release: $GITHUB_SHA"; then
+              echo "oriel.jeffgicharu.com is serving ${GITHUB_SHA::7}"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "oriel.jeffgicharu.com is not serving ${GITHUB_SHA::7}"
+          exit 1
+
+      # From outside, through Cloudflare, as a visitor arrives.
+      - name: Check the pages load through Cloudflare
+        run: |
+          for path in $(./release/oriel check-release --print-paths); do
+            status=$(curl -sS -o /dev/null -w '%{http_code}' -A "Mozilla/5.0 (deploy check)" "https://oriel.jeffgicharu.com$path" || echo 000)
+            echo "$status $path"
+            [ "$status" = "200" ] || failed=1
+          done
+          [ -z "${failed:-}" ]

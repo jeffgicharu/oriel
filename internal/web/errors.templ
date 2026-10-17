@@ -1,0 +1,33 @@
+package web
+
+templ NotFound(p Page) {
+	@Layout(p) {
+		<section class="section drawing-grid error-page">
+			<div class="wrap error-page__inner">
+				<p class="label label--cobalt">Error 404 · Sheet not found</p>
+				<h1 class="h1">This page isn't on the plans.</h1>
+				<p class="lede">The address may be mistyped, or the page may have moved. These will take you somewhere useful.</p>
+				<div class="hero__actions">
+					<a class="btn btn--cobalt" href="/residences">See the homes @Arrow()</a>
+					<a class="btn btn--line" href="/">Back to the start</a>
+				</div>
+			</div>
+		</section>
+	}
+}
+
+templ ServerError(p Page) {
+	@Layout(p) {
+		<section class="section drawing-grid error-page">
+			<div class="wrap error-page__inner">
+				<p class="label label--cobalt">Error 500</p>
+				<h1 class="h1">Something went wrong on our side.</h1>
+				<p class="lede">Please try again in a moment. If it keeps happening, the sales team can help: book a viewing or send a question and we will come back to you.</p>
+				<div class="hero__actions">
+					<a class="btn btn--cobalt" href="/">Back to the start @Arrow()</a>
+					<a class="btn btn--line" href="/enquire">Ask a question</a>
+				</div>
+			</div>
+		</section>
+	}
+}

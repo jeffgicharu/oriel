@@ -1,0 +1,40 @@
+[Unit]
+Description=Oriel web server, port %i
+After=network.target
+ConditionPathExists=/var/www/oriel.jeffgicharu.com/slots/%i/oriel
+
+[Service]
+Type=simple
+User=oriel
+Group=oriel
+WorkingDirectory=/var/www/oriel.jeffgicharu.com/shared/data
+EnvironmentFile=/var/www/oriel.jeffgicharu.com/shared/env
+# Local connections only. nginx is the only way in from outside.
+Environment=ORIEL_ADDR=127.0.0.1:%i
+Environment=ORIEL_DATA=/var/www/oriel.jeffgicharu.com/shared/data
+# The Go runtime collects harder as it nears this, well inside MemoryMax.
+Environment=GOMEMLIMIT=200MiB
+ExecStart=/var/www/oriel.jeffgicharu.com/slots/%i/oriel serve
+Restart=on-failure
+RestartSec=3
+# On SIGTERM the server stops taking new requests, finishes the ones in hand
+# and closes live-update streams so browsers reconnect to the live slot.
+KillSignal=SIGTERM
+TimeoutStopSec=20
+# Two slots run side by side for about a minute during a release.
+MemoryMax=256M
+MemorySwapMax=0
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectHome=true
+ProtectSystem=strict
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+ReadWritePaths=/var/www/oriel.jeffgicharu.com/shared/data
+
+[Install]
+WantedBy=multi-user.target

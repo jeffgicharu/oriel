@@ -1,0 +1,92 @@
+@font-face {
+  font-family: "Mona Sans";
+  src: url("../../static/fonts/MonaSans.woff2") format("woff2");
+  font-weight: 300 800;
+  font-stretch: 100% 125%;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Martian Mono";
+  src: url("../../static/fonts/MartianMono.woff2") format("woff2");
+  font-weight: 300 700;
+  font-stretch: 75% 112.5%;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Metric-matched stand-ins, so the page does not jump when the fonts arrive. */
+@font-face {
+  font-family: "Mona Sans Fallback";
+  src: local("Arial"), local("Helvetica Neue"), local("Liberation Sans");
+  size-adjust: 103%;
+  ascent-override: 92%;
+  descent-override: 24%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Martian Mono Fallback";
+  src: local("Courier New"), local("Liberation Mono"), local("Menlo");
+  size-adjust: 112%;
+  ascent-override: 82%;
+  descent-override: 22%;
+}
+
+:root {
+  /* Ground */
+  --plaster: #ecedea;
+  --plaster-hi: #f4f5f2;
+  --plaster-lo: #e3e5e1;
+  --concrete: #d6d8d3;
+  --concrete-lo: #c2c5bf;
+  --stone: #a6aaa4;
+
+  /* Ink */
+  --graphite: #1a1d1f;
+  --graphite-2: #2a2e31;
+  --ink-soft: #565c61;
+  --ink-faint: #81878c;
+
+  /* The one colour */
+  --cobalt: #1f3bd1;
+  --cobalt-hi: #3552e6;
+  --cobalt-lo: #172ea6;
+  --cobalt-wash: #dfe3f7;
+  --cobalt-mist: rgb(31 59 209 / 0.08);
+
+  /* States, used sparingly and always with words */
+  --alert: #b3321f;
+  --alert-wash: #f6e3df;
+  --success: #2e6a43;
+  --success-wash: #e1ede4;
+  --amber: #a26a10;
+
+  --rule: rgb(26 29 31 / 0.14);
+  --rule-strong: rgb(26 29 31 / 0.34);
+  --rule-light: rgb(244 245 242 / 0.18);
+  --grid-line: rgb(26 29 31 / 0.05);
+
+  --font-sans: "Mona Sans", "Mona Sans Fallback", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "Martian Mono", "Martian Mono Fallback", ui-monospace, Menlo, monospace;
+
+  --gutter: clamp(16px, 4.2vw, 56px);
+  --page-max: 1520px;
+  --header-h: 64px;
+  --radius: 2px;
+
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+  --shadow-sheet: 0 1px 0 rgb(26 29 31 / 0.04), 0 18px 40px -24px rgb(26 29 31 / 0.35);
+
+  color-scheme: light;
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --header-h: 76px;
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "name": "oriel-web",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.28.0",
+  "scripts": {
+    "build": "node build.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "gsap": "3.15.0",
+    "htmx.org": "2.0.11",
+    "sortablejs": "1.15.7",
+    "three": "0.186.1"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild"]
+  },
+  "devDependencies": {
+    "@types/sortablejs": "1.15.9",
+    "@types/three": "0.186.0",
+    "esbuild": "0.28.2",
+    "typescript": "7.0.2"
+  }
+}
