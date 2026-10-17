@@ -167,13 +167,51 @@
 }
 
 /* The drawing traces itself once, floor by floor, on first paint. Each
-   stroke has pathLength="1", so a dash of 1 is its whole length. */
+   stroke has pathLength="1", so a dash of 1 is its whole length. A floor's
+   glass and cobalt bands fill in just after its lines. --draw-start waits
+   for the 3D building, which usually takes the drawing's place. */
+.hero__drawing {
+  --draw-start: 2.5s;
+}
+
+.hero--flat .hero__drawing {
+  --draw-start: 0.15s;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .hero__drawing [data-draw] {
     stroke-dasharray: 1;
     stroke-dashoffset: 1;
     animation: draw-line 1.3s var(--ease-in-out) forwards;
-    animation-delay: calc(var(--i, 0) * 80ms + 150ms);
+    animation-delay: calc(var(--i, 0) * 80ms + var(--draw-start));
+  }
+
+  .hero__drawing .glass {
+    animation:
+      draw-line 1.3s var(--ease-in-out) forwards,
+      glass-in 0.8s var(--ease) backwards;
+    animation-delay:
+      calc(var(--i, 0) * 80ms + var(--draw-start)),
+      calc(var(--i, 0) * 80ms + var(--draw-start) + 0.7s);
+  }
+
+  .hero__drawing .fill {
+    stroke-dasharray: none;
+    stroke-dashoffset: 0;
+    animation: fill-in 0.6s var(--ease) backwards;
+    animation-delay: calc(var(--i, 0) * 80ms + var(--draw-start) + 0.9s);
+  }
+}
+
+@keyframes fill-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes glass-in {
+  from {
+    fill-opacity: 0;
   }
 }
 
@@ -250,15 +288,6 @@
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .hero__drawing [data-draw] {
-    animation-delay: calc(var(--i, 0) * 80ms + 2.5s);
-  }
-
-  .hero--flat .hero__drawing [data-draw] {
-    animation-delay: calc(var(--i, 0) * 80ms + 0.15s);
-  }
-}
 
 /* On wide screens the scene runs up behind the transparent header, and
    fades out behind the words so they stay easy to read. */
@@ -303,15 +332,6 @@
   stroke: #6f7d68;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .hero__drawing .fill {
-    animation: drawing-in 0.8s var(--ease) 4.2s backwards;
-  }
-
-  .hero--flat .hero__drawing .fill {
-    animation-delay: 2s;
-  }
-}
 
 /* ---------- Home: the story ---------- */
 
