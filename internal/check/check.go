@@ -178,8 +178,21 @@ func (c *Checker) assetsLoad(ctx context.Context) error {
 	if len(seen) == 0 {
 		return errors.New("no page asks for any asset")
 	}
+	// Scripts load further pieces of themselves later (the 3D building, for
+	// one); those must be there too.
+	checked := map[string]bool{}
+	queue := make([]string, 0, len(seen))
 	for path := range seen {
-		res, _, err := c.get(ctx, path)
+		queue = append(queue, path)
+	}
+	for len(queue) > 0 {
+		path := queue[0]
+		queue = queue[1:]
+		if checked[path] {
+			continue
+		}
+		checked[path] = true
+		res, body, err := c.get(ctx, path)
 		if err != nil {
 			return fmt.Errorf("%s: %w", path, err)
 		}
@@ -189,8 +202,33 @@ func (c *Checker) assetsLoad(ctx context.Context) error {
 		if !strings.Contains(res.Header.Get("Cache-Control"), "immutable") {
 			return fmt.Errorf("%s is not cached as immutable", path)
 		}
+		if strings.HasSuffix(path, ".js") {
+			dir := path[:strings.LastIndex(path, "/")+1]
+			for _, m := range chunkRe.FindAllStringSubmatch(body, -1) {
+				queue = append(queue, cleanPath(dir+m[1]))
+			}
+		}
 	}
 	return nil
+}
+
+var chunkRe = regexp.MustCompile(`["'](\.{1,2}/(?:chunks/)?[A-Za-z0-9_-]+\.js)["']`)
+
+// cleanPath resolves ./ and ../ in an asset path.
+func cleanPath(p string) string {
+	var out []string
+	for _, part := range strings.Split(p, "/") {
+		switch part {
+		case ".":
+		case "..":
+			if len(out) > 1 {
+				out = out[:len(out)-1]
+			}
+		default:
+			out = append(out, part)
+		}
+	}
+	return strings.Join(out, "/")
 }
 
 func (c *Checker) metadataFiles(ctx context.Context) error {

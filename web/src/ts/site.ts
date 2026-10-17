@@ -60,6 +60,19 @@ function measureDrawings(): void {
   });
 }
 
+// The 3D building loads after the page has painted, and only where it is shown.
+function loadModel(): void {
+  const hero = document.querySelector<HTMLElement>("[data-model-stage='hero']");
+  if (!hero) return;
+  const start = () => import("./model/hero").then((m) => m.mountHero(hero));
+  if ("requestIdleCallback" in window) {
+    window.requestIdleCallback(start, { timeout: 600 });
+  } else {
+    setTimeout(start, 120);
+  }
+}
+
 setUpMenu();
 setUpHeader();
 measureDrawings();
+loadModel();

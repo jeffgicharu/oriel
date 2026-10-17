@@ -212,3 +212,56 @@
 .intro__body p .accent {
   color: var(--cobalt);
 }
+
+/* ---------- The 3D building ---------- */
+
+.hero__canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.9s var(--ease);
+}
+
+.hero--3d .hero__canvas {
+  opacity: 1;
+}
+
+.hero--3d .hero__drawing {
+  display: none;
+}
+
+/* The flat drawing waits a moment for the 3D building, and appears on its own
+   if the building does not come (no script, no WebGL, or data saving). */
+.hero__drawing {
+  opacity: 0;
+  animation: drawing-in 0.6s var(--ease) 2.4s forwards;
+}
+
+.hero--flat .hero__drawing {
+  animation-delay: 0s;
+}
+
+@keyframes drawing-in {
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero__drawing [data-draw] {
+    animation-delay: calc(var(--i, 0) * 45ms + 2.5s);
+  }
+
+  .hero--flat .hero__drawing [data-draw] {
+    animation-delay: calc(var(--i, 0) * 45ms + 0.15s);
+  }
+}
+
+/* On wide screens the scene runs up behind the transparent header. */
+@media (min-width: 900px) {
+  .hero__stage {
+    margin-top: calc(var(--header-h) * -1);
+  }
+}

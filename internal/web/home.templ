@@ -1,5 +1,7 @@
 package web
 
+import "github.com/jeffgicharu/oriel/internal/building"
+
 // ElevationDrawing is the line drawing of the tower's south face. Each line
 // traces itself when the page first paints.
 templ ElevationDrawing(class string) {
@@ -10,10 +12,11 @@ templ ElevationDrawing(class string) {
 	</svg>
 }
 
-templ Home(p Page) {
+templ Home(p Page, model building.Model) {
 	@Layout(p) {
+		@templ.JSONScript("oriel-model", model)
 		<section class="hero drawing-grid" aria-labelledby="hero-title">
-			<div class="hero__stage">
+			<div class="hero__stage" data-model-stage="hero">
 				@ElevationDrawing("hero__drawing")
 			</div>
 			<div class="wrap hero__content">

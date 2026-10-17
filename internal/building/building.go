@@ -74,6 +74,8 @@ const (
 
 	// Bays project this far from the façade.
 	BayProjection = 1.2
+	// Balconies on the long façades project this far.
+	BalconyDepth = 1.6
 	// The glass of a bay starts above a window seat and stops under the slab.
 	BaySeatHeight = 0.45
 	BayHeadHeight = 2.75
@@ -133,6 +135,8 @@ type Position struct {
 	Footprint Rect
 	Facing    []Facing
 	Bay       Bay
+	// Balcony is the projecting balcony, in plan.
+	Balcony   Rect
 	RiverView bool
 	// Handed is true where the plan is the mirror image of its type's drawing.
 	Handed bool
@@ -154,13 +158,15 @@ var Positions = []Position{
 		Footprint: Rect{XMin, ZMin, -4.5, -1.0},
 		Facing:    []Facing{North, West},
 		Bay:       cornerBay(XMin, ZMin, North, West),
+		Balcony:   Rect{-16.0, ZMin - BalconyDepth, -6.0, ZMin},
 		RiverView: true,
 	},
 	{
 		Number: 2, Type: "A",
 		Footprint: Rect{-4.5, ZMin, 2.7, -1.0},
 		Facing:    []Facing{North},
-		Bay:       faceBay(-0.9, ZMin, North),
+		Bay:       faceBay(1.2, ZMin, North),
+		Balcony:   Rect{-4.3, ZMin - 2.0, -0.3, ZMin},
 		RiverView: true,
 	},
 	{
@@ -168,6 +174,7 @@ var Positions = []Position{
 		Footprint: Rect{2.7, ZMin, XMax, -1.0},
 		Facing:    []Facing{North, East},
 		Bay:       cornerBay(XMax, ZMin, North, East),
+		Balcony:   Rect{5.0, ZMin - BalconyDepth, 16.0, ZMin},
 		RiverView: true,
 	},
 	{
@@ -175,13 +182,15 @@ var Positions = []Position{
 		Footprint:    Rect{9.1, 1.0, XMax, ZMax},
 		Facing:       []Facing{South, East},
 		Bay:          cornerBay(XMax, ZMax, South, East),
+		Balcony:      Rect{10.0, ZMax, 17.5, ZMax + BalconyDepth},
 		PlanRotation: 180,
 	},
 	{
 		Number: 5, Type: "A",
 		Footprint:    Rect{1.9, 1.0, 9.1, ZMax},
 		Facing:       []Facing{South},
-		Bay:          faceBay(5.5, ZMax, South),
+		Bay:          faceBay(3.3, ZMax, South),
+		Balcony:      Rect{5.0, ZMax, 9.0, ZMax + 2.0},
 		PlanRotation: 180,
 	},
 	{
@@ -189,6 +198,7 @@ var Positions = []Position{
 		Footprint:    Rect{XMin, 1.0, -9.1, ZMax},
 		Facing:       []Facing{South, West},
 		Bay:          cornerBay(XMin, ZMax, South, West),
+		Balcony:      Rect{-17.5, ZMax, -10.0, ZMax + BalconyDepth},
 		Handed:       true,
 		PlanRotation: 180,
 	},
