@@ -246,7 +246,7 @@ func progressWidth(percent int) templ.SafeCSS {
 
 func sitePhotoSizes(i int) string {
 	if i == 0 {
-		return "(min-width: 1520px) 1408px, calc(100vw - 2 * var(--gutter))"
+		return "(min-width: 1520px) 1408px, 92vw"
 	}
 	return "(min-width: 1000px) 50vw, 100vw"
 }

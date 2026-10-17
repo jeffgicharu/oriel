@@ -202,6 +202,15 @@
   margin-right: 8px;
 }
 
+/* A full-width photograph stays shorter than the window on wide screens. */
+@media (min-width: 761px) {
+  .content-photo--wide img {
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    object-position: 50% 40%;
+  }
+}
+
 /* The bay's photograph keeps the reader in view on narrow screens. */
 @media (max-width: 760px) {
   .photo--bay img {
@@ -1366,6 +1375,17 @@
   .gallery--portrait {
     grid-template-columns: minmax(0, 7fr) minmax(0, 4fr);
   }
+
+  /* At 7 to 4, a 3:2 picture and a 6:7 one stand the same height. */
+  .gallery--portrait .gallery__item:first-child img {
+    aspect-ratio: 3 / 2;
+    object-fit: cover;
+  }
+
+  .gallery--portrait .gallery__item:last-child img {
+    aspect-ratio: 6 / 7;
+    object-fit: cover;
+  }
 }
 
 .gallery__item {
@@ -1428,4 +1448,30 @@
 
 .spec-head__photo {
   margin: 0;
+}
+
+@media (min-width: 760px) {
+  .photo-pair img {
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+  }
+}
+
+/* Five shared spaces in rows of three: the last one takes the two places left. */
+@media (min-width: 1000px) {
+  .amenity:last-child:nth-child(3n + 2) {
+    grid-column: span 2;
+  }
+
+  .amenity:last-child:nth-child(3n + 2) .amenity__photo img {
+    aspect-ratio: 3.1 / 1;
+  }
+}
+
+@media (min-width: 1000px) {
+  .site-photo--lead img {
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    object-position: 50% 35%;
+  }
 }

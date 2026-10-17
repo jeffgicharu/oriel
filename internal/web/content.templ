@@ -71,7 +71,7 @@ templ BuildingPage(p Page, types []store.TypeSummary) {
 			if HasPhoto("living-bay-b") {
 				<div class="wrap">
 					<figure class="content-photo content-photo--wide crop">
-						@Photo("living-bay-b", "A woman reading on an oak window seat in a corner bay, with a cobalt cushion and treetops outside", "(min-width: 1520px) 1408px, calc(100vw - 2 * var(--gutter))", "photo--bay")
+						@Photo("living-bay-b", "A woman reading on an oak window seat in a corner bay, with a cobalt cushion and treetops outside", "(min-width: 1520px) 1408px, 92vw", "photo--bay")
 						<figcaption class="content-photo__caption">The bay of a two-bedroom home, on a morning in February.</figcaption>
 					</figure>
 				</div>
@@ -168,6 +168,7 @@ templ BuildingPage(p Page, types []store.TypeSummary) {
 					<div class="content-section__head">
 						<p class="sheet-tag label">A-305 · Specification</p>
 						<h2 class="h2" id="spec-title">What every home comes with.</h2>
+						<p class="lede">Every home is finished the same way, from a one-bedroom on level 2 to the penthouses: a short list of honest materials, chosen to age well in Nairobi’s sun.</p>
 					</div>
 					if HasPhoto("materials") {
 						<figure class="spec-head__photo crop">
