@@ -4,6 +4,7 @@ go 1.27.2
 
 require (
 	github.com/a-h/templ v0.3.1070
+	golang.org/x/crypto v0.57.0
 	modernc.org/sqlite v1.60.1
 )
 

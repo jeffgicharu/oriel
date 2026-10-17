@@ -58,6 +58,50 @@ func Open(path string) (*DB, error) {
 	return db, nil
 }
 
+// OpenForBuild opens a new file for writing the sample. It skips the safety
+// of a journal for speed: if the build fails the file is thrown away.
+func OpenForBuild(path string) (*DB, error) {
+	q := url.Values{}
+	for _, p := range []string{"journal_mode(OFF)", "synchronous(OFF)", "foreign_keys(1)"} {
+		q.Add("_pragma", p)
+	}
+	sqlDB, err := sql.Open("sqlite", "file:"+path+"?"+q.Encode())
+	if err != nil {
+		return nil, err
+	}
+	sqlDB.SetMaxOpenConns(1)
+	db := &DB{DB: sqlDB}
+	if err := db.Migrate(context.Background()); err != nil {
+		sqlDB.Close()
+		return nil, err
+	}
+	return db, nil
+}
+
+// Seal compacts a freshly built sample into one self-contained file and
+// closes it, ready to be opened read-only and copied.
+func (db *DB) Seal(ctx context.Context) error {
+	for _, stmt := range []string{"PRAGMA foreign_key_check", "PRAGMA journal_mode = DELETE", "VACUUM", "PRAGMA optimize"} {
+		rows, err := db.QueryContext(ctx, stmt)
+		if err != nil {
+			db.Close()
+			return fmt.Errorf("%s: %w", stmt, err)
+		}
+		if stmt == "PRAGMA foreign_key_check" && rows.Next() {
+			var table string
+			var rowid sql.NullInt64
+			var parent string
+			var fkid int
+			rows.Scan(&table, &rowid, &parent, &fkid)
+			rows.Close()
+			db.Close()
+			return fmt.Errorf("store: %s row %d points at a missing %s", table, rowid.Int64, parent)
+		}
+		rows.Close()
+	}
+	return db.Close()
+}
+
 // OpenReadOnly opens the shared sample. The file is never changed once
 // written, so it is opened as immutable and needs no locks.
 func OpenReadOnly(path string) (*DB, error) {
@@ -73,10 +117,11 @@ func OpenReadOnly(path string) (*DB, error) {
 	sqlDB.SetMaxOpenConns(4)
 	sqlDB.SetMaxIdleConns(4)
 	db := &DB{DB: sqlDB, readOnly: true}
+	// A newer sample is fine (migrations only add); an older one is not.
 	if v, err := db.SchemaVersion(context.Background()); err != nil {
 		sqlDB.Close()
 		return nil, err
-	} else if v != LatestVersion() {
+	} else if v < LatestVersion() {
 		sqlDB.Close()
 		return nil, fmt.Errorf("store: sample %s is at schema %d, this release needs %d", path, v, LatestVersion())
 	}
