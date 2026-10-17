@@ -29,11 +29,56 @@ function paint(button: HTMLButtonElement, on: boolean): void {
 }
 
 function paintCount(): void {
-  const n = readShortlist().length;
+  const list = readShortlist();
+  const n = list.length;
   document.querySelectorAll<HTMLElement>("[data-shortlist-count]").forEach((el) => {
     el.textContent = String(n);
-    el.closest<HTMLElement>("[data-shortlist-link]")?.toggleAttribute("hidden", n === 0);
+    const link = el.closest<HTMLAnchorElement>("[data-shortlist-link]");
+    if (!link) return;
+    link.toggleAttribute("hidden", n === 0);
+    link.href = n ? "/shortlist?homes=" + list.join(",") : "/shortlist";
   });
+  // "Compare" on a home's page brings in up to two more homes from the shortlist.
+  document.querySelectorAll<HTMLAnchorElement>("[data-compare-with]").forEach((a) => {
+    const id = a.dataset.compareWith!;
+    const others = list.filter((x) => x !== id).slice(0, 2);
+    a.href = "/compare?homes=" + [id, ...others].join(",");
+  });
+}
+
+/** The shortlist page: fill it from this browser's list, remove homes, and
+ * keep the comparison to at most three. */
+function setUpShortlistPage(): void {
+  const list = readShortlist();
+  const params = new URLSearchParams(location.search);
+  if (location.pathname === "/shortlist" && !params.get("homes") && list.length) {
+    location.replace("/shortlist?homes=" + list.join(","));
+    return;
+  }
+  document.querySelectorAll<HTMLButtonElement>("[data-shortlist-remove]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const id = button.dataset.shortlistRemove!;
+      const next = readShortlist().filter((x) => x !== id);
+      writeShortlist(next);
+      button.closest("li")?.remove();
+      history.replaceState(null, "", next.length ? "/shortlist?homes=" + next.join(",") : "/shortlist");
+      if (!next.length) location.replace("/shortlist");
+    });
+  });
+  const form = document.querySelector<HTMLFormElement>("[data-compare-form]");
+  if (!form) return;
+  const note = form.querySelector<HTMLElement>("[data-compare-note]");
+  const picks = () => Array.from(form.querySelectorAll<HTMLInputElement>("[data-compare-pick]"));
+  const update = () => {
+    const chosen = picks().filter((p) => p.checked).length;
+    picks().forEach((p) => (p.disabled = !p.checked && chosen >= 3));
+    if (note) note.textContent = chosen < 2 ? "Choose two or three." : `${chosen} chosen.`;
+  };
+  form.addEventListener("change", update);
+  form.addEventListener("submit", (e) => {
+    if (picks().filter((p) => p.checked).length < 1) e.preventDefault();
+  });
+  update();
 }
 
 export function setUpShortlist(root: ParentNode = document): void {
@@ -50,6 +95,7 @@ export function setUpShortlist(root: ParentNode = document): void {
     });
   });
   paintCount();
+  if (root === document) setUpShortlistPage();
   if (!listening) {
     document.addEventListener("shortlist:change", paintCount);
     listening = true;

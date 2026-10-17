@@ -65,6 +65,8 @@ var pages = []struct {
 	{"/terms", "Terms of use."},
 	{"/viewings/new", "Book a viewing."},
 	{"/enquire", "Ask us anything."},
+	{"/shortlist?homes=0704,0806", "Your shortlist."},
+	{"/compare?homes=0704,0806,1601", "Side by side."},
 }
 
 // Checker walks a release at Base.

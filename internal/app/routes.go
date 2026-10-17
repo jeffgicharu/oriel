@@ -24,6 +24,8 @@ func (a *App) routes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /residences/{id}", a.unit)
 	mux.HandleFunc("GET /schedule/{id}", a.unitSchedule)
 	mux.HandleFunc("GET /residences/types/{code}", a.homeType)
+	mux.HandleFunc("GET /shortlist", a.shortlistPage)
+	mux.HandleFunc("GET /compare", a.comparePage)
 	mux.HandleFunc("GET /viewings/new", a.viewingForm)
 	mux.HandleFunc("GET /viewings/slots", a.viewingSlots)
 	mux.HandleFunc("POST /viewings", a.bookViewing)

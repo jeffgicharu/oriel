@@ -352,3 +352,10 @@ func percent(bp int64) string {
 }
 
 func minF(a, b float64) float64 { return math.Min(a, b) }
+
+func compareColumns(n int) templ.SafeCSS {
+	if n < 1 {
+		n = 1
+	}
+	return templ.SafeCSS(fmt.Sprintf("--cols: %d", n))
+}

@@ -1,0 +1,148 @@
+package web
+
+import (
+	"strconv"
+	"strings"
+
+	"github.com/jeffgicharu/oriel/internal/floorplan"
+	"github.com/jeffgicharu/oriel/internal/store"
+)
+
+// MaxCompare is how many homes stand side by side.
+const MaxCompare = 3
+
+// ShortlistData is the shortlist page.
+type ShortlistData struct {
+	Homes []store.Home
+	IDs   string // the shortlist as it appears in the address: 0704,0806
+}
+
+templ ShortlistPage(p Page, d ShortlistData) {
+	@Layout(p) {
+		<div class="wrap content-page">
+			<header class="page-head content-head">
+				<p class="sheet-tag label">A-210 · Shortlist</p>
+				<h1 class="h1">Your shortlist.</h1>
+				<p class="lede">The homes you have marked with a heart, kept in this browser. Choose up to three to compare side by side.</p>
+			</header>
+			if len(d.Homes) == 0 {
+				<div class="shortlist-empty" data-shortlist-empty>
+					<p>Nothing on your shortlist yet. Tap the heart on any home to add it.</p>
+					<a class="btn btn--cobalt" href="/residences">See the homes @Arrow()</a>
+				</div>
+			} else {
+				<form class="shortlist" method="get" action="/compare" data-compare-form>
+					<ul class="shortlist__list" role="list">
+						for i, h := range d.Homes {
+							<li class="shortlist__item">
+								<label class="shortlist__pick">
+									<input type="checkbox" name="homes" value={ h.ID } checked?={ i < MaxCompare } data-compare-pick/>
+									<span class="visually-hidden">Compare home { h.ID }</span>
+								</label>
+								<a class="shortlist__home" href={ templ.SafeURL(HomePath(h.ID)) }>
+									<span class="shortlist__id mono">{ h.ID }</span>
+									<span class="shortlist__title">{ HomeTitle(h) }</span>
+									<span class="shortlist__meta">Faces { h.Facings() } · { strconv.Itoa(h.Type.Internal) } m²</span>
+								</a>
+								<span class="shortlist__deal">
+									@StatusBadge(h.Status)
+									if h.ShowsPrice() {
+										<span class="shortlist__price tnum">{ KESShort(h.Price) }</span>
+									}
+								</span>
+								<button class="link-button shortlist__remove" type="button" data-shortlist-remove={ h.ID }>Remove</button>
+							</li>
+						}
+					</ul>
+					<div class="shortlist__actions">
+						<button class="btn btn--cobalt" type="submit">Compare the chosen homes @Arrow()</button>
+						<span class="form-small muted" data-compare-note>Choose two or three.</span>
+					</div>
+				</form>
+			}
+		</div>
+	}
+}
+
+// CompareData is the comparison page.
+type CompareData struct {
+	Homes []store.Home
+	IDs   []string
+}
+
+func (d CompareData) without(id string) string {
+	var keep []string
+	for _, x := range d.IDs {
+		if x != id {
+			keep = append(keep, x)
+		}
+	}
+	if len(keep) == 0 {
+		return "/shortlist"
+	}
+	return "/compare?homes=" + strings.Join(keep, ",")
+}
+
+templ ComparePage(p Page, d CompareData) {
+	@Layout(p) {
+		<div class="wrap content-page">
+			<header class="page-head content-head">
+				<p class="sheet-tag label">A-220 · Compare</p>
+				<h1 class="h1">Side by side.</h1>
+				<p class="lede">
+					if len(d.Homes) < 2 {
+						Add another home from your shortlist to compare them.
+					} else {
+						{ strconv.Itoa(len(d.Homes)) } homes, drawn to the same scale.
+					}
+				</p>
+			</header>
+			<div class="compare" style={ compareColumns(len(d.Homes)) }>
+				<div class="compare__row compare__row--plans">
+					<span class="compare__label label">Plan</span>
+					for _, h := range d.Homes {
+						<div class="compare__cell">
+							<a class="compare__id mono" href={ templ.SafeURL(HomePath(h.ID)) }>{ h.ID }</a>
+							<div class="compare__plan">
+								@planSVG(PlanFor(h.Unit), floorplan.Options{Plain: true, North: NorthFor(h.Unit), ID: "cmp-" + h.ID, Title: "Plan of home " + h.ID})
+							</div>
+						</div>
+					}
+				</div>
+				@compareRow("Home", d.Homes, func(h store.Home) string { return HomeTitle(h) })
+				@compareRow("Type", d.Homes, func(h store.Home) string { return h.Type.Code + " · " + h.Type.Name })
+				@compareRow("Faces", d.Homes, func(h store.Home) string { return capitalise(h.Facings()) })
+				@compareRow("River view", d.Homes, func(h store.Home) string { return map[bool]string{true: "Yes", false: "No"}[h.Position.RiverView] })
+				@compareRow("Inside", d.Homes, func(h store.Home) string { return strconv.Itoa(h.Type.Internal) + " m²" })
+				@compareRow("Outside", d.Homes, func(h store.Home) string { return h.Type.OutdoorName + " " + strconv.Itoa(h.Type.Outdoor) + " m²" })
+				@compareRow("Sun a day", d.Homes, func(h store.Home) string { return sunHours(h.ID) + " hours on average" })
+				@compareRow("Status", d.Homes, func(h store.Home) string { return store.StatusName(h.Status) })
+				@compareRow("Price", d.Homes, func(h store.Home) string {
+					if h.ShowsPrice() {
+						return KES(h.Price)
+					}
+					return "—"
+				})
+				<div class="compare__row compare__row--actions">
+					<span class="compare__label"></span>
+					for _, h := range d.Homes {
+						<div class="compare__cell">
+							<a class="btn btn--cobalt btn--small" href={ templ.SafeURL(HomePath(h.ID)) }>See this home</a>
+							<a class="link-arrow compare__remove" href={ templ.SafeURL(d.without(h.ID)) }>Take it out</a>
+						</div>
+					}
+				</div>
+			</div>
+			<p class="content-note muted"><a href="/shortlist">Back to your shortlist</a></p>
+		</div>
+	}
+}
+
+templ compareRow(label string, homes []store.Home, value func(store.Home) string) {
+	<div class="compare__row">
+		<span class="compare__label label">{ label }</span>
+		for _, h := range homes {
+			<span class="compare__cell">{ value(h) }</span>
+		}
+	</div>
+}
