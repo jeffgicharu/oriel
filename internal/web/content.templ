@@ -76,6 +76,20 @@ templ BuildingPage(p Page, types []store.TypeSummary) {
 					</figure>
 				</div>
 			}
+			if HasPhoto("facade-bays-dusk") && HasPhoto("facade-detail-day") {
+				<div class="wrap">
+					<div class="photo-pair">
+						<figure class="crop">
+							@Photo("facade-bays-dusk", "Three corner bays stacked up the building at dusk, lit from inside, each under a deep cobalt band", "(min-width: 760px) 45vw, 100vw", "")
+							<figcaption class="content-photo__caption">The corner bays at dusk, lit like lanterns.</figcaption>
+						</figure>
+						<figure class="crop">
+							@Photo("facade-detail-day", "A corner bay in bright sun, its cobalt band casting a shadow on the glass, beside the deep white fins of the side façade", "(min-width: 760px) 45vw, 100vw", "")
+							<figcaption class="content-photo__caption">At midday the band shades the glass, and the fins shade the side façade.</figcaption>
+						</figure>
+					</div>
+				</div>
+			}
 		</section>
 		<section class="content-section content-section--rule" aria-labelledby="sun-title">
 			<div class="wrap content-split content-split--flip">
@@ -150,9 +164,17 @@ templ BuildingPage(p Page, types []store.TypeSummary) {
 		</section>
 		<section class="content-section content-section--rule" id="specification" aria-labelledby="spec-title">
 			<div class="wrap">
-				<div class="content-section__head">
-					<p class="sheet-tag label">A-305 · Specification</p>
-					<h2 class="h2" id="spec-title">What every home comes with.</h2>
+				<div class="spec-head">
+					<div class="content-section__head">
+						<p class="sheet-tag label">A-305 · Specification</p>
+						<h2 class="h2" id="spec-title">What every home comes with.</h2>
+					</div>
+					if HasPhoto("materials") {
+						<figure class="spec-head__photo crop">
+							@Photo("materials", "Samples of the finishes on a plaster table: board-marked concrete, oak, terrazzo, linen, a graphite window profile, brushed brass and a cobalt glazed tile", "(min-width: 1000px) 40vw, 100vw", "")
+							<figcaption class="content-photo__caption">The finishes: concrete, oak, terrazzo, linen, graphite, brass and one cobalt tile.</figcaption>
+						</figure>
+					}
 				</div>
 				<div class="spec">
 					for _, g := range Specification {
@@ -474,5 +496,22 @@ templ TermsPage(p Page) {
 				<p class="muted">Last updated 17 October 2026.</p>
 			</div>
 		</div>
+	}
+}
+
+// Gallery shows a type's interiors side by side.
+templ Gallery(shots []Shot, note string) {
+	if len(shots) > 0 {
+		<div class={ "gallery", templ.KV("gallery--portrait", len(shots) > 1 && shots[1].Portrait()) }>
+			for i, s := range shots {
+				<figure class="gallery__item">
+					@Photo(s.Name, s.Alt, gallerySizes(i), "")
+					<figcaption class="gallery__caption">{ s.Caption }</figcaption>
+				</figure>
+			}
+		</div>
+		if note != "" {
+			<p class="gallery__note">{ note }</p>
+		}
 	}
 }

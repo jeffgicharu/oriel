@@ -53,6 +53,9 @@ var pages = []struct {
 	{"/residences/1601", "Penthouse on the top floor"},
 	{"/residences/types/B", "Two bedrooms."},
 	{"/residences/types/P", "Penthouse."},
+	{"/residences/types/A", "One bedroom."},
+	{"/residences/types/C", "Three bedrooms."},
+	{"/residences/types/D", "Three bedrooms, study and DSQ."},
 	{"/building", "Built around the light."},
 	{"/location", "Between the forest and the city."},
 	{"/progress", "The programme"},
@@ -182,6 +185,7 @@ var (
 	canonicalRe   = regexp.MustCompile(`<link rel="canonical" href="https://[^"]+"`)
 	ogImageRe     = regexp.MustCompile(`<meta property="og:image" content="https://[^"]+/assets/[^"]+"`)
 	assetRe       = regexp.MustCompile(`(?:href|src)="(/assets/[^"]+)"`)
+	srcsetRe      = regexp.MustCompile(`srcset="([^"]+)"`)
 )
 
 func (c *Checker) pagesLoad(ctx context.Context) error {
@@ -228,6 +232,14 @@ func (c *Checker) assetsLoad(ctx context.Context) error {
 		for _, m := range assetRe.FindAllStringSubmatch(body, -1) {
 			seen[m[1]] = true
 		}
+		// Every size of every picture.
+		for _, m := range srcsetRe.FindAllStringSubmatch(body, -1) {
+			for _, candidate := range strings.Split(m[1], ",") {
+				if fields := strings.Fields(candidate); len(fields) > 0 && strings.HasPrefix(fields[0], "/assets/") {
+					seen[fields[0]] = true
+				}
+			}
+		}
 	}
 	if len(seen) == 0 {
 		return errors.New("no page asks for any asset")
@@ -255,6 +267,11 @@ func (c *Checker) assetsLoad(ctx context.Context) error {
 		}
 		if !strings.Contains(res.Header.Get("Cache-Control"), "immutable") {
 			return fmt.Errorf("%s is not cached as immutable", path)
+		}
+		for ext, want := range map[string]string{".avif": "image/avif", ".webp": "image/webp", ".woff2": "font/woff2", ".css": "text/css", ".js": "text/javascript"} {
+			if strings.HasSuffix(path, ext) && !strings.HasPrefix(res.Header.Get("Content-Type"), want) {
+				return fmt.Errorf("%s is served as %q, want %s", path, res.Header.Get("Content-Type"), want)
+			}
 		}
 		if strings.HasSuffix(path, ".js") {
 			dir := path[:strings.LastIndex(path, "/")+1]

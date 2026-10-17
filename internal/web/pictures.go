@@ -37,15 +37,21 @@ func PhotoFor(name string) (PhotoSource, bool) {
 	if !ok {
 		return PhotoSource{}, false
 	}
+	// Every picture has 800 and 1400 in both formats; landscapes also have
+	// a 2000 AVIF for wide, sharp screens.
 	var avif, webp []string
 	for _, w := range photoWidths {
 		a := assets.URL("img/photos/" + name + "-" + strconv.Itoa(w) + ".avif")
 		b := assets.URL("img/photos/" + name + "-" + strconv.Itoa(w) + ".webp")
-		if a == "" || b == "" {
+		if w <= 1400 && (a == "" || b == "") {
 			return PhotoSource{}, false
 		}
-		avif = append(avif, a+" "+strconv.Itoa(w)+"w")
-		webp = append(webp, b+" "+strconv.Itoa(w)+"w")
+		if a != "" {
+			avif = append(avif, a+" "+strconv.Itoa(w)+"w")
+		}
+		if b != "" {
+			webp = append(webp, b+" "+strconv.Itoa(w)+"w")
+		}
 	}
 	return PhotoSource{
 		AVIF:     strings.Join(avif, ", "),
@@ -60,4 +66,57 @@ func PhotoFor(name string) (PhotoSource, bool) {
 func HasPhoto(name string) bool {
 	_, ok := PhotoFor(name)
 	return ok
+}
+
+// Shot is a photograph with what it shows.
+type Shot struct {
+	Name, Alt, Caption string
+}
+
+// Portrait reports whether the picture is taller than it is wide.
+func (s Shot) Portrait() bool {
+	shape := photoShapes[s.Name]
+	return shape[1] > shape[0]
+}
+
+// TypeShots are the interiors shown for each type of home, in order.
+var TypeShots = map[string][]Shot{
+	"A": {
+		{"living-bay-a", "A living room with a three-sided glazed bay, an oak window seat and a cobalt throw, with gardens and jacarandas outside", "The living room and its bay, which looks three ways."},
+		{"bathroom-ensuite", "A bathroom with a walk-in shower behind a glass panel, terrazzo floors and an oak vanity", "The bathroom: terrazzo, oak and a walk-in shower."},
+	},
+	"B": {
+		{"living-bay-b", "A woman reading on an oak window seat in a corner bay, with a cobalt cushion and treetops outside", "The corner bay of the living room, on a February morning."},
+		{"kitchen-b", "A couple cooking at a pale stone island in an open kitchen with oak cabinets and tall windows", "The kitchen, open to the living room."},
+	},
+	"C": {
+		{"dining-river", "A family at an oak dining table in a long living room with tall windows onto trees", "The long living and dining room, on the river side."},
+		{"bedroom-principal", "A principal bedroom with a low oak bed, linen curtains and a door to the balcony", "The principal bedroom, with a tall door to the outside."},
+	},
+	"D": {
+		{"study-d", "A study behind a graphite-framed glass partition, with oak shelves and a desk at the window", "The study, behind a glass partition off the living room."},
+		{"balcony-morning", "Hands around a coffee cup on a balcony with a glass balustrade, above green treetops", "Morning on the balcony, above the treetops."},
+	},
+	"P": {
+		{"penthouse-living", "A penthouse living room with glass on two sides, a corner bay, a low sofa and a cobalt chair", "The penthouse living room, glazed on two sides."},
+		{"penthouse-terrace", "A couple sitting on a timber terrace with planters and a glass balustrade at sunset", "The terrace that wraps the top floor."},
+	},
+}
+
+// ShotsFor lists the type's pictures that are in the build.
+func ShotsFor(code string) []Shot {
+	var out []Shot
+	for _, s := range TypeShots[code] {
+		if HasPhoto(s.Name) {
+			out = append(out, s)
+		}
+	}
+	return out
+}
+
+func gallerySizes(i int) string {
+	if i == 0 {
+		return "(min-width: 1000px) 60vw, 100vw"
+	}
+	return "(min-width: 1000px) 38vw, 100vw"
 }

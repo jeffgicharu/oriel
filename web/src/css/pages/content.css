@@ -1345,3 +1345,87 @@
 .legal h2 {
   margin-top: 2em;
 }
+
+/* Interiors on the type and home pages */
+
+.gallery-title {
+  margin: 6px 0 22px;
+}
+
+.gallery {
+  display: grid;
+  gap: 16px;
+  align-items: start;
+}
+
+@media (min-width: 760px) {
+  .gallery {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .gallery--portrait {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 4fr);
+  }
+}
+
+.gallery__item {
+  margin: 0;
+}
+
+/* Landscape pictures on a phone are cropped a little taller, keeping the middle. */
+@media (max-width: 759px) {
+  .gallery__item:not(:has(img[height="2304"])) img {
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+  }
+}
+
+.gallery__caption {
+  margin-top: 10px;
+  font-size: 14px;
+  color: var(--graphite-2);
+}
+
+.gallery__note {
+  margin-top: 16px;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.photo-pair {
+  display: grid;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+@media (min-width: 760px) {
+  .photo-pair {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.photo-pair figure {
+  margin: 0;
+}
+
+.spec-head {
+  display: grid;
+  gap: 24px;
+  align-items: end;
+  margin-bottom: clamp(28px, 4vw, 48px);
+}
+
+.spec-head .content-section__head {
+  margin-bottom: 0;
+}
+
+@media (min-width: 1000px) {
+  .spec-head {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 48px;
+  }
+}
+
+.spec-head__photo {
+  margin: 0;
+}

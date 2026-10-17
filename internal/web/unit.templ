@@ -97,6 +97,15 @@ templ Unit(p Page, d UnitData) {
 					</aside>
 				</div>
 			</section>
+			if shots := ShotsFor(d.Home.Type.Code); len(shots) > 0 {
+				<section class="unit-inside section--tight section--rule" aria-labelledby="inside-title">
+					<div class="wrap">
+						<p class="sheet-tag label">Inside</p>
+						<h2 class="h3 gallery-title" id="inside-title">How a type { d.Home.Type.Code } home looks finished</h2>
+						@Gallery(shots, "A typical home of this type, finished to the specification; furniture is not included.")
+					</div>
+				</section>
+			}
 			<section class="unit-light section--tight section--rule" aria-labelledby="light-title">
 				<div class="wrap unit-light__grid">
 					<div>

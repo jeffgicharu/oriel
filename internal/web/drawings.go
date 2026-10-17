@@ -284,7 +284,7 @@ var Places = []MapPlace{
 }
 
 // The site, as a point on a diagram; no plot is named.
-const siteLat, siteLon = -1.2711, 36.8030
+const siteLat, siteLon = -1.2705, 36.8030
 
 // LocationMap is a diagram of the neighbourhood, not to scale in detail.
 func LocationMap() templ.Component {

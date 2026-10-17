@@ -54,6 +54,12 @@ templ TypePage(p Page, t store.TypeSummary, homes []store.Home) {
 					}
 				</ul>
 			</section>
+			if shots := ShotsFor(t.Code); len(shots) > 0 {
+				<section class="section--tight section--rule" aria-labelledby="inside-title">
+					<h2 class="h3 gallery-title" id="inside-title">Inside a type { t.Code } home</h2>
+					@Gallery(shots, "Pictures show a typical home of this type, finished to the specification; furniture is not included.")
+				</section>
+			}
 			<section class="section--tight section--rule" aria-labelledby="homes-title">
 				<h2 class="h3" id="homes-title">Every type { t.Code } home</h2>
 				<table class="schedule schedule--compact">
