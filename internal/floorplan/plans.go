@@ -11,9 +11,9 @@ var plans = map[string]Plan{
 	"P": typeP,
 }
 
-func r(x0, y0, x1, y1 float64) Rect     { return Rect{x0, y0, x1, y1} }
-func l(x0, y0, x1, y1 float64) Line     { return Line{x0, y0, x1, y1} }
-func rooms(rs ...Room) []Room            { return rs }
+func r(x0, y0, x1, y1 float64) Rect { return Rect{x0, y0, x1, y1} }
+func l(x0, y0, x1, y1 float64) Line { return Line{x0, y0, x1, y1} }
+func rooms(rs ...Room) []Room       { return rs }
 func room(name, kind string, rects ...Rect) Room {
 	return Room{Name: name, Kind: kind, Rects: rects}
 }
