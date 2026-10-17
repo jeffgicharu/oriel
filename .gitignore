@@ -18,3 +18,6 @@
 .playwright-cli/
 *.log
 .DS_Store
+
+# What is handed to Portfolio: screenshots and the case study.
+/handoff/

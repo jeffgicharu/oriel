@@ -766,6 +766,10 @@
 
 .locmap .map-ringlabel {
   fill: var(--cobalt);
+  paint-order: stroke;
+  stroke: #fbfbfa;
+  stroke-width: 4px;
+  stroke-linejoin: round;
 }
 
 .locmap .map-dot {

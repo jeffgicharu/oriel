@@ -264,6 +264,8 @@ type MapPlace struct {
 	How      string
 	// Anchor is where the label sits against the dot: "start" or "end".
 	Anchor string
+	// DY moves the label up or down, to keep it off a road or the river.
+	DY float64
 	// Edge places are off the map; they are drawn as an arrow on its edge.
 	Edge bool
 }
@@ -273,11 +275,11 @@ var Places = []MapPlace{
 	{Name: "Westlands", Lat: -1.2650, Lon: 36.8105, Minutes: "5", How: "by car", Anchor: "start"},
 	{Name: "City centre", Lat: -1.2850, Lon: 36.8235, Minutes: "12", How: "by car", Anchor: "start"},
 	{Name: "Nairobi Arboretum", Lat: -1.2752, Lon: 36.8088, Minutes: "10", How: "on foot", Anchor: "end"},
-	{Name: "University of Nairobi", Lat: -1.2797, Lon: 36.8172, Minutes: "8", How: "by car", Anchor: "start"},
+	{Name: "University of Nairobi", Lat: -1.2797, Lon: 36.8172, Minutes: "8", How: "by car", Anchor: "end", DY: 8},
 	{Name: "Karura Forest", Lat: -1.2420, Lon: 36.8335, Minutes: "15", How: "by car", Anchor: "start"},
 	{Name: "Gigiri", Lat: -1.2335, Lon: 36.8150, Minutes: "18", How: "by car", Anchor: "end"},
-	{Name: "Kileleshwa", Lat: -1.2850, Lon: 36.7860, Minutes: "8", How: "by car", Anchor: "end"},
-	{Name: "Lavington", Lat: -1.2790, Lon: 36.7700, Minutes: "12", How: "by car", Anchor: "end"},
+	{Name: "Kileleshwa", Lat: -1.2850, Lon: 36.7860, Minutes: "8", How: "by car", Anchor: "end", DY: -10},
+	{Name: "Lavington", Lat: -1.2790, Lon: 36.7700, Minutes: "12", How: "by car", Anchor: "start", DY: 6},
 	{Name: "Upper Hill", Lat: -1.2990, Lon: 36.8150, Minutes: "15", How: "by car", Anchor: "start"},
 	{Name: "Wilson Airport", Lat: -1.3215, Lon: 36.8148, Minutes: "25", How: "by car", Anchor: "start", Edge: true},
 	{Name: "JKIA", Lat: -1.3192, Lon: 36.9275, Minutes: "35", How: "by the Expressway", Anchor: "end", Edge: true},
@@ -339,8 +341,13 @@ func drawLocationMap() string {
 	p.f(`<text class="map-roadname" x="%s" y="%s" transform="rotate(8 %s %s)">Waiyaki Way</text>`, n1(rx), n1(ry-6), n1(rx), n1(ry-6))
 	ex, ey := px(-1.3050, 36.8270)
 	p.f(`<text class="map-roadname" x="%s" y="%s" transform="rotate(-38 %s %s)">Expressway</text>`, n1(ex+8), n1(ey), n1(ex+8), n1(ey))
-	vx, vy := px(-1.2770, 36.7720)
-	p.f(`<text class="map-rivername" x="%s" y="%s" transform="rotate(-12 %s %s)">Nairobi River</text>`, n1(vx), n1(vy+14), n1(vx), n1(vy+14))
+	// The river's name sits above its open stretch east of the city centre.
+	v0x, v0y := px(-1.2835, 36.8330)
+	v1x, v1y := px(-1.2860, 36.8480)
+	vt := 0.3
+	vx, vy := v0x+(v1x-v0x)*vt, v0y+(v1y-v0y)*vt-7
+	va := math.Atan2(v1y-v0y, v1x-v0x) * 180 / math.Pi
+	p.f(`<text class="map-rivername" x="%s" y="%s" transform="rotate(%s %s %s)">Nairobi River</text>`, n1(vx), n1(vy), n1(va), n1(vx), n1(vy))
 	kx, ky := px(-1.2380, 36.8330)
 	p.f(`<text class="map-area" x="%s" y="%s" text-anchor="middle">Karura Forest</text>`, n1(kx), n1(ky))
 
@@ -393,8 +400,8 @@ func drawLocationMap() string {
 		if pl.Anchor == "end" {
 			lx = x - 10
 		}
-		p.f(`<text class="map-place" x="%s" y="%s" text-anchor="%s">%s</text>`, n1(lx), n1(y-2), pl.Anchor, pl.Name)
-		p.f(`<text class="map-time" x="%s" y="%s" text-anchor="%s">%s min</text>`, n1(lx), n1(y+14), pl.Anchor, pl.Minutes)
+		p.f(`<text class="map-place" x="%s" y="%s" text-anchor="%s">%s</text>`, n1(lx), n1(y-2+pl.DY), pl.Anchor, pl.Name)
+		p.f(`<text class="map-time" x="%s" y="%s" text-anchor="%s">%s min</text>`, n1(lx), n1(y+14+pl.DY), pl.Anchor, pl.Minutes)
 	}
 	// Oriel itself.
 	p.f(`<g class="map-site"><rect x="%s" y="%s" width="%s" height="%s"/><text x="%s" y="%s" text-anchor="end">Oriel</text></g>`,

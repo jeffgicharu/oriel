@@ -432,8 +432,15 @@
   min-width: 0;
 }
 
+/* Every plan's frame takes the row's height, and each plan sits centred in
+   it, so homes drawn to one scale read side by side. */
+.compare__row--plans {
+  align-items: stretch;
+}
+
 .compare__row--plans .compare__cell {
   display: grid;
+  grid-template-rows: auto 1fr;
   gap: 8px;
 }
 
@@ -445,6 +452,8 @@
 }
 
 .compare__plan {
+  display: grid;
+  place-items: center;
   border: 1px solid var(--rule);
   background: #fbfbfa;
   padding: 8px;
