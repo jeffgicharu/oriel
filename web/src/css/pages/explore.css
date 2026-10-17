@@ -30,7 +30,7 @@
 
 .is-flat .explorer__plate {
   min-height: 100%;
-  align-content: center;
+  align-content: start;
 }
 
 .explorer__canvas {
