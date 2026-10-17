@@ -278,7 +278,7 @@ var Places = []MapPlace{
 	{Name: "University of Nairobi", Lat: -1.2797, Lon: 36.8172, Minutes: "8", How: "by car", Anchor: "end", DY: 8},
 	{Name: "Karura Forest", Lat: -1.2420, Lon: 36.8335, Minutes: "15", How: "by car", Anchor: "start"},
 	{Name: "Gigiri", Lat: -1.2335, Lon: 36.8150, Minutes: "18", How: "by car", Anchor: "end"},
-	{Name: "Kileleshwa", Lat: -1.2850, Lon: 36.7860, Minutes: "8", How: "by car", Anchor: "end", DY: -10},
+	{Name: "Kileleshwa", Lat: -1.2850, Lon: 36.7860, Minutes: "8", How: "by car", Anchor: "start", DY: -6},
 	{Name: "Lavington", Lat: -1.2790, Lon: 36.7700, Minutes: "12", How: "by car", Anchor: "start", DY: 6},
 	{Name: "Upper Hill", Lat: -1.2990, Lon: 36.8150, Minutes: "15", How: "by car", Anchor: "start"},
 	{Name: "Wilson Airport", Lat: -1.3215, Lon: 36.8148, Minutes: "25", How: "by car", Anchor: "start", Edge: true},
