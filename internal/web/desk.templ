@@ -295,3 +295,12 @@ templ DeskDashboard(d DeskPage, x DeskDashboardData) {
 		</div>
 	}
 }
+
+// DeskMessage is a page that only explains something, such as a page the
+// signed-in member may not open.
+templ DeskMessage(d DeskPage, title, text string) {
+	@DeskLayout(d) {
+		@deskHeader(title, text)
+		<p><a class="btn btn--line btn--small" href="/desk">Back to the dashboard</a></p>
+	}
+}

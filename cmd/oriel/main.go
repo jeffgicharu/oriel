@@ -163,7 +163,14 @@ func checkRelease(args []string) error {
 	if len(secret) < 32 {
 		return errors.New("check-release needs ORIEL_SECRET, from the environment or --env-file")
 	}
+	deskKey := os.Getenv("ORIEL_DESK_KEY")
+	if len(deskKey) < 16 {
+		return errors.New("check-release needs ORIEL_DESK_KEY, from the environment or --env-file")
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
-	return check.New(*base, *want, app.ReleaseCheckToken([]byte(secret)), os.Stdout).Run(ctx)
+	c := check.New(*base, *want, app.ReleaseCheckToken([]byte(secret)), os.Stdout)
+	c.EnterManager = app.EnterSignature([]byte(deskKey), "manager")
+	c.EnterAgent = app.EnterSignature([]byte(deskKey), "agent")
+	return c.Run(ctx)
 }

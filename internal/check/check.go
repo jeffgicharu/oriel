@@ -78,6 +78,9 @@ type Checker struct {
 	out    io.Writer
 	// reservation is the one the checker made, for the steps after.
 	reservation string
+	// EnterManager and EnterAgent are the signatures of the desk's one-click
+	// sign-in links.
+	EnterManager, EnterAgent string
 }
 
 // New makes a checker with its own cookie jar, as a fresh visitor would have.
@@ -124,6 +127,8 @@ func (c *Checker) Run(ctx context.Context) error {
 			return c.privateCopy(ctx, c.reservation)
 		}},
 		{"the checker's own copy is deleted", c.forget},
+		{"the manager signs in by link, works the desk, confirms a reservation and gets its letter of offer", c.deskManager},
+		{"an agent signs in by link and cannot open pricing", c.deskAgent},
 	}
 	for _, step := range steps {
 		start := time.Now()

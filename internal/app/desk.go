@@ -58,7 +58,12 @@ func (a *App) managers(next http.HandlerFunc) http.HandlerFunc {
 }
 
 func (a *App) deskForbidden(w http.ResponseWriter, r *http.Request) {
-	http.Error(w, "Only the sales manager can do that.", http.StatusForbidden)
+	if r.Method != http.MethodGet || r.Header.Get("HX-Request") != "" {
+		http.Error(w, "Only the sales manager can do that.", http.StatusForbidden)
+		return
+	}
+	d := a.deskPage(r, "", "Managers only")
+	a.render(w, r, http.StatusForbidden, web.DeskMessage(d, "For the sales manager", "Prices are set by the sales manager. You can see every price on the stacking plan."))
 }
 
 // deskPage is the frame every desk page shares.
