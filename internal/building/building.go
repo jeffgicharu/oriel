@@ -76,9 +76,10 @@ const (
 	BayProjection = 1.2
 	// Balconies on the long façades project this far.
 	BalconyDepth = 1.6
-	// The glass of a bay starts above a window seat and stops under the slab.
+	// The glass of a bay starts above a window seat and stops under a cobalt
+	// band about 0.4 m deep that runs up to the slab above.
 	BaySeatHeight = 0.45
-	BayHeadHeight = 2.75
+	BayHeadHeight = 2.45
 )
 
 // LevelElevation is the height of a level's floor above the ground.

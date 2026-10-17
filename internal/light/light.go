@@ -111,9 +111,10 @@ func windows(u building.Unit) []Window {
 		}
 		out = append(out, w)
 	}
-	// The bay looks out on its own faces, under its cobalt head only.
+	// The bay looks out on its own faces. Its glass runs from the seat to the
+	// cobalt band, flush with it, so nothing shades it from above.
 	for _, f := range u.Position.Bay.Facing {
-		out = append(out, Window{Facing: f, Overhang: 0.25, Height: 2.3})
+		out = append(out, Window{Facing: f, Height: building.BayHeadHeight - building.BaySeatHeight})
 	}
 	return out
 }
