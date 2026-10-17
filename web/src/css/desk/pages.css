@@ -847,7 +847,7 @@
     grid-column: 1 / -1;
   }
 
-  .pricing__bases .input {
+  .pricing__bases td .input {
     max-width: none;
   }
 }
