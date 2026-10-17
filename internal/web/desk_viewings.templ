@@ -124,8 +124,8 @@ templ DeskViewings(d DeskPage, x DeskViewingsData) {
 						</fieldset>
 						<div class="field">
 							<label class="field__label" for="f-times">Viewing times</label>
-							<input class="input mono" id="f-times" name="times" type="text" value={ strings.Join(x.Config.Times, ", ") }/>
-							<p class="field__hint">24-hour times, separated by commas. Each visit takes 45 minutes.</p>
+							<textarea class="textarea textarea--short mono" id="f-times" name="times" rows="3" aria-describedby="f-times-hint">{ strings.Join(x.Config.Times, ", ") }</textarea>
+							<p class="field__hint" id="f-times-hint">24-hour times, separated by commas. Each visit takes 45 minutes.</p>
 						</div>
 						<div class="field">
 							<label class="field__label" for="f-capacity">Parties at once</label>

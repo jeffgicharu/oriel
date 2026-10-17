@@ -46,11 +46,11 @@ templ DeskActivity(d DeskPage, x DeskActivityData) {
 							}
 						</span>
 						<span class="activity__what">
-							{ e.Action }
+							{{ before, after := ActivityWords(e.Action) }}
 							if e.Link != "" {
-								<a href={ templ.SafeURL(e.Link) }>{ e.Subject }</a>
+								{ before }<a href={ templ.SafeURL(e.Link) }>{ e.Subject }</a>{ after }
 							} else {
-								<strong>{ e.Subject }</strong>
+								{ before }<strong>{ e.Subject }</strong>{ after }
 							}
 							if e.Detail != "" {
 								<span class="activity__detail">{ e.Detail }</span>

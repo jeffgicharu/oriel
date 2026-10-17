@@ -72,9 +72,9 @@ func (db *DB) SetUnitStatus(ctx context.Context, unitID, to, reason string, by S
 		if err := setUnitStatus(ctx, tx, unitID, to, now, by.ID, reason); err != nil {
 			return err
 		}
-		action := "released a home"
+		action := "released {} for sale"
 		if to == Withheld {
-			action = "withheld a home"
+			action = "withheld {} from sale"
 		}
 		return Activity(ctx, tx, now, by.ID, "staff", action, unitID, reason, "/desk/stack?home="+unitID)
 	})
@@ -120,7 +120,7 @@ func (db *DB) SetPriceOverride(ctx context.Context, unitID string, price int64, 
 			unitID, now.Unix(), by.ID, from, to, reason); err != nil {
 			return err
 		}
-		return Activity(ctx, tx, now, by.ID, "staff", "set a home’s price", unitID, from+" → "+to+" · "+reason, "/desk/stack?home="+unitID)
+		return Activity(ctx, tx, now, by.ID, "staff", "set the price of", unitID, from+" → "+to+" · "+reason, "/desk/stack?home="+unitID)
 	})
 }
 
@@ -181,7 +181,7 @@ func (db *DB) PublishPriceList(ctx context.Context, l pricing.List, note string,
 		if detail == "" {
 			detail = "New prices"
 		}
-		return Activity(ctx, tx, now, by.ID, "staff", "published a price list", fmt.Sprintf("Price list %d", id), detail, "/desk/pricing")
+		return Activity(ctx, tx, now, by.ID, "staff", "published {}", fmt.Sprintf("Price list %d", id), detail, "/desk/pricing")
 	})
 	return id, err
 }
@@ -211,9 +211,9 @@ func (db *DB) SetViewingOutcome(ctx context.Context, ref, outcome, notes string,
 			return err
 		}
 		label := "Attended the viewing"
-		action := "marked a viewing attended"
+		action := "marked {}’s viewing attended"
 		if outcome == "no_show" {
-			label, action = "Did not come to the viewing", "marked a no-show"
+			label, action = "Did not come to the viewing", "marked {} as a no-show"
 		}
 		if n := strings.TrimSpace(notes); n != "" {
 			label += ": " + n
@@ -240,7 +240,7 @@ func (db *DB) SaveViewingConfig(ctx context.Context, cfg viewings.Config, by Sta
 				return err
 			}
 		}
-		return Activity(ctx, tx, now, by.ID, "staff", "changed the viewing hours", "Viewings", fmt.Sprintf("%d slots a day, %s per slot", len(cfg.Times), capacity), "/desk/viewings")
+		return Activity(ctx, tx, now, by.ID, "staff", "changed {}", "the viewing hours", fmt.Sprintf("%d slots a day, %s per slot", len(cfg.Times), capacity), "/desk/viewings")
 	})
 }
 
@@ -270,7 +270,7 @@ func (db *DB) BlockDay(ctx context.Context, day, reason string, by Staff, now ti
 		if booked > 0 {
 			detail += fmt.Sprintf(" · %d booked %s to rearrange", booked, map[bool]string{true: "viewing", false: "viewings"}[booked == 1])
 		}
-		return Activity(ctx, tx, now, by.ID, "staff", "closed a day for viewings", t.Format("Mon 2 Jan"), detail, "/desk/viewings")
+		return Activity(ctx, tx, now, by.ID, "staff", "closed {} for viewings", t.Format("Mon 2 Jan"), detail, "/desk/viewings")
 	})
 }
 
@@ -287,7 +287,11 @@ func (db *DB) UnblockDay(ctx context.Context, day string, by Staff, now time.Tim
 		if n, _ := res.RowsAffected(); n == 0 {
 			return nil
 		}
-		return Activity(ctx, tx, now, by.ID, "staff", "opened a day for viewings", day, "", "/desk/viewings")
+		when := day
+		if t, err := time.ParseInLocation("2006-01-02", day, time.UTC); err == nil {
+			when = t.Format("Mon 2 Jan")
+		}
+		return Activity(ctx, tx, now, by.ID, "staff", "opened {} for viewings", when, "", "/desk/viewings")
 	})
 }
 

@@ -36,6 +36,10 @@
   resize: vertical;
 }
 
+.textarea--short {
+  min-height: 0;
+}
+
 .select {
   appearance: none;
   padding-right: 40px;

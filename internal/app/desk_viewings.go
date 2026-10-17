@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/jeffgicharu/oriel/internal/store"
 	"github.com/jeffgicharu/oriel/internal/viewings"
@@ -120,7 +121,7 @@ func (a *App) deskViewingHours(w http.ResponseWriter, r *http.Request) {
 				cfg.Days = append(cfg.Days, time.Weekday(n))
 			}
 		}
-		for _, t := range strings.FieldsFunc(r.PostFormValue("times"), func(c rune) bool { return c == ',' || c == ' ' || c == ';' }) {
+		for _, t := range strings.FieldsFunc(r.PostFormValue("times"), func(c rune) bool { return c == ',' || c == ';' || unicode.IsSpace(c) }) {
 			h, m, err := viewings.ParseClock(t)
 			if err != nil {
 				return "", userError("“" + t + "” is not a time; write times like 10:00, 14:45")

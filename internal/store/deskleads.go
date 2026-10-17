@@ -219,7 +219,7 @@ func (db *DB) MoveLead(ctx context.Context, leadID int64, stage, reason string, 
 		if err := SetLeadStage(ctx, tx, leadID, now, by.ID, stage, strings.TrimSpace(reason)); err != nil {
 			return err
 		}
-		return Activity(ctx, tx, now, by.ID, "staff", "moved a lead to "+StageTitle(stage), name, strings.TrimSpace(reason), fmt.Sprintf("/desk/leads/%d", leadID))
+		return Activity(ctx, tx, now, by.ID, "staff", "moved {} to "+StageTitle(stage), name, strings.TrimSpace(reason), fmt.Sprintf("/desk/leads/%d", leadID))
 	})
 }
 
@@ -264,7 +264,7 @@ func (db *DB) AddNote(ctx context.Context, leadID int64, body string, by Staff, 
 		if err := LeadEvent(ctx, tx, leadID, now, by.ID, "note", body, ""); err != nil {
 			return err
 		}
-		return Activity(ctx, tx, now, by.ID, "staff", "added a note", name, clip(body, 80), fmt.Sprintf("/desk/leads/%d", leadID))
+		return Activity(ctx, tx, now, by.ID, "staff", "added a note on", name, clip(body, 80), fmt.Sprintf("/desk/leads/%d", leadID))
 	})
 }
 
@@ -320,7 +320,7 @@ func (db *DB) AssignLead(ctx context.Context, leadID, agentID int64, by Staff, n
 		if err := LeadEvent(ctx, tx, leadID, now, by.ID, "assigned", "Assigned to "+agentName, ""); err != nil {
 			return err
 		}
-		return Activity(ctx, tx, now, by.ID, "staff", "assigned a lead", leadName, "to "+agentName, fmt.Sprintf("/desk/leads/%d", leadID))
+		return Activity(ctx, tx, now, by.ID, "staff", "assigned {} to "+agentName, leadName, "", fmt.Sprintf("/desk/leads/%d", leadID))
 	})
 }
 
@@ -371,7 +371,7 @@ func (db *DB) AddLead(ctx context.Context, n NewLead, by Staff, now time.Time) (
 		if err := LeadEvent(ctx, tx, id, now, by.ID, "created", body, ""); err != nil {
 			return err
 		}
-		return Activity(ctx, tx, now, by.ID, "staff", "added a lead", n.Name, n.Source, fmt.Sprintf("/desk/leads/%d", id))
+		return Activity(ctx, tx, now, by.ID, "staff", "added {} as a lead", n.Name, n.Source, fmt.Sprintf("/desk/leads/%d", id))
 	})
 	return id, err
 }

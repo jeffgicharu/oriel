@@ -429,3 +429,12 @@ func ParsePercentBP(s string) (int64, bool) {
 	}
 	return w*100 + f, true
 }
+
+// ActivityWords splits a line of the activity log around its subject, which
+// the action marks with {}; without a mark the subject comes last.
+func ActivityWords(action string) (before, after string) {
+	if b, a, ok := strings.Cut(action, "{}"); ok {
+		return b, a
+	}
+	return action + " ", ""
+}

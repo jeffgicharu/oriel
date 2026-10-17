@@ -75,6 +75,7 @@ function applyUnit(change: Change): void {
           fresh.classList.add("is-changed");
           setTimeout(() => fresh.classList.remove("is-changed"), 2400);
         });
+        markOpenHome();
       })
       .catch(() => undefined);
   });
@@ -106,6 +107,15 @@ function setUpLive(): void {
   window.addEventListener("pagehide", () => source.close());
 }
 
+// The home whose drawer is open is marked on the stacking plan.
+function markOpenHome(): void {
+  const open = document.querySelector<HTMLElement>("#drawer [data-home]")?.dataset.home ?? "";
+  document.querySelectorAll<HTMLElement>(".stack-cell").forEach((cell) => {
+    if (open && cell.dataset.unit === open) cell.setAttribute("aria-current", "true");
+    else cell.removeAttribute("aria-current");
+  });
+}
+
 // The home drawer on the stacking plan closes with its button or Escape.
 function setUpDrawer(): void {
   const drawer = document.getElementById("drawer");
@@ -113,8 +123,11 @@ function setUpDrawer(): void {
   const close = () => {
     if (!drawer.firstElementChild) return;
     drawer.replaceChildren();
+    markOpenHome();
     if (location.search.includes("home=")) history.pushState(null, "", location.pathname);
   };
+  drawer.addEventListener("htmx:afterSwap", markOpenHome);
+  markOpenHome();
   drawer.addEventListener("click", (e) => {
     if ((e.target as HTMLElement).closest("[data-drawer-close]")) close();
   });
@@ -123,6 +136,7 @@ function setUpDrawer(): void {
   });
   window.addEventListener("popstate", () => {
     if (!location.search.includes("home=")) drawer.replaceChildren();
+    markOpenHome();
   });
 }
 

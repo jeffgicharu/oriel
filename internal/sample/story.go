@@ -311,14 +311,14 @@ func (s *Story) blocked(t time.Time) bool {
 func (s *Story) publishPriceLists() {
 	launch := pricing.Launch()
 	s.PriceLists = append(s.PriceLists, PriceList{ID: 1, PublishedAt: s.Launch.Add(-18 * time.Hour), By: 1, List: launch, Note: "Launch price list"})
-	s.Activity = append(s.Activity, Activity{At: s.Launch.Add(-18 * time.Hour), StaffID: 1, Actor: "staff", Action: "published a price list", Subject: "Price list 1", Detail: "Launch prices", Link: "/desk/pricing"})
+	s.Activity = append(s.Activity, Activity{At: s.Launch.Add(-18 * time.Hour), StaffID: 1, Actor: "staff", Action: "published {}", Subject: "Price list 1", Detail: "Launch prices", Link: "/desk/pricing"})
 
 	revised := pricing.Launch()
 	revised.FloorBP = 100
 	at := s.Launch.AddDate(0, 0, 119).Add(-1 * time.Hour)
 	if at.Before(s.Now) {
 		s.PriceLists = append(s.PriceLists, PriceList{ID: 2, PublishedAt: at, By: 1, List: revised, Note: "Floor premium raised from 0.8% to 1% after strong sales on the upper floors"})
-		s.Activity = append(s.Activity, Activity{At: at, StaffID: 1, Actor: "staff", Action: "published a price list", Subject: "Price list 2", Detail: "Floor premium 0.8% → 1%", Link: "/desk/pricing"})
+		s.Activity = append(s.Activity, Activity{At: at, StaffID: 1, Actor: "staff", Action: "published {}", Subject: "Price list 2", Detail: "Floor premium 0.8% → 1%", Link: "/desk/pricing"})
 	}
 }
 
@@ -454,7 +454,7 @@ func (s *Story) newLead(wantType string, created time.Time) *Lead {
 	s.event(l, created, 0, "enquiry", messages[s.rng.IntN(len(messages))], "")
 	s.event(l, created.Add(4*time.Minute), 1, "assigned", "Assigned to "+s.staffName(agent), "")
 	if source == "Website" {
-		s.Activity = append(s.Activity, Activity{At: created, Actor: "visitor", Action: "sent an enquiry", Subject: name, Detail: interest, Link: fmt.Sprintf("/desk/leads/%d", l.ID)})
+		s.Activity = append(s.Activity, Activity{At: created, Actor: "visitor", Action: "took an enquiry from", Subject: name, Detail: interest, Link: fmt.Sprintf("/desk/leads/%d", l.ID)})
 	}
 	return l
 }
@@ -576,7 +576,11 @@ func (s *Story) request(l *Lead, unit string, at time.Time, fromWebsite bool) *R
 	s.setStatus(unit, at, by, "held", "Reservation "+r.Ref+" requested")
 	s.event(l, at, by, "reservation_requested", fmt.Sprintf("Requested %s on %s", unit, plan.Name), unit)
 	s.stage(l, at.Add(time.Minute), by, "reservation", "")
-	s.Activity = append(s.Activity, Activity{At: at, StaffID: by, Actor: actor, Action: "requested a reservation", Subject: unit, Detail: l.Name + " · " + plan.Name, Link: "/desk/reservations"})
+	action := "requested a reservation for"
+	if fromWebsite {
+		action = "took a reservation request for"
+	}
+	s.Activity = append(s.Activity, Activity{At: at, StaffID: by, Actor: actor, Action: action, Subject: unit, Detail: l.Name + " · " + plan.Name, Link: "/desk/reservations"})
 	return r
 }
 
@@ -589,7 +593,7 @@ func (s *Story) confirm(l *Lead, r *Reservation, at time.Time) {
 	r.OfferNumber = fmt.Sprintf("OR-%d-%04d", year, s.nextOffer[year])
 	s.setStatus(r.UnitID, at, 1, "reserved", "Reservation "+r.Ref+" confirmed")
 	s.event(l, at, 1, "reservation_confirmed", "Letter of offer "+r.OfferNumber+" issued", r.UnitID)
-	s.Activity = append(s.Activity, Activity{At: at, StaffID: 1, Actor: "staff", Action: "confirmed a reservation", Subject: r.UnitID, Detail: l.Name + " · " + r.OfferNumber, Link: "/desk/reservations"})
+	s.Activity = append(s.Activity, Activity{At: at, StaffID: 1, Actor: "staff", Action: "confirmed the reservation for", Subject: r.UnitID, Detail: l.Name + " · " + r.OfferNumber, Link: "/desk/reservations"})
 }
 
 func (s *Story) deposit(l *Lead, r *Reservation, at time.Time) {
@@ -601,7 +605,7 @@ func (s *Story) deposit(l *Lead, r *Reservation, at time.Time) {
 	s.setStatus(r.UnitID, at, l.AgentID, "sold", "Deposit received on "+r.Ref)
 	s.event(l, at, l.AgentID, "deposit", "Deposit of KES "+thousands(r.DepositAmount)+" received", r.UnitID)
 	s.stage(l, at.Add(time.Minute), l.AgentID, "won", "")
-	s.Activity = append(s.Activity, Activity{At: at, StaffID: l.AgentID, Actor: "staff", Action: "recorded a deposit", Subject: r.UnitID, Detail: l.Name + " · KES " + thousands(r.DepositAmount), Link: "/desk/reservations"})
+	s.Activity = append(s.Activity, Activity{At: at, StaffID: l.AgentID, Actor: "staff", Action: "recorded the deposit for", Subject: r.UnitID, Detail: l.Name + " · KES " + thousands(r.DepositAmount), Link: "/desk/reservations"})
 }
 
 // ---------- The sales ----------
@@ -727,15 +731,32 @@ func (s *Story) addPipeline() {
 		}
 	}
 
-	// Viewing: some booked for the coming fortnight, some seen over the last
-	// ten days, spread so that every recent day the suite was open has visits.
+	// Viewing: some booked for today and the coming fortnight, some seen over
+	// the last ten days, spread so that every recent day the suite was open
+	// has visits.
 	for i := 0; i < 30; i++ {
 		created := s.within(s.day(-(3 + s.rng.IntN(40))), 7, 21)
 		l := s.newLead(pick(), created)
 		contacted := s.past(created.Add(time.Duration(2+s.rng.IntN(48)) * time.Hour))
 		s.contact(l, contacted)
 		if i < 15 {
-			slot, ok := s.slotNear(s.day(1+s.rng.IntN(12)), 1, s.Now.Add(3*time.Hour), s.day(viewings.BookAhead))
+			// The first few are today, if the suite is open, so its agenda
+			// has visits on it whenever the desk is opened.
+			var slot time.Time
+			ok := false
+			if i < 4 {
+				slot, ok = s.slotNear(s.day(0), 1, contacted.Add(18*time.Hour), s.day(1).Add(-time.Minute))
+			}
+			if ok && slot.Add(Length()).Before(s.Now) {
+				booked := s.between(contacted.Add(10*time.Minute), slot.Add(-12*time.Hour))
+				s.book(l, slot, booked, "", "attended")
+				s.stage(l, slot.Add(Length()+time.Minute), l.AgentID, "viewing", "")
+				l.FollowUpOn = s.day(s.rng.IntN(4)).Format("2006-01-02")
+				continue
+			}
+			if !ok {
+				slot, ok = s.slotNear(s.day(1+s.rng.IntN(12)), 1, s.Now.Add(3*time.Hour), s.day(viewings.BookAhead))
+			}
 			if !ok {
 				continue
 			}

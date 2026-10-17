@@ -221,7 +221,7 @@ func (db *DB) BookViewing(ctx context.Context, req ViewingRequest, now time.Time
 		if req.UnitID != "" {
 			detail += " · home " + req.UnitID
 		}
-		return Activity(ctx, tx, now, 0, "visitor", "booked a viewing", req.Name, detail, fmt.Sprintf("/desk/leads/%d", leadID))
+		return Activity(ctx, tx, now, 0, "visitor", "took a viewing booking from", req.Name, detail, fmt.Sprintf("/desk/leads/%d", leadID))
 	})
 	return v, err
 }
@@ -265,6 +265,6 @@ func (db *DB) CancelViewing(ctx context.Context, ref string, now time.Time, staf
 		if staffID > 0 {
 			actor = "staff"
 		}
-		return Activity(ctx, tx, now, staffID, actor, "cancelled a viewing", name, when, fmt.Sprintf("/desk/leads/%d", leadID))
+		return Activity(ctx, tx, now, staffID, actor, "cancelled a viewing for", name, when, fmt.Sprintf("/desk/leads/%d", leadID))
 	})
 }

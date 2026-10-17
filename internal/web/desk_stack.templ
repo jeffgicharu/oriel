@@ -87,7 +87,7 @@ templ stackCell(h store.Home, wide bool) {
 }
 
 templ DeskHome(x DeskHomeData) {
-	<div class="desk-home">
+	<div class="desk-home" data-home={ x.Home.ID }>
 		<button class="desk-drawer__close" type="button" aria-label="Close" data-drawer-close>×</button>
 		<p class="label">{ LevelName(x.Home.Level) } · Type { x.Home.Type.Code }</p>
 		<h2 class="desk-h1">Home { x.Home.ID }</h2>

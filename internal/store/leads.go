@@ -172,7 +172,7 @@ func (db *DB) Enquire(ctx context.Context, c Contact, message string, at time.Ti
 		if err := LeadEvent(ctx, tx, id, at, 0, "enquiry", message, ""); err != nil {
 			return err
 		}
-		return Activity(ctx, tx, at, 0, "visitor", "sent an enquiry", c.Name, c.Interest, fmt.Sprintf("/desk/leads/%d", id))
+		return Activity(ctx, tx, at, 0, "visitor", "took an enquiry from", c.Name, c.Interest, fmt.Sprintf("/desk/leads/%d", id))
 	})
 	return leadID, err
 }

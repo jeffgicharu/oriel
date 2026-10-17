@@ -110,7 +110,7 @@ func (db *DB) RequestReservation(ctx context.Context, req ReservationRequest, pr
 		if err := SetLeadStage(ctx, tx, leadID, now, 0, "reservation", ""); err != nil {
 			return err
 		}
-		return Activity(ctx, tx, now, 0, "visitor", "requested a reservation", r.UnitID, req.Name+" · "+plan.Name, "/desk/reservations")
+		return Activity(ctx, tx, now, 0, "visitor", "took a reservation request for", r.UnitID, req.Name+" · "+plan.Name, "/desk/reservations")
 	})
 	return r, err
 }
@@ -166,7 +166,7 @@ func lapseHolds(ctx context.Context, tx *sql.Tx, now time.Time) error {
 		if err := SetLeadStage(ctx, tx, x.lead, now, 0, "viewing", "hold lapsed"); err != nil {
 			return err
 		}
-		if err := Activity(ctx, tx, now, 0, "system", "released a lapsed hold", x.unit, x.name+" · "+x.ref, "/desk/reservations"); err != nil {
+		if err := Activity(ctx, tx, now, 0, "system", "released the lapsed hold on", x.unit, x.name+" · "+x.ref, "/desk/reservations"); err != nil {
 			return err
 		}
 	}
@@ -260,7 +260,7 @@ func (db *DB) ConfirmReservation(ctx context.Context, ref string, staffID int64,
 		if err := LeadEvent(ctx, tx, leadID, now, staffID, "reservation_confirmed", "Letter of offer "+offer+" issued", unit); err != nil {
 			return err
 		}
-		return Activity(ctx, tx, now, staffID, "staff", "confirmed a reservation", unit, name+" · "+offer, "/desk/reservations")
+		return Activity(ctx, tx, now, staffID, "staff", "confirmed the reservation for", unit, name+" · "+offer, "/desk/reservations")
 	})
 }
 
@@ -287,7 +287,7 @@ func (db *DB) DeclineReservation(ctx context.Context, ref, reason string, staffI
 		if err := SetLeadStage(ctx, tx, leadID, now, staffID, "viewing", ""); err != nil {
 			return err
 		}
-		return Activity(ctx, tx, now, staffID, "staff", "declined a reservation", unit, name+" · "+reason, "/desk/reservations")
+		return Activity(ctx, tx, now, staffID, "staff", "declined the reservation for", unit, name+" · "+reason, "/desk/reservations")
 	})
 }
 
@@ -314,7 +314,7 @@ func (db *DB) RecordDeposit(ctx context.Context, ref string, amount int64, staff
 		if err := SetLeadStage(ctx, tx, leadID, now, staffID, "won", ""); err != nil {
 			return err
 		}
-		return Activity(ctx, tx, now, staffID, "staff", "recorded a deposit", unit, name+" · KES "+thousands(amount), "/desk/reservations")
+		return Activity(ctx, tx, now, staffID, "staff", "recorded the deposit for", unit, name+" · KES "+thousands(amount), "/desk/reservations")
 	})
 }
 

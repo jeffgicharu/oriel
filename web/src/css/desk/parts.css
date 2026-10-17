@@ -471,6 +471,14 @@
   display: none;
 }
 
+/* On a wide screen the page makes room for the drawer rather than hiding
+   the far side of the plan under it. */
+@media (min-width: 1200px) {
+  .desk-content:has(.desk-drawer:not(:empty)) {
+    padding-right: calc(460px + 24px);
+  }
+}
+
 .desk-drawer__close {
   position: absolute;
   top: 14px;
