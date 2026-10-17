@@ -383,7 +383,7 @@ body.menu-open {
   line-height: 0.74;
   font-weight: 790;
   font-stretch: 125%;
-  letter-spacing: -0.05em;
+  letter-spacing: -0.015em;
   color: var(--graphite-2);
   margin-bottom: -0.06em;
   user-select: none;

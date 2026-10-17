@@ -1,26 +1,30 @@
 /* ---------- Home: opening ---------- */
 
+/* The stage and the words share the first row, so the building stands on the
+   top rule of the facts strip. On phones they stack: building, then words. */
 .hero {
   position: relative;
-  min-height: 100svh;
   display: grid;
-  grid-template-rows: 1fr auto;
+  grid-template-columns: 100%;
+  grid-template-rows: auto auto auto;
   padding-top: var(--header-h);
   overflow: hidden;
 }
 
 .hero__stage {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
+  grid-area: 1 / 1;
+  position: relative;
+  height: clamp(300px, 46svh, 460px);
+  margin-top: 12px;
 }
 
 .hero__drawing {
   position: absolute;
-  right: clamp(-40px, 2vw, 80px);
+  left: 50%;
   bottom: 0;
-  height: min(86%, 820px);
+  height: 100%;
   width: auto;
+  transform: translateX(-50%);
   color: var(--graphite);
 }
 
@@ -29,20 +33,70 @@
 }
 
 .hero__content {
+  grid-area: 2 / 1;
   position: relative;
   z-index: 1;
-  align-self: end;
   display: grid;
-  gap: clamp(22px, 3vw, 36px);
-  padding-bottom: clamp(40px, 6vw, 88px);
-  pointer-events: none;
+  gap: clamp(20px, 3vw, 34px);
+  padding-top: 28px;
+  padding-bottom: clamp(40px, 6vw, 80px);
+  border-top: 1px solid var(--rule);
 }
 
-.hero__content > * {
-  pointer-events: auto;
+.hero__strip {
+  grid-area: 3 / 1;
+}
+
+.hero__place span {
+  display: block;
+}
+
+@media (min-width: 900px) {
+  .hero {
+    min-height: 100svh;
+    grid-template-rows: 1fr auto;
+  }
+
+  .hero__stage {
+    grid-area: 1 / 1;
+    height: auto;
+    margin-top: 0;
+  }
+
+  .hero__drawing {
+    left: auto;
+    right: clamp(0px, 6vw, 120px);
+    height: min(88%, 820px);
+    transform: none;
+  }
+
+  .hero__content {
+    grid-area: 1 / 1;
+    align-self: end;
+    padding-top: 0;
+    border-top: 0;
+    pointer-events: none;
+  }
+
+  .hero__content > * {
+    pointer-events: auto;
+  }
+
+  .hero__strip {
+    grid-area: 2 / 1;
+  }
+
+  .hero__place span {
+    display: inline;
+  }
+
+  .hero__place span + span::before {
+    content: " · ";
+  }
 }
 
 .hero__title {
+  font-size: clamp(50px, 7.2vw, 128px);
   max-width: 9.5ch;
 }
 
@@ -55,10 +109,8 @@
 .hero__strip {
   position: relative;
   z-index: 1;
-  border-top: 1px solid var(--rule);
-  background: rgb(236 237 234 / 0.72);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
+  border-top: 1px solid var(--rule-strong);
+  background: var(--plaster);
 }
 
 .hero__facts {
