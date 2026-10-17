@@ -180,14 +180,15 @@ func (d *doc) header(title string, rows [][2]string) {
 	h := 26 + rowH*float64(len(rows))
 	d.rect(bx, marginT-6, bw, h, nil, &graphite, 0.8)
 	d.spaced(bx+10, marginT+2, mono, 6.5, 1.4, inkSoft, strings.ToUpper(title))
+	// Text is placed by its baseline, so each row's rule sits above its words.
 	for i, r := range rows {
-		y := marginT + 20 + rowH*float64(i)
-		d.line(bx, y-3, right, y-3, 0.4, rule)
-		d.text(bx+10, y+1, sans, 7.5, inkSoft, r[0])
-		d.rightText(right-10, y+1, mono, 8, graphite, r[1])
+		y := marginT + 22 + rowH*float64(i)
+		d.line(bx, y-11, right, y-11, 0.4, rule)
+		d.text(bx+10, y, sans, 7.5, inkSoft, r[0])
+		d.rightText(right-10, y, mono, 8, graphite, r[1])
 	}
-	d.y = marginT + h + 26
-	d.line(marginL, d.y-12, right, d.y-12, 0.8, graphite)
+	d.line(marginL, marginT+h+8, right, marginT+h+8, 0.8, graphite)
+	d.y = marginT + h + 34
 }
 
 func (d *doc) drawFooter() {

@@ -399,3 +399,187 @@
     text-align: right;
   }
 }
+
+/* Leads: the pipeline board */
+.board {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(240px, 1fr);
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  align-items: start;
+}
+
+.board__col {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  padding: 10px;
+  border: 1px solid var(--rule-strong);
+  background: var(--plaster-lo);
+  min-height: 200px;
+}
+
+.board__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 2px 4px 6px;
+  border-bottom: 2px solid var(--graphite);
+}
+
+.board__title {
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.board__count {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.board__cards {
+  display: grid;
+  gap: 6px;
+  min-height: 60px;
+  align-content: start;
+}
+
+.board__more {
+  padding: 4px;
+  font-size: 12px;
+}
+
+.lead-card {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid var(--rule-strong);
+  background: var(--plaster-hi);
+  cursor: grab;
+  user-select: none;
+  transition: box-shadow 0.15s var(--ease);
+}
+
+.lead-card:hover {
+  box-shadow: 0 6px 16px -10px rgb(26 29 31 / 0.5);
+}
+
+.lead-card.is-chosen {
+  cursor: grabbing;
+  box-shadow: 0 12px 26px -12px rgb(26 29 31 / 0.6);
+}
+
+.lead-card.is-ghost {
+  opacity: 0.35;
+  border-style: dashed;
+}
+
+.lead-card.is-saving {
+  opacity: 0.6;
+}
+
+.lead-card__name {
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.lead-card__name:hover {
+  text-decoration: underline;
+}
+
+.lead-card__interest {
+  font-size: 12.5px;
+  color: var(--graphite-2);
+}
+
+.lead-card__meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+  color: var(--ink-soft);
+}
+
+.lead-card__follow.is-late {
+  color: var(--alert);
+  font-weight: 600;
+}
+
+.lead-card__age {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+}
+
+/* Stage tags in tables and headers */
+.stage-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border: 1px solid var(--rule-strong);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.stage-tag--big {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+.stage-tag--viewing,
+.stage-tag--reservation {
+  border-color: var(--cobalt);
+  color: var(--cobalt);
+}
+
+.stage-tag--won {
+  border-color: var(--success);
+  background: var(--success-wash);
+  color: var(--success);
+}
+
+.stage-tag--lost {
+  color: var(--ink-faint);
+  border-style: dashed;
+}
+
+.desk-table .is-late {
+  color: var(--alert);
+  font-weight: 600;
+}
+
+/* A lead's page */
+.lead-page {
+  display: grid;
+  gap: 20px;
+  align-items: start;
+}
+
+.lead-page > * {
+  min-width: 0;
+}
+
+@media (min-width: 1100px) {
+  .lead-page {
+    grid-template-columns: minmax(0, 7fr) minmax(300px, 4fr);
+  }
+}
+
+.lead-page__main,
+.lead-page__side {
+  display: grid;
+  gap: 16px;
+}
+
+.lead-timeline .is-note .desk-timeline__body {
+  padding-left: 10px;
+  border-left: 2px solid var(--cobalt);
+}
+
+.new-lead {
+  max-width: 860px;
+}

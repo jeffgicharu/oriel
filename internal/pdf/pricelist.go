@@ -45,7 +45,7 @@ func PriceList(p PriceListDoc) ([]byte, error) {
 	d.para(marginL, width, sans, 9.5, 14, inkSoft, fmt.Sprintf("Every home still for sale, with its price on the list in force. Homes on hold are waiting for a reservation to be confirmed and may come free. Completion is planned for %s.", plans.Completion.Format("January 2006")))
 	d.y += 16
 
-	cols := []float64{marginL, marginL + 52, marginL + 100, marginL + 238, marginL + 300, right - 92, right}
+	cols := []float64{marginL, marginL + 52, marginL + 100, marginL + 214, marginL + 270, marginL + 330, right}
 	head := func() {
 		d.text(cols[0], d.y, sans, 7.5, inkSoft, "Home")
 		d.text(cols[1], d.y, sans, 7.5, inkSoft, "Level")

@@ -323,3 +323,43 @@ func ParseShillings(s string) (int64, error) {
 	clean := strings.NewReplacer(",", "", " ", "", "KES", "", "kes", "", "Ksh", "", "_", "").Replace(strings.TrimSpace(s))
 	return strconv.ParseInt(clean, 10, 64)
 }
+
+func leadsLede(s store.Staff) string {
+	if s.Manager() {
+		return "Everyone the team is talking to, from the first enquiry to the keys."
+	}
+	return "Your leads, from the first enquiry to the keys."
+}
+
+func phoneLink(p string) string { return strings.ReplaceAll(p, " ", "") }
+
+func buyingName(b string) string {
+	if b == "investment" {
+		return "To let"
+	}
+	return "To live in"
+}
+
+func viewingStatus(s string) string {
+	switch s {
+	case "booked":
+		return "Booked"
+	case "attended":
+		return "Came"
+	case "no_show":
+		return "Did not come"
+	case "cancelled":
+		return "Cancelled"
+	}
+	return s
+}
+
+func reservationTab(status string) string {
+	switch status {
+	case "requested":
+		return "waiting"
+	case "confirmed", "completed":
+		return status
+	}
+	return "closed"
+}

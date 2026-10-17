@@ -1,0 +1,365 @@
+package web
+
+import (
+	"strconv"
+	"time"
+
+	"github.com/jeffgicharu/oriel/internal/store"
+)
+
+// DeskLeadsData is the leads page, as a board or a table.
+type DeskLeadsData struct {
+	View    string // "board" or "table"
+	Columns []LeadColumn
+	List    []store.Lead
+	Filter  store.LeadFilter
+	Team    []store.Staff
+	Now     time.Time
+	CSV     string // the address of the same list as a CSV file
+	Total   int
+}
+
+// LeadColumn is one stage of the board.
+type LeadColumn struct {
+	Stage string
+	Leads []store.Lead
+	More  int // leads in the stage not shown on the board
+}
+
+templ DeskLeads(d DeskPage, x DeskLeadsData) {
+	@DeskLayout(d) {
+		@deskHeader("Leads", leadsLede(d.Staff)) {
+			<a class="btn btn--line btn--small" href={ templ.SafeURL(x.CSV) }>Export CSV</a>
+			<a class="btn btn--cobalt btn--small" href="/desk/leads/new">Add a lead</a>
+		}
+		<nav class="desk-tabs" aria-label="View">
+			<a href="/desk/leads" { current(x.View == "board")... }>Pipeline</a>
+			<a href="/desk/leads?view=table" { current(x.View == "table")... }>Table<span class="tnum">{ strconv.Itoa(x.Total) }</span></a>
+		</nav>
+		if x.View == "board" {
+			<p class="desk-small">Drag a lead to move it along. Moving a lead to Lost asks why.</p>
+			<div class="board" data-board>
+				for _, col := range x.Columns {
+					<section class="board__col" aria-label={ store.StageTitle(col.Stage) }>
+						<header class="board__head">
+							<h2 class="board__title">{ store.StageTitle(col.Stage) }</h2>
+							<span class="board__count tnum">{ strconv.Itoa(len(col.Leads) + col.More) }</span>
+						</header>
+						<ol class="board__cards" role="list" data-stage={ col.Stage }>
+							for _, l := range col.Leads {
+								@leadCard(l, x.Now)
+							}
+						</ol>
+						if col.More > 0 {
+							<a class="board__more desk-link" href={ templ.SafeURL("/desk/leads?view=table&stage=" + col.Stage) }>and { strconv.Itoa(col.More) } more</a>
+						}
+					</section>
+				}
+			</div>
+			<dialog class="desk-dialog" data-lost-dialog>
+				<form class="desk-form" method="dialog">
+					<h2 class="desk-h2">Why was this lead lost?</h2>
+					<div class="field">
+						<label class="field__label" for="f-lost-reason">Reason</label>
+						<input class="input" id="f-lost-reason" name="reason" type="text" maxlength="200" required/>
+					</div>
+					<div class="desk-form__row">
+						<button class="btn btn--small" type="submit" value="ok">Move to Lost</button>
+						<button class="btn btn--small btn--line" type="submit" value="cancel" formnovalidate>Cancel</button>
+					</div>
+				</form>
+			</dialog>
+		} else {
+			<form class="desk-filters" method="get" action="/desk/leads">
+				<input type="hidden" name="view" value="table"/>
+				<div class="field">
+					<label class="field__label" for="f-q">Search</label>
+					<input class="input" id="f-q" name="q" type="search" value={ x.Filter.Query } placeholder="Name, email, phone or interest"/>
+				</div>
+				<div class="field">
+					<label class="field__label" for="f-stage">Stage</label>
+					<select class="select" id="f-stage" name="stage">
+						<option value="">Every stage</option>
+						for _, s := range store.Stages {
+							<option value={ s } selected?={ x.Filter.Stage == s }>{ store.StageTitle(s) }</option>
+						}
+					</select>
+				</div>
+				if d.Staff.Manager() {
+					<div class="field">
+						<label class="field__label" for="f-agent">Agent</label>
+						<select class="select" id="f-agent" name="agent">
+							<option value="">Everyone</option>
+							for _, m := range x.Team {
+								<option value={ strconv.FormatInt(m.ID, 10) } selected?={ x.Filter.AgentID == m.ID }>{ m.Name }</option>
+							}
+						</select>
+					</div>
+				}
+				<div class="field">
+					<label class="field__label" for="f-sort">Order</label>
+					<select class="select" id="f-sort" name="sort">
+						<option value="recent" selected?={ x.Filter.Sort == "" || x.Filter.Sort == "recent" }>Latest activity</option>
+						<option value="follow" selected?={ x.Filter.Sort == "follow" }>Follow-up date</option>
+						<option value="name" selected?={ x.Filter.Sort == "name" }>Name</option>
+					</select>
+				</div>
+				<button class="btn btn--small" type="submit">Show</button>
+			</form>
+			if len(x.List) == 0 {
+				<p class="desk-empty">No leads match.</p>
+			} else {
+				<div class="desk-table-wrap">
+					<table class="desk-table">
+						<thead>
+							<tr><th scope="col">Name</th><th scope="col">Stage</th><th scope="col">Agent</th><th scope="col">Interest</th><th scope="col">Source</th><th scope="col">Follow up</th><th scope="col">Last activity</th></tr>
+						</thead>
+						<tbody>
+							for _, l := range x.List {
+								<tr>
+									<th scope="row"><a href={ templ.SafeURL("/desk/leads/" + strconv.FormatInt(l.ID, 10)) }>{ l.Name }</a></th>
+									<td><span class={ "stage-tag", "stage-tag--" + l.Stage }>{ store.StageTitle(l.Stage) }</span></td>
+									<td><span class="desk-dot" style={ dotColour(l.AgentColour) } aria-hidden="true"></span> { l.AgentName }</td>
+									<td class="wrap-cell">{ l.Interest }</td>
+									<td>{ l.Source }</td>
+									<td class={ templ.KV("is-late", l.Overdue(x.Now)) }>
+										if l.FollowUpOn != "" {
+											{ DayLabel(l.FollowUpOn) }
+										}
+									</td>
+									<td>{ When(l.UpdatedAt, x.Now) }</td>
+								</tr>
+							}
+						</tbody>
+					</table>
+				</div>
+				if len(x.List) >= 300 {
+					<p class="desk-small">Showing the first 300. Search or filter to narrow the list.</p>
+				}
+			}
+		}
+	}
+}
+
+templ leadCard(l store.Lead, now time.Time) {
+	<li class="lead-card" data-id={ strconv.FormatInt(l.ID, 10) }>
+		<a class="lead-card__name" href={ templ.SafeURL("/desk/leads/" + strconv.FormatInt(l.ID, 10)) }>{ l.Name }</a>
+		if l.Interest != "" {
+			<span class="lead-card__interest">{ l.Interest }</span>
+		}
+		<span class="lead-card__meta">
+			<span class="desk-dot" style={ dotColour(l.AgentColour) } title={ l.AgentName }></span>
+			if l.FollowUpOn != "" && l.Stage != "won" && l.Stage != "lost" {
+				<span class={ "lead-card__follow", templ.KV("is-late", l.Overdue(now)) }>{ DayLabel(l.FollowUpOn) }</span>
+			}
+			<span class="lead-card__age">{ Ago(l.StageChangedAt, now) }</span>
+		</span>
+	</li>
+}
+
+// DeskLeadData is one lead's page.
+type DeskLeadData struct {
+	Lead         store.Lead
+	Timeline     []store.TimelineEntry
+	Viewings     []store.Viewing
+	Reservations []store.Reservation
+	Team         []store.Staff
+	Now          time.Time
+	Problem      string
+	CanEdit      bool
+}
+
+templ DeskLead(d DeskPage, x DeskLeadData) {
+	@DeskLayout(d) {
+		<nav class="breadcrumb label" aria-label="Breadcrumb"><a href="/desk/leads">Leads</a><span aria-hidden="true">/</span><span aria-current="page">{ x.Lead.Name }</span></nav>
+		@deskHeader(x.Lead.Name, x.Lead.Interest) {
+			<span class={ "stage-tag", "stage-tag--" + x.Lead.Stage, "stage-tag--big" }>{ store.StageTitle(x.Lead.Stage) }</span>
+		}
+		if x.Problem != "" {
+			<div class="notice notice--alert" role="alert">{ x.Problem }</div>
+		}
+		<div class="lead-page">
+			<div class="lead-page__main">
+				if x.CanEdit {
+					<form class="desk-panel desk-form" method="post" action={ templ.SafeURL("/desk/leads/" + strconv.FormatInt(x.Lead.ID, 10) + "/notes") }>
+						<label class="desk-h2" for="f-note">Add a note</label>
+						<textarea class="textarea" id="f-note" name="body" maxlength="2000" required placeholder="A call, a message, what they asked for…"></textarea>
+						<button class="btn btn--small" type="submit">Save the note</button>
+					</form>
+				}
+				<section class="desk-panel" aria-labelledby="lead-history">
+					<h2 class="desk-h2" id="lead-history">History</h2>
+					<ol class="desk-timeline lead-timeline" role="list">
+						for _, e := range x.Timeline {
+							<li class={ "is-" + e.Kind }>
+								<span class="desk-timeline__when mono">{ When(e.At, x.Now) }</span>
+								<span class="desk-timeline__body">
+									{ e.Body }
+									if e.StaffName != "" {
+										<span class="desk-timeline__sub">{ e.StaffName }</span>
+									}
+								</span>
+							</li>
+						}
+					</ol>
+				</section>
+			</div>
+			<aside class="lead-page__side">
+				<section class="desk-panel" aria-labelledby="lead-contact">
+					<h2 class="desk-h2" id="lead-contact">Contact</h2>
+					<dl class="desk-facts">
+						<div><dt class="label">Email</dt><dd><a href={ templ.SafeURL("mailto:" + x.Lead.Email) }>{ x.Lead.Email }</a></dd></div>
+						<div><dt class="label">Phone</dt><dd><a href={ templ.SafeURL("tel:" + phoneLink(x.Lead.Phone)) }>{ x.Lead.Phone }</a></dd></div>
+						<div><dt class="label">Source</dt><dd>{ x.Lead.Source }</dd></div>
+						if x.Lead.Budget > 0 {
+							<div><dt class="label">Budget</dt><dd class="tnum">{ KES(x.Lead.Budget) }</dd></div>
+						}
+						if x.Lead.BuyingFor != "" {
+							<div><dt class="label">Buying</dt><dd>{ buyingName(x.Lead.BuyingFor) }</dd></div>
+						}
+						<div><dt class="label">First contact</dt><dd>{ When(x.Lead.CreatedAt, x.Now) }</dd></div>
+						if x.Lead.LostReason != "" {
+							<div><dt class="label">Lost because</dt><dd>{ x.Lead.LostReason }</dd></div>
+						}
+					</dl>
+				</section>
+				if x.CanEdit {
+					<form class="desk-panel desk-form" method="post" action={ templ.SafeURL("/desk/leads/" + strconv.FormatInt(x.Lead.ID, 10) + "/stage") }>
+						<h2 class="desk-h2">Stage</h2>
+						<div class="field">
+							<label class="visually-hidden" for="f-stage">Stage</label>
+							<select class="select" id="f-stage" name="stage">
+								for _, s := range store.Stages {
+									<option value={ s } selected?={ x.Lead.Stage == s }>{ store.StageTitle(s) }</option>
+								}
+							</select>
+						</div>
+						<div class="field">
+							<label class="field__label" for="f-reason">Reason <span class="label">If lost</span></label>
+							<input class="input" id="f-reason" name="reason" type="text" maxlength="200"/>
+						</div>
+						<button class="btn btn--small" type="submit">Move</button>
+					</form>
+					<form class="desk-panel desk-form" method="post" action={ templ.SafeURL("/desk/leads/" + strconv.FormatInt(x.Lead.ID, 10) + "/follow-up") }>
+						<h2 class="desk-h2">Follow up on</h2>
+						<div class="desk-form__row">
+							<div class="field">
+								<label class="visually-hidden" for="f-follow">Date</label>
+								<input class="input" id="f-follow" name="day" type="date" value={ x.Lead.FollowUpOn }/>
+							</div>
+							<button class="btn btn--small" type="submit">Set</button>
+							if x.Lead.FollowUpOn != "" {
+								<button class="btn btn--small btn--line" type="submit" name="clear" value="1">Clear</button>
+							}
+						</div>
+					</form>
+				}
+				if d.Staff.Manager() {
+					<form class="desk-panel desk-form" method="post" action={ templ.SafeURL("/desk/leads/" + strconv.FormatInt(x.Lead.ID, 10) + "/assign") }>
+						<h2 class="desk-h2">Agent</h2>
+						<div class="desk-form__row">
+							<div class="field">
+								<label class="visually-hidden" for="f-assign">Agent</label>
+								<select class="select" id="f-assign" name="agent">
+									for _, m := range x.Team {
+										<option value={ strconv.FormatInt(m.ID, 10) } selected?={ x.Lead.AgentID == m.ID }>{ m.Name }</option>
+									}
+								</select>
+							</div>
+							<button class="btn btn--small" type="submit">Assign</button>
+						</div>
+					</form>
+				} else {
+					<section class="desk-panel">
+						<h2 class="desk-h2">Agent</h2>
+						<p>{ x.Lead.AgentName }</p>
+					</section>
+				}
+				if len(x.Viewings) > 0 {
+					<section class="desk-panel" aria-labelledby="lead-viewings">
+						<h2 class="desk-h2" id="lead-viewings">Viewings</h2>
+						<ul class="desk-list" role="list">
+							for _, v := range x.Viewings {
+								<li class={ templ.KV("is-cancelled", v.Status == "cancelled") }>
+									<a class="desk-list__row" href={ templ.SafeURL("/desk/viewings?day=" + DateValue(v.StartsAt)) }>
+										<span class="mono desk-list__id">{ v.StartsAt.In(Nairobi).Format("2 Jan") }</span>
+										<span class="desk-list__main">{ v.StartsAt.In(Nairobi).Format("15:04") }<span class="desk-list__sub">{ viewingStatus(v.Status) }</span></span>
+									</a>
+								</li>
+							}
+						</ul>
+					</section>
+				}
+				if len(x.Reservations) > 0 {
+					<section class="desk-panel" aria-labelledby="lead-res">
+						<h2 class="desk-h2" id="lead-res">Reservations</h2>
+						<ul class="desk-list" role="list">
+							for _, r := range x.Reservations {
+								<li>
+									<a class="desk-list__row" href={ templ.SafeURL("/desk/reservations?tab=" + reservationTab(r.Status) + "#" + r.Ref) }>
+										<span class="mono desk-list__id">{ r.UnitID }</span>
+										<span class="desk-list__main">{ store.ReservationStatusName(r.Status) }<span class="desk-list__sub">{ r.Ref } · { KESShort(r.Price) }</span></span>
+									</a>
+								</li>
+							}
+						</ul>
+					</section>
+				}
+			</aside>
+		</div>
+	}
+}
+
+// DeskNewLeadData is the form for adding a lead by hand.
+type DeskNewLeadData struct {
+	Form Form
+	Team []store.Staff
+}
+
+templ DeskNewLead(d DeskPage, x DeskNewLeadData) {
+	@DeskLayout(d) {
+		<nav class="breadcrumb label" aria-label="Breadcrumb"><a href="/desk/leads">Leads</a><span aria-hidden="true">/</span><span aria-current="page">New lead</span></nav>
+		@deskHeader("Add a lead", "Someone who called, walked in or was referred.")
+		<form class="desk-panel desk-form new-lead" method="post" action="/desk/leads" novalidate>
+			@formErrorSummary(x.Form, "name", "phone", "email")
+			<div class="field-grid">
+				@field(x.Form, "name", "Full name", "text", "off", "", true)
+				@field(x.Form, "phone", "Phone", "tel", "off", "", true)
+				@field(x.Form, "email", "Email", "email", "off", "", true)
+				<div class="field">
+					<label class="field__label" for="f-source">Came from</label>
+					<select class="select" id="f-source" name="source">
+						for _, s := range []string{"Walk-in", "Phone call", "Referral", "Agent network", "Site hoarding", "Property portal", "Social media"} {
+							<option value={ s } selected?={ x.Form.Value("source") == s }>{ s }</option>
+						}
+					</select>
+				</div>
+				@field(x.Form, "interest", "Interested in", "text", "off", "Such as: 2 bed, high floor", false)
+				<div class="field">
+					<label class="field__label" for="f-buying">Buying</label>
+					<select class="select" id="f-buying" name="buying">
+						<option value="home" selected?={ x.Form.Value("buying") != "investment" }>To live in</option>
+						<option value="investment" selected?={ x.Form.Value("buying") == "investment" }>To let</option>
+					</select>
+				</div>
+				if d.Staff.Manager() {
+					<div class="field">
+						<label class="field__label" for="f-agent">Agent</label>
+						<select class="select" id="f-agent" name="agent">
+							for _, m := range x.Team {
+								if m.Role == "agent" {
+									<option value={ strconv.FormatInt(m.ID, 10) } selected?={ x.Form.Value("agent") == strconv.FormatInt(m.ID, 10) }>{ m.Name }</option>
+								}
+							}
+						</select>
+					</div>
+				}
+			</div>
+			<div class="field">
+				<label class="field__label" for="f-note">Note <span class="label">Optional</span></label>
+				<textarea class="textarea" id="f-note" name="note" maxlength="600">{ x.Form.Value("note") }</textarea>
+			</div>
+			<button class="btn btn--cobalt btn--small" type="submit">Add the lead</button>
+		</form>
+	}
+}

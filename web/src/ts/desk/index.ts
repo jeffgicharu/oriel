@@ -128,5 +128,7 @@ function setUpDrawer(): void {
 
 setUpMenu();
 setUpDrawer();
+const board = document.querySelector<HTMLElement>("[data-board]");
+if (board) void import("./board").then((m) => m.setUpBoard(board));
 setUpConfirms();
 setUpLive();
