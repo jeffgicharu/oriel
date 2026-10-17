@@ -86,7 +86,7 @@ templ homeStory(s HomeStory) {
 		<div class="wrap story-homes">
 			<div class="story-homes__list">
 				<p class="sheet-tag label">A-003 · The homes</p>
-				<h2 class="h2" id="story-homes">Five plans, eighty-six homes.</h2>
+				<h2 class="h2" id="story-homes">Five plans, eighty‑six homes.</h2>
 				<ol class="story-types" role="list">
 					for _, t := range s.Types {
 						<li>
@@ -122,7 +122,7 @@ templ homeStory(s HomeStory) {
 				<h2 class="h2" id="story-stack">{ numberWord(s.Available) } homes free today.</h2>
 				<p class="lede">Every floor of the building, as the sales team sees it. Open any floor in the 3D building to see where each home sits and how the light falls on it.</p>
 				<ul class="story-stack__key" role="list">
-					for _, st := range []string{store.Available, store.Held, store.Reserved, store.Sold} {
+					for _, st := range []string{store.Available, store.Held, store.Reserved, store.Sold, store.Withheld} {
 						<li>@StatusBadge(st)</li>
 					}
 				</ul>
