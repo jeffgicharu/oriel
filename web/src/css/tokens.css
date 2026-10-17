@@ -47,7 +47,7 @@
   --graphite: #1a1d1f;
   --graphite-2: #2a2e31;
   --ink-soft: #565c61;
-  --ink-faint: #81878c;
+  --ink-faint: #63696e; /* still 4.5:1 on plaster */
 
   /* The one colour */
   --cobalt: #1f3bd1;

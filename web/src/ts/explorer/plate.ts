@@ -55,7 +55,8 @@ export function plateSVG(model: BuildingModel, homes: PlateHome[], level: number
     const [bx0, bz0, bx1, bz1] = u.b;
     const on = matches(home);
     const cls = `plate__home plate__home--${home.s}${on ? "" : " is-dim"}${selected === home.id ? " is-selected" : ""}`;
-    const label = `${home.id}, ${home.b === 4 ? "penthouse" : home.b + " bedroom" + (home.b > 1 ? "s" : "")}, ${statusName(home.s)}${home.pr ? ", KES " + home.pr.toLocaleString("en-KE") : ""}`;
+    // The name starts with the words the plan shows, then adds what it doesn't.
+    const label = `${home.id} ${home.t} · ${statusName(home.s)}, ${home.b === 4 ? "penthouse" : home.b + " bedroom" + (home.b > 1 ? "s" : "")}${home.pr ? ", KES " + home.pr.toLocaleString("en-KE") : ""}`;
     out += `<g class="${cls}" data-home="${home.id}" tabindex="0" role="button" aria-label="${label}">`;
     out += `<rect class="plate__fill" x="${X(fx0)}" y="${Z(fz0)}" width="${(fx1 - fx0) * s}" height="${(fz1 - fz0) * s}"/>`;
     out += `<rect class="plate__bay" x="${X(bx0)}" y="${Z(bz0)}" width="${(bx1 - bx0) * s}" height="${(bz1 - bz0) * s}"/>`;

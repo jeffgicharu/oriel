@@ -378,16 +378,21 @@ body.menu-open {
   max-width: 34ch;
 }
 
+/* The wordmark across the foot of the page, drawn so it fills the width. */
 .footer-mark {
-  font-size: clamp(88px, 23vw, 380px);
-  line-height: 0.74;
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-bottom: -0.4%;
+  user-select: none;
+}
+
+.footer-mark text {
+  font-family: var(--font-sans);
+  font-size: 268px;
   font-weight: 790;
   font-stretch: 125%;
-  letter-spacing: -0.015em;
-  color: var(--graphite-2);
-  margin-bottom: -0.06em;
-  user-select: none;
-  white-space: nowrap;
+  fill: var(--graphite-2);
 }
 
 /* The title block in the corner of every drawing sheet. */
