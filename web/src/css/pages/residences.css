@@ -50,12 +50,19 @@
 
 .types__list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
   gap: 12px;
 }
 
+@media (min-width: 1100px) {
+  .types__list {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
 .type-card {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 6px;
   height: 100%;
   padding: 16px 16px 18px;
@@ -94,6 +101,7 @@
 }
 
 .type-card__name {
+  min-height: 2.4em;
   font-size: 18px;
   font-weight: 680;
   font-stretch: 106%;
@@ -102,12 +110,15 @@
 }
 
 .type-card__facts {
+  display: grid;
+  gap: 2px;
   font-size: 12px;
   color: var(--ink-soft);
 }
 
 .type-card__price {
-  margin-top: 6px;
+  margin-top: auto;
+  padding-top: 10px;
   font-size: 15px;
 }
 

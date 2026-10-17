@@ -30,6 +30,8 @@ templ TypePage(p Page, t store.TypeSummary, homes []store.Home) {
 							<dd class="tnum">
 								if t.Available > 0 {
 									{ KESShort(t.From) }
+								} else if t.Withheld > 0 {
+									Next release
 								} else {
 									Sold out
 								}

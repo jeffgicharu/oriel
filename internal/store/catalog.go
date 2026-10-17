@@ -83,6 +83,7 @@ type TypeSummary struct {
 	building.Type
 	Total     int
 	Available int
+	Withheld  int
 	From      int64
 }
 
@@ -96,6 +97,9 @@ func (c *Catalog) Types() []TypeSummary {
 				continue
 			}
 			s.Total++
+			if h.Status == Withheld {
+				s.Withheld++
+			}
 			if h.Status == Available {
 				s.Available++
 				if s.From == 0 || h.Price < s.From {

@@ -24,10 +24,13 @@
 }
 
 .unit-head__number {
-  font-size: clamp(64px, 11vw, 168px);
-  line-height: 0.82;
-  font-weight: 300;
-  letter-spacing: -0.06em;
+  font-family: var(--font-sans);
+  font-size: clamp(72px, 12vw, 180px);
+  line-height: 0.8;
+  font-weight: 330;
+  font-stretch: 112%;
+  font-variant-numeric: tabular-nums lining-nums;
+  letter-spacing: -0.04em;
   color: var(--cobalt);
 }
 
@@ -130,6 +133,10 @@
 .unit-facts dd {
   font-size: 18px;
   font-weight: 620;
+}
+
+.unit-plan {
+  padding-top: clamp(28px, 3.5vw, 48px);
 }
 
 .unit-plan__grid {

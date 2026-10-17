@@ -511,6 +511,15 @@
   letter-spacing: -0.01em;
 }
 
+/* Room names sit on a halo of floor colour, so furniture lines never cut them. */
+.floorplan .fp-name,
+.floorplan .fp-size {
+  paint-order: stroke;
+  stroke: #f6f7f4;
+  stroke-width: 7px;
+  stroke-linejoin: round;
+}
+
 .floorplan .fp-north circle {
   fill: none;
   stroke: var(--graphite);
@@ -663,8 +672,9 @@
   font-size: 11px;
 }
 
-.keyplan__home.is-this ~ .keyplan__num {
-  fill: inherit;
+.keyplan__num.is-this {
+  fill: #fff;
+  font-weight: 600;
 }
 
 .keyplan__north path {

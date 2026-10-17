@@ -128,6 +128,7 @@ a {
   font-weight: 760;
   font-stretch: 125%;
   letter-spacing: -0.045em;
+  word-spacing: 0.06em;
   text-wrap: balance;
 }
 
@@ -136,7 +137,8 @@ a {
   line-height: 0.95;
   font-weight: 740;
   font-stretch: 118%;
-  letter-spacing: -0.035em;
+  letter-spacing: -0.032em;
+  word-spacing: 0.07em;
   text-wrap: balance;
 }
 

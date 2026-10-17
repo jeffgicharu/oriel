@@ -42,7 +42,11 @@ func KeyPlan(u building.Unit) templ.Component {
 		fmt.Fprintf(&b, `<rect class="%s" x="%.1f" y="%.1f" width="%.1f" height="%.1f"/>`, class, x(f.X0), z(f.Z0), f.Width()*s, f.Depth()*s)
 		bay := p.Bay.Plan
 		fmt.Fprintf(&b, `<rect class="%s keyplan__bay" x="%.1f" y="%.1f" width="%.1f" height="%.1f"/>`, class, x(bay.X0), z(bay.Z0), bay.Width()*s, bay.Depth()*s)
-		fmt.Fprintf(&b, `<text class="keyplan__num" x="%.1f" y="%.1f" text-anchor="middle" dominant-baseline="middle">%02d</text>`, x((f.X0+f.X1)/2), z((f.Z0+f.Z1)/2), p.Number)
+		numClass := "keyplan__num"
+		if p.Number == u.Position.Number {
+			numClass += " is-this"
+		}
+		fmt.Fprintf(&b, `<text class="%s" x="%.1f" y="%.1f" text-anchor="middle" dominant-baseline="middle">%02d</text>`, numClass, x((f.X0+f.X1)/2), z((f.Z0+f.Z1)/2), p.Number)
 	}
 	// North.
 	fmt.Fprintf(&b, `<g class="keyplan__north" transform="translate(%.1f %.1f)"><path d="M0 -12L5 6L0 2L-5 6Z"/><text y="-16" text-anchor="middle">N</text></g>`, w-16, 26.0)
@@ -72,13 +76,13 @@ func MiniElevation(level int) templ.Component {
 			class += " is-shared"
 		}
 		fmt.Fprintf(&b, `<rect class="%s" x="%.1f" y="%.1f" width="%.1f" height="%.1f"/>`, class, x0, y+1, x1-x0, floor-2)
-		if l == level || l == building.TopLevel || l == 0 || l == 1 {
+		// Labels for the top, the ground and the home's own level, never two
+		// close enough to touch.
+		near := l != level && (l-level == 1 || level-l == 1 || (level <= 2 && l == 0))
+		if (l == level || l == building.TopLevel || l == 0) && !(near && l != level) {
 			label := LevelName(l)
-			switch l {
-			case 0:
+			if l == 0 {
 				label = "G · Lobby"
-			case 1:
-				label = "L01 · Club"
 			}
 			fmt.Fprintf(&b, `<text class="minielev__label%s" x="%.1f" y="%.1f" dominant-baseline="middle">%s</text>`, map[bool]string{true: " is-this", false: ""}[l == level], w+8, y+floor/2, label)
 		}

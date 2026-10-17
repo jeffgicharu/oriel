@@ -49,10 +49,9 @@ func Thousands(n int64) string {
 func KESShort(amount int64) string {
 	switch {
 	case amount >= 1_000_000:
+		// Always one decimal, so figures line up in a column: 19.0M beside 18.7M.
 		m := float64(amount) / 1_000_000
-		s := strconv.FormatFloat(m, 'f', 1, 64)
-		s = strings.TrimSuffix(s, ".0")
-		return "KES " + s + "M"
+		return "KES " + strconv.FormatFloat(m, 'f', 1, 64) + "M"
 	case amount >= 1_000:
 		return fmt.Sprintf("KES %dK", amount/1_000)
 	default:

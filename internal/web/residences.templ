@@ -38,10 +38,12 @@ templ Residences(p Page, d ResidencesData) {
 								</span>
 								<span class="type-card__code label">Type { t.Code }</span>
 								<span class="type-card__name">{ t.Name }</span>
-								<span class="type-card__facts mono">{ strconv.Itoa(t.Internal) } m² · { t.OutdoorName } { strconv.Itoa(t.Outdoor) } m²</span>
+								<span class="type-card__facts mono"><span>{ strconv.Itoa(t.Internal) }&nbsp;m² inside</span><span>{ t.OutdoorName } { strconv.Itoa(t.Outdoor) }&nbsp;m²</span></span>
 								<span class="type-card__price">
 									if t.Available > 0 {
 										From <strong class="tnum">{ KESShort(t.From) }</strong>
+									} else if t.Withheld > 0 {
+										<strong>Next release soon</strong>
 									} else {
 										<strong>Sold out</strong>
 									}

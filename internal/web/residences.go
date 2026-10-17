@@ -176,7 +176,8 @@ func HomeTitle(h store.Home) string {
 	if h.Type.Code == "P" {
 		return "Penthouse on the top floor"
 	}
-	return fmt.Sprintf("%s on level %d", h.Type.Name, h.Level)
+	// The level never parts from its number at a line break.
+	return fmt.Sprintf("%s on level\u00a0%d", h.Type.Name, h.Level)
 }
 
 // HomePath is the address of a home's page.
