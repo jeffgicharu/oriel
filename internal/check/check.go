@@ -205,14 +205,18 @@ func (c *Checker) assetsLoad(ctx context.Context) error {
 		if strings.HasSuffix(path, ".js") {
 			dir := path[:strings.LastIndex(path, "/")+1]
 			for _, m := range chunkRe.FindAllStringSubmatch(body, -1) {
-				queue = append(queue, cleanPath(dir+m[1]))
+				if strings.HasPrefix(m[1], "/") {
+					queue = append(queue, m[1])
+				} else {
+					queue = append(queue, cleanPath(dir+m[1]))
+				}
 			}
 		}
 	}
 	return nil
 }
 
-var chunkRe = regexp.MustCompile(`["'](\.{1,2}/(?:chunks/)?[A-Za-z0-9_-]+\.js)["']`)
+var chunkRe = regexp.MustCompile(`["']((?:/assets/js/|\.{1,2}/)(?:chunks/)?[A-Za-z0-9_-]+\.js)["']`)
 
 // cleanPath resolves ./ and ../ in an asset path.
 func cleanPath(p string) string {
