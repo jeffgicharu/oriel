@@ -285,34 +285,7 @@ function skyScene(): { scene: THREE.Scene; dispose(): void } {
   };
 }
 
-export function supportsWebGL(): boolean {
-  try {
-    const canvas = document.createElement("canvas");
-    return !!(canvas.getContext("webgl2") || canvas.getContext("webgl"));
-  } catch {
-    return false;
-  }
-}
-
-/** The name of the device's graphics renderer, if the browser shares it. */
-export function rendererName(): string {
-  try {
-    const canvas = document.createElement("canvas");
-    const gl = (canvas.getContext("webgl2") || canvas.getContext("webgl")) as WebGLRenderingContext | null;
-    if (!gl) return "";
-    const info = gl.getExtension("WEBGL_debug_renderer_info");
-    const name = String(info ? gl.getParameter(info.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER));
-    gl.getExtension("WEBGL_lose_context")?.loseContext();
-    return name;
-  } catch {
-    return "";
-  }
-}
-
-/** Whether 3D would be drawn by the processor instead of a graphics chip. */
-export function isSoftwareRenderer(name: string): boolean {
-  return /swiftshader|llvmpipe|softpipe|software|basic render/i.test(name);
-}
+export { isSoftwareRenderer, rendererName, supportsWebGL } from "./capable";
 
 /** A lighter scene for phones and modest machines. */
 export function preferLite(): boolean {

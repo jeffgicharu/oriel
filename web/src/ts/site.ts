@@ -6,6 +6,7 @@ import htmx from "htmx.org";
 import { setUpPlans } from "./plans";
 import { setUpShortlist } from "./shortlist";
 import { setUpConfirms, setUpLiveReservation, setUpPans, showFormErrors } from "./live";
+import { canDraw3D } from "./model/capable";
 
 declare global {
   interface Window {
@@ -72,6 +73,11 @@ function loadModel(): void {
   }
   const hero = document.querySelector<HTMLElement>("[data-model-stage='hero']");
   if (!hero) return;
+  // A device that would only show the drawn elevation never fetches the 3D code.
+  if (!canDraw3D()) {
+    hero.closest(".hero")?.classList.add("hero--flat");
+    return;
+  }
   const start = () => import("./model/hero").then((m) => m.mountHero(hero));
   if ("requestIdleCallback" in window) {
     window.requestIdleCallback(start, { timeout: 600 });
