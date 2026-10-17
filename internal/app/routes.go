@@ -76,5 +76,9 @@ func (a *App) home(w http.ResponseWriter, r *http.Request) {
 		HeaderOver:  true,
 		JSONLD:      []any{organizationLD(a.cfg.SiteURL), websiteLD(a.cfg.SiteURL), complexLD(a.cfg.SiteURL)},
 	})
-	a.render(w, r, http.StatusOK, web.Home(p, building.ModelData()))
+	c, ok := a.catalog(w, r)
+	if !ok {
+		return
+	}
+	a.render(w, r, http.StatusOK, web.Home(p, building.ModelData(), web.StoryFor(c, a.now())))
 }

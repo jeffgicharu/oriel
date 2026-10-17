@@ -1,6 +1,12 @@
 package web
 
-import "github.com/jeffgicharu/oriel/internal/building"
+import (
+	"strconv"
+
+	"github.com/jeffgicharu/oriel/internal/building"
+	"github.com/jeffgicharu/oriel/internal/plans"
+	"github.com/jeffgicharu/oriel/internal/store"
+)
 
 // ElevationDrawing is the line drawing of the tower's south face. Each line
 // traces itself when the page first paints.
@@ -12,7 +18,7 @@ templ ElevationDrawing(class string) {
 	</svg>
 }
 
-templ Home(p Page, model building.Model) {
+templ Home(p Page, model building.Model, story HomeStory) {
 	@Layout(p) {
 		@templ.JSONScript("oriel-model", model)
 		<section class="hero drawing-grid" aria-labelledby="hero-title">
@@ -32,7 +38,16 @@ templ Home(p Page, model building.Model) {
 				<dl class="wrap hero__facts">
 					<div><dt class="label">Homes</dt><dd>86</dd></div>
 					<div><dt class="label">Bedrooms</dt><dd>1 to 4</dd></div>
-					<div><dt class="label">From</dt><dd class="tnum">KES 11.4M</dd></div>
+					<div>
+						<dt class="label">From</dt>
+						<dd class="tnum">
+							if story.From > 0 {
+								{ KESShort(story.From) }
+							} else {
+								Sold out
+							}
+						</dd>
+					</div>
 					<div><dt class="label">Completion</dt><dd>December 2028</dd></div>
 				</dl>
 			</div>
@@ -47,5 +62,155 @@ templ Home(p Page, model building.Model) {
 				</div>
 			</div>
 		</section>
+		@homeStory(story)
 	}
+}
+
+templ homeStory(s HomeStory) {
+	if HasPhoto("living-bay-b") {
+		<section class="story story--bay" aria-labelledby="story-bay">
+			<div class="wrap story-bay">
+				<figure class="story-bay__photo">
+					@Photo("living-bay-b", "A woman reading on an oak window seat in a corner bay, with a cobalt cushion and treetops outside", "(min-width: 1520px) 1408px, 92vw", "")
+				</figure>
+				<div class="story-bay__card">
+					<p class="sheet-tag label">A-002 · The bay</p>
+					<h2 class="h2" id="story-bay">Sit in the light.</h2>
+					<p>Each home has a window seat in a glazed bay at its corner, stepping out from the wall to catch the morning sun and the long view.</p>
+					<a class="link-arrow" href="/building">How the bay works @Arrow()</a>
+				</div>
+			</div>
+		</section>
+	}
+	<section class="story" aria-labelledby="story-homes">
+		<div class="wrap story-homes">
+			<div class="story-homes__list">
+				<p class="sheet-tag label">A-003 · The homes</p>
+				<h2 class="h2" id="story-homes">Five plans, eighty-six homes.</h2>
+				<ol class="story-types" role="list">
+					for _, t := range s.Types {
+						<li>
+							<a class="story-types__row" href={ templ.SafeURL("/residences/types/" + t.Code) }>
+								<span class="story-types__code mono">{ t.Code }</span>
+								<span class="story-types__name">{ t.Name }</span>
+								<span class="story-types__from tnum">
+									if t.Available > 0 {
+										from { KESShort(t.From) }
+									} else if t.Withheld > 0 {
+										Next release
+									} else {
+										Sold out
+									}
+								</span>
+							</a>
+						</li>
+					}
+				</ol>
+				<a class="btn btn--cobalt" href="/residences">See every home @Arrow()</a>
+			</div>
+			<div class="story-homes__photos">
+				@Photo("kitchen-b", "A couple cooking at a pale stone island in an open kitchen with oak cabinets and tall windows", "(min-width: 1000px) 34vw, 100vw", "story-homes__a")
+				@Photo("penthouse-terrace", "A couple sitting on a timber terrace with planters and a glass balustrade at sunset", "(min-width: 1000px) 24vw, 50vw", "story-homes__b")
+				@Photo("study-d", "A study behind a graphite-framed glass partition, with oak shelves and a desk at the window", "(min-width: 1000px) 24vw, 50vw", "story-homes__c")
+			</div>
+		</div>
+	</section>
+	<section class="story story--rule" aria-labelledby="story-stack">
+		<div class="wrap story-stack">
+			<div class="story-stack__text">
+				<p class="sheet-tag label">A-004 · Stacking plan</p>
+				<h2 class="h2" id="story-stack">{ numberWord(s.Available) } homes free today.</h2>
+				<p class="lede">Every floor of the building, as the sales team sees it. Open any floor in the 3D building to see where each home sits and how the light falls on it.</p>
+				<ul class="story-stack__key" role="list">
+					for _, st := range []string{store.Available, store.Held, store.Reserved, store.Sold} {
+						<li>@StatusBadge(st)</li>
+					}
+				</ul>
+				<a class="btn btn--line" href="/explore">Explore in 3D @Arrow()</a>
+			</div>
+			<div class="stack" role="img" aria-label={ stackLabel(s) }>
+				for _, row := range s.Stack {
+					<div class="stack__row">
+						<span class="stack__level mono" aria-hidden="true">{ LevelName(row.Level) }</span>
+						<div class="stack__cells">
+							for _, c := range row.Cells {
+								<a class={ "stack__cell", "is-" + c.Status, templ.KV("stack__cell--wide", c.Wide) } href={ templ.SafeURL(HomePath(c.ID)) } title={ StackTitle(c) } tabindex="-1" aria-hidden="true"><span>{ c.ID }</span></a>
+							}
+						</div>
+					</div>
+				}
+			</div>
+		</div>
+	</section>
+	if HasPhoto("rooftop-pool") {
+		<section class="story story--rule" aria-labelledby="story-shared">
+			<div class="wrap">
+				<div class="story-wide">
+					<figure class="story-wide__photo crop">
+						@Photo("rooftop-pool", "A long pool on the roof with a timber deck, loungers under a slatted pergola and treetops beyond", "(min-width: 1520px) 1408px, 92vw", "")
+					</figure>
+					<div class="story-wide__text">
+						<p class="sheet-tag label">A-005 · Shared</p>
+						<h2 class="h2" id="story-shared">A pool above the treetops.</h2>
+						<p class="muted">A rooftop pool and terrace, a gym and a workroom on the garden, a concierge day and night, and a path along the river.</p>
+						<a class="link-arrow" href="/building">Everything residents share @Arrow()</a>
+					</div>
+				</div>
+			</div>
+		</section>
+	}
+	<section class="story story--rule" aria-labelledby="story-place">
+		<div class="wrap story-place">
+			<div>
+				<p class="sheet-tag label">A-006 · Location</p>
+				<h2 class="h2" id="story-place">Five minutes to Westlands. Fifteen to the forest.</h2>
+				<dl class="story-times">
+					for _, name := range []string{"Westlands", "City centre", "Karura Forest", "JKIA"} {
+						for _, pl := range Places {
+							if pl.Name == name {
+								<div><dt>{ pl.Name }</dt><dd><span class="tnum">{ pl.Minutes }</span> min</dd></div>
+							}
+						}
+					}
+				</dl>
+				<a class="link-arrow" href="/location">The neighbourhood @Arrow()</a>
+			</div>
+			@Photo("neighbourhood-street", "A quiet street in Riverside under jacaranda trees, with people walking and a café in a garden", "(min-width: 1000px) 55vw, 100vw", "story-place__photo")
+		</div>
+	</section>
+	<section class="story story--rule" aria-labelledby="story-buy">
+		<div class="wrap story-buy">
+			<div class="story-buy__head">
+				<p class="sheet-tag label">A-007 · Buying</p>
+				<h2 class="h2" id="story-buy">Reserve online. Pay your way.</h2>
+				<p class="lede">Choose a home and a payment plan, and the home is held for you for 72 hours while the sales team prepares your letter of offer. No payment is taken online.</p>
+			</div>
+			<ol class="story-buy__plans" role="list">
+				for _, pl := range plansList() {
+					<li>
+						<h3 class="h3">{ pl.Name }</h3>
+						<p class="muted">{ pl.Summary }</p>
+					</li>
+				}
+			</ol>
+			<a class="link-arrow" href="/buying">How buying off-plan works @Arrow()</a>
+		</div>
+	</section>
+	<section class="story story--rule" aria-labelledby="story-progress">
+		<div class="wrap story-progress">
+			if HasPhoto("construction-3") {
+				<figure class="story-progress__photo crop">
+					@Photo("construction-3", "The concrete frame of the building rising, with workers on the top deck and a crane hook overhead", "(min-width: 1000px) 50vw, 100vw", "")
+				</figure>
+			}
+			<div class="story-progress__text">
+				<p class="sheet-tag label">A-008 · Progress</p>
+				<h2 class="h2" id="story-progress">{ progressTitle(s.Progress) }</h2>
+				<p class="story-progress__figure"><span class="tnum">{ strconv.Itoa(s.Progress.Percent) }%</span> complete</p>
+				<div class="progress-bar" role="presentation"><span style={ progressWidth(s.Progress.Percent) }></span></div>
+				<p class="muted">{ s.Progress.Current }. Completion in { plans.Completion.Format("January 2006") }.</p>
+				<a class="link-arrow" href="/progress">Follow the build @Arrow()</a>
+			</div>
+		</div>
+	</section>
 }

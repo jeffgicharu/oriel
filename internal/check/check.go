@@ -45,6 +45,7 @@ var pages = []struct {
 	phrase string
 }{
 	{"/", "Homes designed around the light."},
+	{"/?story", "homes free today."},
 	{"/explore", "Explore the building"},
 	{"/explore?home=0704&beds=2", "data-explorer"},
 	{"/residences", "Find your home."},
