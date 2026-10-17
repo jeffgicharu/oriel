@@ -791,3 +791,22 @@
   color: var(--cobalt);
   margin-right: 8px;
 }
+
+/* The chapters rise into place as they scroll into view, where the browser
+   can tie an animation to scrolling; elsewhere they are simply there. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .story > .wrap > * {
+      animation: chapter-in linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 70%;
+    }
+  }
+}
+
+@keyframes chapter-in {
+  from {
+    opacity: 0;
+    transform: translateY(32px);
+  }
+}

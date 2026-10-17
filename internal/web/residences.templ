@@ -167,7 +167,7 @@ templ ResidenceResults(d ResidencesData) {
 				<tbody>
 					for _, h := range d.Homes {
 						<tr class={ "schedule__row", templ.KV("is-off", !h.ShowsPrice()) }>
-							<th scope="row" class="schedule__home"><a href={ templ.SafeURL(HomePath(h.ID)) }><span class="mono">{ h.ID }</span><span class="visually-hidden">, { HomeTitle(h) }</span></a></th>
+							<th scope="row" class="schedule__home"><a href={ templ.SafeURL(HomePath(h.ID)) }><span class="mono" style={ homeTransition(h.ID) }>{ h.ID }</span><span class="visually-hidden">, { HomeTitle(h) }</span></a></th>
 							<td data-label="Type"><span class="schedule__type">{ h.Type.Code }</span> { h.Type.Short }</td>
 							<td class="num mono" data-label="Level">{ LevelName(h.Level) }</td>
 							<td class="num mono" data-label="Size">{ strconv.Itoa(h.Type.Internal) } m²</td>

@@ -104,7 +104,9 @@ templ ComparePage(p Page, d CompareData) {
 						<div class="compare__cell">
 							<a class="compare__id mono" href={ templ.SafeURL(HomePath(h.ID)) }>{ h.ID }</a>
 							<div class="compare__plan">
-								@planSVG(PlanFor(h.Unit), floorplan.Options{Plain: true, North: NorthFor(h.Unit), ID: "cmp-" + h.ID, Title: "Plan of home " + h.ID})
+								<div class="compare__scale" style={ comparePlanWidth(h, d.Homes) }>
+									@planSVG(PlanFor(h.Unit), floorplan.Options{Plain: true, North: NorthFor(h.Unit), ID: "cmp-" + h.ID, Title: "Plan of home " + h.ID})
+								</div>
 							</div>
 						</div>
 					}

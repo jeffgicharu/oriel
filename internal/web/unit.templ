@@ -21,7 +21,7 @@ templ Unit(p Page, d UnitData) {
 				</nav>
 				<header class="unit-head">
 					<div class="unit-head__id">
-						<p class="unit-head__number mono" aria-hidden="true">{ d.Home.ID }</p>
+						<p class="unit-head__number mono" aria-hidden="true" style={ homeTransition(d.Home.ID) }>{ d.Home.ID }</p>
 						<div class="unit-head__titles">
 							<p class="label label--cobalt">Home { d.Home.ID } · Type { d.Home.Type.Code }</p>
 							<h1 class="h2">{ HomeTitle(d.Home) }, facing { d.Home.Facings() }</h1>

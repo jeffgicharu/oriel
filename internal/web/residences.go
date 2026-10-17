@@ -359,3 +359,29 @@ func compareColumns(n int) templ.SafeCSS {
 	}
 	return templ.SafeCSS(fmt.Sprintf("--cols: %d", n))
 }
+
+// plainPlanWidth is the width, in metres, of a home's plain plan drawing,
+// margins included, as the floorplan package frames it.
+func plainPlanWidth(h store.Home) float64 {
+	return PlanFor(h.Unit).Bounds().W() + 0.3 + 1.15
+}
+
+// comparePlanWidth sizes a plan against the widest of those compared, so
+// every plan on the page is drawn to the same scale.
+func comparePlanWidth(h store.Home, homes []store.Home) templ.SafeCSS {
+	widest := 0.0
+	for _, o := range homes {
+		widest = math.Max(widest, plainPlanWidth(o))
+	}
+	pct := 100.0
+	if widest > 0 {
+		pct = 100 * plainPlanWidth(h) / widest
+	}
+	return templ.SafeCSS(fmt.Sprintf("width: %.1f%%", pct))
+}
+
+// homeTransition names a home's number so that it carries across from a list
+// into the home's own page.
+func homeTransition(id string) templ.SafeCSS {
+	return templ.SafeCSS("view-transition-name: home-" + id)
+}
