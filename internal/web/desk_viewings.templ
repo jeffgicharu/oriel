@@ -1,0 +1,173 @@
+package web
+
+import (
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/jeffgicharu/oriel/internal/store"
+	"github.com/jeffgicharu/oriel/internal/viewings"
+)
+
+// DeskViewingsData is the viewings agenda.
+type DeskViewingsData struct {
+	Day      time.Time
+	Week     []AgendaDay
+	List     []store.Viewing
+	Config   viewings.Config
+	Blocks   []store.Block
+	Blocked  string // why the chosen day is closed, if it is
+	Now      time.Time
+	Problem  string
+	PrevWeek string
+	NextWeek string
+}
+
+// AgendaDay is a day on the week strip.
+type AgendaDay struct {
+	Date    time.Time
+	Count   int
+	Closed  bool
+	Current bool
+}
+
+var weekdayNames = []time.Weekday{time.Monday, time.Tuesday, time.Wednesday, time.Thursday, time.Friday, time.Saturday, time.Sunday}
+
+templ DeskViewings(d DeskPage, x DeskViewingsData) {
+	@DeskLayout(d) {
+		@deskHeader("Viewings", "The sales suite’s agenda. Mark each visit once it has happened.")
+		if x.Problem != "" {
+			<div class="notice notice--alert" role="alert">{ x.Problem }</div>
+		}
+		<div class="week-strip">
+			<a class="week-strip__step" href={ templ.SafeURL("/desk/viewings?day=" + x.PrevWeek) } aria-label="The week before">←</a>
+			<ol class="week-strip__days" role="list">
+				for _, day := range x.Week {
+					<li>
+						<a class={ "week-day", templ.KV("is-closed", day.Closed), templ.KV("is-today", DateValue(day.Date) == DateValue(x.Now)) } href={ templ.SafeURL("/desk/viewings?day=" + DateValue(day.Date)) } { current(day.Current)... }>
+							<span class="week-day__name">{ day.Date.In(Nairobi).Format("Mon") }</span>
+							<span class="week-day__num">{ day.Date.In(Nairobi).Format("2") }</span>
+							<span class="week-day__count">
+								if day.Closed {
+									Closed
+								} else if day.Count == 0 {
+									—
+								} else {
+									{ strconv.Itoa(day.Count) } { plural(day.Count, "visit", "visits") }
+								}
+							</span>
+						</a>
+					</li>
+				}
+			</ol>
+			<a class="week-strip__step" href={ templ.SafeURL("/desk/viewings?day=" + x.NextWeek) } aria-label="The week after">→</a>
+		</div>
+		<div class="agenda-layout">
+			<section class="desk-panel" aria-labelledby="agenda-day">
+				<div class="desk-panel__head">
+					<h2 class="desk-h2" id="agenda-day">{ LongDate(x.Day) }</h2>
+					if x.Blocked != "" {
+						<span class="stage-tag stage-tag--lost">Closed: { x.Blocked }</span>
+					}
+				</div>
+				if len(x.List) == 0 {
+					<p class="desk-empty">No viewings this day.</p>
+				} else {
+					<ol class="agenda" role="list">
+						for _, v := range x.List {
+							<li class={ "agenda__item", "is-" + v.Status }>
+								<span class="agenda__time mono">{ v.StartsAt.In(Nairobi).Format("15:04") }</span>
+								<div class="agenda__main">
+									<a class="agenda__name" href={ templ.SafeURL("/desk/leads/" + strconv.FormatInt(v.LeadID, 10)) }>{ v.Name }</a>
+									<span class="agenda__meta">
+										{ strconv.Itoa(v.PartySize) } { plural(v.PartySize, "person", "people") }
+										if v.UnitID != "" {
+											· home { v.UnitID }
+										}
+										· { v.Phone }
+										if v.AgentName != "" {
+											· { v.AgentName }
+										}
+									</span>
+									if v.Notes != "" {
+										<span class="agenda__note">“{ v.Notes }”</span>
+									}
+									if v.Outcome != "" {
+										<span class="agenda__note">{ v.Outcome }</span>
+									}
+								</div>
+								<div class="agenda__state">
+									if v.Status == "booked" && v.StartsAt.Before(x.Now) {
+										<form class="agenda__outcome" method="post" action={ templ.SafeURL("/desk/viewings/" + v.Ref + "/outcome?day=" + DateValue(x.Day)) }>
+											<label class="visually-hidden" for={ "o-" + v.Ref }>Notes</label>
+											<input class="input" id={ "o-" + v.Ref } name="notes" type="text" maxlength="300" placeholder="Notes, if any"/>
+											<button class="btn btn--small btn--cobalt" type="submit" name="outcome" value="attended">Came</button>
+											<button class="btn btn--small btn--line" type="submit" name="outcome" value="no_show">Did not come</button>
+										</form>
+									} else {
+										<span class={ "agenda__status", "is-" + v.Status }>{ viewingStatus(v.Status) }</span>
+									}
+								</div>
+							</li>
+						}
+					</ol>
+				}
+			</section>
+			if d.Staff.Manager() {
+				<div class="agenda-side">
+					<form class="desk-panel desk-form" method="post" action="/desk/viewings/hours">
+						<h2 class="desk-h2">Opening hours</h2>
+						<fieldset class="chips" aria-label="Open on">
+							for _, wd := range weekdayNames {
+								<label class="chip"><input type="checkbox" name="days" value={ strconv.Itoa(int(wd)) } checked?={ opensOn(x.Config, wd) }/><span>{ wd.String()[:3] }</span></label>
+							}
+						</fieldset>
+						<div class="field">
+							<label class="field__label" for="f-times">Viewing times</label>
+							<input class="input mono" id="f-times" name="times" type="text" value={ strings.Join(x.Config.Times, ", ") }/>
+							<p class="field__hint">24-hour times, separated by commas. Each visit takes 45 minutes.</p>
+						</div>
+						<div class="field">
+							<label class="field__label" for="f-capacity">Parties at once</label>
+							<select class="select" id="f-capacity" name="capacity">
+								for n := 1; n <= 6; n++ {
+									<option value={ strconv.Itoa(n) } selected?={ x.Config.Capacity == n }>{ strconv.Itoa(n) }</option>
+								}
+							</select>
+						</div>
+						<button class="btn btn--small" type="submit">Save the hours</button>
+					</form>
+					<section class="desk-panel" aria-labelledby="closed-days">
+						<h2 class="desk-h2" id="closed-days">Closed days</h2>
+						if len(x.Blocks) > 0 {
+							<ul class="desk-list" role="list">
+								for _, b := range x.Blocks {
+									<li class="desk-list__row closed-day">
+										<span class="mono desk-list__id">{ DayLabel(b.Day) }</span>
+										<span class="desk-list__main">{ b.Reason }</span>
+										<form method="post" action={ templ.SafeURL("/desk/viewings/blocks/" + b.Day + "/remove") }>
+											<button class="link-button" type="submit">Open</button>
+										</form>
+									</li>
+								}
+							</ul>
+						}
+						<form class="desk-form" method="post" action="/desk/viewings/blocks">
+							<div class="desk-form__row">
+								<div class="field">
+									<label class="field__label" for="f-block-day">Day</label>
+									<input class="input" id="f-block-day" name="day" type="date" min={ DateValue(x.Now) }/>
+								</div>
+								<div class="field closed-day__reason">
+									<label class="field__label" for="f-block-reason">Reason</label>
+									<input class="input" id="f-block-reason" name="reason" type="text" maxlength="120" placeholder="Such as: staff training"/>
+								</div>
+							</div>
+							<button class="btn btn--small" type="submit">Close the day</button>
+						</form>
+					</section>
+				</div>
+			}
+		</div>
+	}
+}

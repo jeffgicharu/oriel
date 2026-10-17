@@ -590,3 +590,335 @@
   box-shadow: 0 16px 34px -12px rgb(26 29 31 / 0.6);
   transform: rotate(1.5deg);
 }
+
+/* Viewings: the week strip and the day's agenda */
+.week-strip {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) 36px;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.week-strip__step {
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--rule-strong);
+  background: var(--plaster-hi);
+  text-decoration: none;
+  font-size: 18px;
+}
+
+.week-strip__days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+  overflow-x: auto;
+}
+
+.week-day {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 8px 4px;
+  border: 1px solid var(--rule-strong);
+  background: var(--plaster-hi);
+  text-decoration: none;
+  min-width: 72px;
+}
+
+.week-day__name {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.week-day__num {
+  font-size: 20px;
+  font-weight: 650;
+}
+
+.week-day__count {
+  font-size: 11.5px;
+  color: var(--ink-soft);
+}
+
+.week-day.is-today .week-day__num {
+  color: var(--cobalt);
+}
+
+.week-day[aria-current="page"] {
+  border-color: var(--graphite);
+  background: var(--graphite);
+  color: var(--plaster-hi);
+}
+
+.week-day[aria-current="page"] .week-day__name,
+.week-day[aria-current="page"] .week-day__count {
+  color: var(--stone);
+}
+
+.week-day.is-closed:not([aria-current="page"]) {
+  border-style: dashed;
+  background: transparent;
+}
+
+.agenda-layout {
+  display: grid;
+  gap: 20px;
+  align-items: start;
+}
+
+.agenda-layout > * {
+  min-width: 0;
+}
+
+@media (min-width: 1200px) {
+  .agenda-layout {
+    grid-template-columns: minmax(0, 2fr) minmax(320px, 1fr);
+  }
+}
+
+.agenda-side {
+  display: grid;
+  gap: 16px;
+}
+
+.agenda {
+  display: grid;
+  border-top: 1px solid var(--rule);
+}
+
+.agenda__item {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  gap: 6px 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.agenda__time {
+  font-size: 15px;
+  color: var(--cobalt);
+  padding-top: 1px;
+}
+
+.agenda__main {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.agenda__name {
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.agenda__meta {
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.agenda__note {
+  font-size: 13px;
+  color: var(--graphite-2);
+  font-style: italic;
+}
+
+.agenda__state {
+  grid-column: 2;
+}
+
+.agenda__outcome {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.agenda__outcome .input {
+  flex: 1 1 180px;
+  min-height: 38px;
+  padding: 6px 10px;
+  font-size: 14px;
+}
+
+.agenda__outcome .btn {
+  min-height: 38px;
+}
+
+.agenda__status {
+  display: inline-block;
+  padding: 2px 8px;
+  border: 1px solid var(--rule-strong);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.agenda__status.is-attended {
+  border-color: var(--success);
+  color: var(--success);
+}
+
+.agenda__status.is-no_show,
+.agenda__status.is-cancelled {
+  color: var(--ink-faint);
+  border-style: dashed;
+}
+
+.agenda__item.is-cancelled .agenda__name {
+  text-decoration: line-through;
+  color: var(--ink-faint);
+}
+
+@media (min-width: 900px) {
+  .agenda__item {
+    grid-template-columns: 56px minmax(0, 1fr) auto;
+  }
+
+  .agenda__state {
+    grid-column: 3;
+    grid-row: 1;
+    align-self: start;
+  }
+
+  .agenda__outcome {
+    max-width: 420px;
+  }
+}
+
+.closed-day {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.closed-day__reason {
+  flex: 1 1 180px;
+}
+
+/* Pricing */
+.pricing {
+  display: grid;
+  gap: 20px;
+  align-items: start;
+}
+
+.pricing > * {
+  min-width: 0;
+}
+
+@media (min-width: 1200px) {
+  .pricing {
+    grid-template-columns: minmax(0, 3fr) minmax(300px, 2fr);
+  }
+}
+
+.pricing__bases .input {
+  min-height: 38px;
+  padding: 6px 10px;
+  font-size: 14px;
+  max-width: 180px;
+}
+
+.pricing__bases .input.is-wrong {
+  border-color: var(--alert);
+}
+
+.price-history__row {
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+}
+
+.price-history__row .desk-list__aside {
+  text-align: right;
+  line-height: 1.4;
+}
+
+.price-preview__publish {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+}
+
+.price-preview .desk-table-wrap {
+  max-height: 520px;
+}
+
+.is-up {
+  color: var(--success);
+}
+
+.is-down {
+  color: var(--alert);
+}
+
+/* Activity */
+.activity {
+  display: grid;
+  border: 1px solid var(--rule-strong);
+  background: var(--plaster-hi);
+}
+
+.activity__item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2px 16px;
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--rule);
+  font-size: 14px;
+}
+
+@media (min-width: 900px) {
+  .activity__item {
+    grid-template-columns: 150px 170px minmax(0, 1fr);
+    align-items: baseline;
+  }
+}
+
+.activity__when {
+  font-size: 11.5px;
+  color: var(--ink-soft);
+}
+
+.activity__who {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 550;
+}
+
+.activity__tag {
+  padding: 1px 7px;
+  border: 1px solid var(--cobalt);
+  color: var(--cobalt);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.activity__tag--system {
+  border-color: var(--rule-strong);
+  color: var(--ink-soft);
+}
+
+.activity__what a {
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.activity__what a:hover {
+  text-decoration: underline;
+}
+
+.activity__detail {
+  display: block;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+}
+
+.activity__pages {
+  display: flex;
+  gap: 8px;
+}

@@ -1,0 +1,149 @@
+package web
+
+import (
+	"strconv"
+	"time"
+
+	"github.com/jeffgicharu/oriel/internal/building"
+	"github.com/jeffgicharu/oriel/internal/pricing"
+	"github.com/jeffgicharu/oriel/internal/store"
+)
+
+// DeskPricingData is the pricing page.
+type DeskPricingData struct {
+	Current  store.PriceListEntry
+	History  []store.PriceListEntry
+	Form     Form
+	Preview  *PricePreview
+	Now      time.Time
+}
+
+// PricePreview is what publishing a new list would do.
+type PricePreview struct {
+	List      pricing.List
+	Note      string
+	Rows      []PriceRow
+	OldTotal  int64
+	NewTotal  int64
+	Changed   int
+	KeptOwn   int
+}
+
+// PriceRow is one home in a preview.
+type PriceRow struct {
+	Home     store.Home
+	Old, New int64
+	KeepsOwn bool
+}
+
+func (r PriceRow) Change() int64 { return r.New - r.Old }
+
+templ DeskPricing(d DeskPage, x DeskPricingData) {
+	@DeskLayout(d) {
+		@deskHeader("Pricing", "Every unsold home’s price comes from the list in force: a base price for each type, raised for each floor above level 2 and for a river view.")
+		<div class="pricing">
+			<form class="desk-panel desk-form pricing__form" method="post" action="/desk/pricing/preview" novalidate>
+				<div class="desk-panel__head">
+					<h2 class="desk-h2">A new price list</h2>
+					<span class="desk-small">In force: list { strconv.FormatInt(x.Current.ID, 10) }, { When(x.Current.PublishedAt, x.Now) }</span>
+				</div>
+				@formErrorSummary(x.Form, "A", "B", "C", "D", "P", "floor", "river")
+				<table class="desk-table pricing__bases">
+					<thead><tr><th scope="col">Type</th><th scope="col" class="num">In force</th><th scope="col">New base price (KES)</th></tr></thead>
+					<tbody>
+						for _, t := range building.OrderedTypes() {
+							<tr>
+								<th scope="row"><span class="mono">{ t.Code }</span> { t.Name }</th>
+								<td class="num">{ KES(x.Current.List.Base[t.Code]) }</td>
+								<td>
+									<label class="visually-hidden" for={ "f-" + t.Code }>New base price for type { t.Code }</label>
+									<input class={ "input tnum", templ.KV("is-wrong", x.Form.Error(t.Code) != "") } id={ "f-" + t.Code } name={ t.Code } type="text" inputmode="numeric" value={ x.Form.Value(t.Code) }/>
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+				<div class="field-grid">
+					<div class="field">
+						<label class="field__label" for="f-floor">Floor premium, % a floor <span class="label">Now { pricing.Percent(x.Current.List.FloorBP) }</span></label>
+						<input class="input tnum" id="f-floor" name="floor" type="text" inputmode="decimal" value={ x.Form.Value("floor") }/>
+					</div>
+					<div class="field">
+						<label class="field__label" for="f-river">River premium, % <span class="label">Now { pricing.Percent(x.Current.List.RiverBP) }</span></label>
+						<input class="input tnum" id="f-river" name="river" type="text" inputmode="decimal" value={ x.Form.Value("river") }/>
+					</div>
+				</div>
+				<div class="field">
+					<label class="field__label" for="f-note">What changed <span class="label">Optional</span></label>
+					<input class="input" id="f-note" name="note" type="text" maxlength="120" value={ x.Form.Value("note") } placeholder="Such as: two-bedroom base up 2%"/>
+				</div>
+				<button class="btn btn--small" type="submit">Preview the change</button>
+			</form>
+			<section class="desk-panel" aria-labelledby="price-history">
+				<h2 class="desk-h2" id="price-history">Price lists</h2>
+				<ol class="desk-list" role="list">
+					for _, h := range x.History {
+						<li class="desk-list__row price-history__row">
+							<span class="mono desk-list__id">{ strconv.FormatInt(h.ID, 10) }</span>
+							<span class="desk-list__main">
+								if h.Note != "" {
+									{ h.Note }
+								} else {
+									Price list { strconv.FormatInt(h.ID, 10) }
+								}
+								<span class="desk-list__sub">Floor { pricing.Percent(h.List.FloorBP) } · river { pricing.Percent(h.List.RiverBP) } · type B { KESShort(h.List.Base["B"]) }</span>
+							</span>
+							<span class="desk-list__aside">{ When(h.PublishedAt, x.Now) }<br/>{ h.By }</span>
+						</li>
+					}
+				</ol>
+			</section>
+		</div>
+		if x.Preview != nil {
+			<section class="desk-panel price-preview" aria-labelledby="preview-title" id="preview">
+				<div class="desk-panel__head">
+					<h2 class="desk-h2" id="preview-title">What this list would do</h2>
+				</div>
+				<div class="desk-kpis price-preview__kpis">
+					<div class="desk-kpi"><span class="label">Homes repriced</span><span class="desk-kpi__n tnum">{ strconv.Itoa(x.Preview.Changed) }</span><span class="desk-kpi__note">{ strconv.Itoa(x.Preview.KeptOwn) } keep their own price</span></div>
+					<div class="desk-kpi"><span class="label">Stock value now</span><span class="desk-kpi__n tnum">{ KESShort(x.Preview.OldTotal) }</span><span class="desk-kpi__note">every unsold home</span></div>
+					<div class="desk-kpi"><span class="label">After</span><span class="desk-kpi__n tnum">{ KESShort(x.Preview.NewTotal) }</span><span class="desk-kpi__note">at the new prices</span></div>
+					<div class="desk-kpi"><span class="label">Change</span><span class={ "desk-kpi__n tnum", templ.KV("is-up", x.Preview.NewTotal > x.Preview.OldTotal), templ.KV("is-down", x.Preview.NewTotal < x.Preview.OldTotal) }>{ signedKES(x.Preview.NewTotal - x.Preview.OldTotal) }</span><span class="desk-kpi__note">{ changePercent(x.Preview.OldTotal, x.Preview.NewTotal) }</span></div>
+				</div>
+				<form class="price-preview__publish" method="post" action="/desk/pricing">
+					for _, t := range building.TypeOrder {
+						<input type="hidden" name={ t } value={ strconv.FormatInt(x.Preview.List.Base[t], 10) }/>
+					}
+					<input type="hidden" name="floor" value={ bpField(x.Preview.List.FloorBP) }/>
+					<input type="hidden" name="river" value={ bpField(x.Preview.List.RiverBP) }/>
+					<input type="hidden" name="note" value={ x.Preview.Note }/>
+					<button class="btn btn--cobalt btn--small" type="submit" data-confirm="Publish this price list? The website and the price list follow at once.">Publish the new prices</button>
+					<span class="desk-small">The website, every home’s schedule and the price-list PDF change at once.</span>
+				</form>
+				<div class="desk-table-wrap">
+					<table class="desk-table">
+						<thead><tr><th scope="col">Home</th><th scope="col">Type</th><th scope="col">Status</th><th scope="col" class="num">Now</th><th scope="col" class="num">New</th><th scope="col" class="num">Change</th></tr></thead>
+						<tbody>
+							for _, row := range x.Preview.Rows {
+								<tr>
+									<th scope="row" class="mono">{ row.Home.ID }</th>
+									<td>{ row.Home.Type.Code }</td>
+									<td>@StatusBadge(row.Home.Status)</td>
+									<td class="num">{ KES(row.Old) }</td>
+									<td class="num">
+										if row.KeepsOwn {
+											<span class="desk-small">keeps its own price</span>
+										} else {
+											{ KES(row.New) }
+										}
+									</td>
+									<td class={ "num", templ.KV("is-up", row.Change() > 0), templ.KV("is-down", row.Change() < 0) }>{ signedKES(row.Change()) }</td>
+								</tr>
+							}
+						</tbody>
+					</table>
+				</div>
+			</section>
+		}
+	}
+}

@@ -10,7 +10,9 @@ import (
 	"github.com/a-h/templ"
 
 	"github.com/jeffgicharu/oriel/internal/plans"
+	"github.com/jeffgicharu/oriel/internal/pricing"
 	"github.com/jeffgicharu/oriel/internal/store"
+	"github.com/jeffgicharu/oriel/internal/viewings"
 )
 
 // DeskPage is passed to every page of the sales desk.
@@ -362,4 +364,68 @@ func reservationTab(status string) string {
 		return status
 	}
 	return "closed"
+}
+
+func opensOn(c viewings.Config, wd time.Weekday) bool {
+	for _, d := range c.Days {
+		if d == wd {
+			return true
+		}
+	}
+	return false
+}
+
+func signedKES(n int64) string {
+	switch {
+	case n > 0:
+		return "+" + KES(n)
+	case n < 0:
+		return "−" + KES(-n)
+	}
+	return "no change"
+}
+
+func changePercent(old, now int64) string {
+	if old == 0 {
+		return ""
+	}
+	bp := (now - old) * 10000 / old
+	sign := "+"
+	if bp < 0 {
+		sign, bp = "−", -bp
+	}
+	return sign + pricing.Percent(bp)
+}
+
+// bpField writes basis points as a percentage for a form: 80 → "0.8".
+func bpField(bp int64) string {
+	return strings.TrimSuffix(pricing.Percent(bp), "%")
+}
+
+// ParsePercentBP reads a percentage typed by a person into basis points:
+// "0.8" → 80, "1" → 100, "2.25%" → 225.
+func ParsePercentBP(s string) (int64, bool) {
+	s = strings.TrimSuffix(strings.TrimSpace(s), "%")
+	if s == "" {
+		return 0, false
+	}
+	whole, frac, _ := strings.Cut(s, ".")
+	if len(frac) > 2 {
+		return 0, false
+	}
+	w, err := strconv.ParseInt(whole, 10, 64)
+	if err != nil || w < 0 {
+		return 0, false
+	}
+	f := int64(0)
+	if frac != "" {
+		for len(frac) < 2 {
+			frac += "0"
+		}
+		f, err = strconv.ParseInt(frac, 10, 64)
+		if err != nil {
+			return 0, false
+		}
+	}
+	return w*100 + f, true
 }

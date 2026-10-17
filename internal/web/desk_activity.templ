@@ -1,0 +1,85 @@
+package web
+
+import (
+	"strconv"
+	"time"
+
+	"github.com/jeffgicharu/oriel/internal/store"
+)
+
+// DeskActivityData is the activity log.
+type DeskActivityData struct {
+	Actor   string
+	Entries []store.ActivityEntry
+	Page    int
+	More    bool
+	Now     time.Time
+}
+
+var activityTabs = []struct{ Key, Label string }{
+	{"", "Everything"}, {"staff", "The team"}, {"visitor", "The website"}, {"system", "Automatic"},
+}
+
+templ DeskActivity(d DeskPage, x DeskActivityData) {
+	@DeskLayout(d) {
+		@deskHeader("Activity", "Who changed what, and when: the team, buyers on the website, and the desk itself.")
+		<nav class="desk-tabs" aria-label="Whose activity">
+			for _, t := range activityTabs {
+				<a href={ templ.SafeURL(activityURL(t.Key, 1)) } { current(x.Actor == t.Key)... }>{ t.Label }</a>
+			}
+		</nav>
+		if len(x.Entries) == 0 {
+			<p class="desk-empty">Nothing yet.</p>
+		} else {
+			<ol class="activity" role="list">
+				for _, e := range x.Entries {
+					<li class="activity__item">
+						<span class="activity__when mono">{ When(e.At, x.Now) }</span>
+						<span class="activity__who">
+							switch e.Actor {
+								case "staff":
+									<span class="desk-dot" style={ dotColour(e.Colour) } aria-hidden="true"></span> { e.StaffName }
+								case "visitor":
+									<span class="activity__tag">Website</span>
+								default:
+									<span class="activity__tag activity__tag--system">Automatic</span>
+							}
+						</span>
+						<span class="activity__what">
+							{ e.Action }
+							if e.Link != "" {
+								<a href={ templ.SafeURL(e.Link) }>{ e.Subject }</a>
+							} else {
+								<strong>{ e.Subject }</strong>
+							}
+							if e.Detail != "" {
+								<span class="activity__detail">{ e.Detail }</span>
+							}
+						</span>
+					</li>
+				}
+			</ol>
+			<nav class="activity__pages" aria-label="Pages">
+				if x.Page > 1 {
+					<a class="btn btn--line btn--small" href={ templ.SafeURL(activityURL(x.Actor, x.Page-1)) }>Newer</a>
+				}
+				if x.More {
+					<a class="btn btn--line btn--small" href={ templ.SafeURL(activityURL(x.Actor, x.Page+1)) }>Older</a>
+				}
+			</nav>
+		}
+	}
+}
+
+func activityURL(actor string, page int) string {
+	u := "/desk/activity"
+	sep := "?"
+	if actor != "" {
+		u += "?actor=" + actor
+		sep = "&"
+	}
+	if page > 1 {
+		u += sep + "page=" + strconv.Itoa(page)
+	}
+	return u
+}
