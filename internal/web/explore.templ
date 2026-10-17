@@ -1,0 +1,135 @@
+package web
+
+import (
+	"strconv"
+
+	"github.com/jeffgicharu/oriel/internal/floorplan"
+	"github.com/jeffgicharu/oriel/internal/store"
+)
+
+templ Explore(p Page, d ExploreData, rows []LevelRow) {
+	@Layout(p) {
+		@templ.JSONScript("oriel-explore", d)
+		<section class="explorer" data-explorer aria-label="The building in 3D">
+			<div class="explorer__stage" data-explorer-stage>
+				<div class="explorer__plate" data-plate hidden></div>
+				<p class="explorer__loading label" data-loading>Drawing the building…</p>
+				<div class="explorer__tip" data-tip hidden></div>
+				<div class="explorer__hud">
+					<div class="sunbar" data-sun>
+						<label class="sunbar__time">
+							<span class="label">Time</span>
+							<input type="range" min="360" max="1170" step="5" value="970" data-sun-time aria-label="Time of day"/>
+							<output class="mono" data-sun-out>16:10</output>
+						</label>
+						<label class="sunbar__month">
+							<span class="label">Month</span>
+							<select class="select select--small" data-sun-month aria-label="Month">
+								for m := 1; m <= 12; m++ {
+									<option value={ strconv.Itoa(m) }>{ MonthName(m) }</option>
+								}
+							</select>
+						</label>
+						<button class="btn btn--line btn--small" type="button" data-reset>Whole building</button>
+					</div>
+				</div>
+			</div>
+			<aside class="explorer__panel" aria-label="Floors and filters">
+				<div class="explorer__head">
+					<p class="sheet-tag label">A-100 · Explore</p>
+					<h1 class="h3">Explore the building</h1>
+					<p class="muted">Choose a floor to open it up, then a home to see its plan.</p>
+				</div>
+				<form class="explorer__filters" data-filters>
+					<fieldset class="filter">
+						<legend class="label">Bedrooms</legend>
+						<div class="chips">
+							@chip("beds", "", "Any", d.Filter.Beds == 0)
+							for n := 1; n <= 4; n++ {
+								@chip("beds", strconv.Itoa(n), strconv.Itoa(n), d.Filter.Beds == n)
+							}
+						</div>
+					</fieldset>
+					<div class="explorer__filterrow">
+						<label class="filter">
+							<span class="label">Up to</span>
+							<select class="select select--small" name="max">
+								<option value="" selected?={ d.Filter.Max == 0 }>Any price</option>
+								for _, step := range PriceSteps {
+									<option value={ strconv.FormatInt(step, 10) } selected?={ d.Filter.Max == step }>{ KESShort(step) }</option>
+								}
+							</select>
+						</label>
+						<label class="filter filter--toggle">
+							<input type="checkbox" name="show" value="all" checked?={ d.Filter.All }/>
+							<span>Show sold</span>
+						</label>
+					</div>
+				</form>
+				<ol class="levels" role="list" data-levels>
+					for _, row := range rows {
+						<li>
+							<button class="level" type="button" data-level={ strconv.Itoa(row.Level) } aria-pressed="false">
+								<span class="level__name mono">{ row.Name }</span>
+								<span class="level__plan" aria-hidden="true">
+									for _, h := range row.Homes {
+										<i class={ "cell", "cell--" + h.Status } data-cell={ h.ID }></i>
+									}
+								</span>
+								<span class="level__count" data-level-count>
+									if row.Available > 0 {
+										{ strconv.Itoa(row.Available) } free
+									} else {
+										—
+									}
+								</span>
+								<span class="visually-hidden">, { strconv.Itoa(row.Available) } of { strconv.Itoa(len(row.Homes)) } homes available</span>
+							</button>
+						</li>
+					}
+				</ol>
+				<div class="explorer__homes" data-homes hidden></div>
+				<ul class="explorer__legend" role="list">
+					for _, s := range []string{store.Available, store.Held, store.Reserved, store.Sold} {
+						<li>@StatusBadge(s)</li>
+					}
+				</ul>
+			</aside>
+			<div class="explorer__card" data-card hidden aria-live="polite"></div>
+		</section>
+	}
+}
+
+// ExploreCard is the card for a home picked in the explorer.
+templ ExploreCard(h store.Home) {
+	<article class="hcard">
+		<button class="hcard__close" type="button" data-card-close aria-label="Close">
+			<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13"></path></svg>
+		</button>
+		<header class="hcard__head">
+			<p class="hcard__id">{ h.ID }</p>
+			<div>
+				<p class="label label--cobalt">Type { h.Type.Code } · { LevelName(h.Level) }</p>
+				<h2 class="hcard__title">{ HomeTitle(h) }</h2>
+			</div>
+		</header>
+		<div class="hcard__plan">
+			@planSVG(PlanFor(h.Unit), floorplan.Options{Plain: true, North: NorthFor(h.Unit), ID: "hc-" + h.ID, Title: "Plan of home " + h.ID})
+		</div>
+		<dl class="hcard__facts">
+			<div><dt class="label">Inside</dt><dd>{ strconv.Itoa(h.Type.Internal) } m²</dd></div>
+			<div><dt class="label">Faces</dt><dd>{ capitalise(h.Facings()) }</dd></div>
+			<div><dt class="label">Sun a day</dt><dd>{ sunHours(h.ID) } h</dd></div>
+		</dl>
+		<div class="hcard__deal">
+			@StatusBadge(h.Status)
+			if h.ShowsPrice() {
+				<p class="hcard__price tnum">{ KES(h.Price) }</p>
+			}
+		</div>
+		<div class="hcard__actions">
+			<a class="btn btn--cobalt btn--small" href={ templ.SafeURL(HomePath(h.ID)) }>See this home @Arrow()</a>
+			<a class="btn btn--line btn--small" href={ templ.SafeURL("/viewings/new?home=" + h.ID) }>Book a viewing</a>
+		</div>
+	</article>
+}

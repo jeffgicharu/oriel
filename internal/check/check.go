@@ -21,6 +21,7 @@ import (
 func PublicPaths() []string {
 	return []string{
 		"/",
+		"/explore",
 		"/residences",
 		"/residences/0704",
 		"/residences/types/B",
@@ -39,6 +40,8 @@ var pages = []struct {
 	phrase string
 }{
 	{"/", "Homes designed around the light."},
+	{"/explore", "Explore the building"},
+	{"/explore?home=0704&beds=2", "data-explorer"},
 	{"/residences", "Find your home."},
 	{"/residences?beds=2&floors=upper&show=all", "homes"},
 	{"/residences/0704", "Home 0704"},

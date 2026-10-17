@@ -122,15 +122,34 @@ export class Stage {
 
   /** Points the camera from its orbit, with the sideways shift applied. */
   applyCamera(): void {
-    const o = this.orbit;
+    this.positionFromOrbit();
+    this.updateProjection();
+  }
+
+  /** Where the camera stands for an orbit. */
+  orbitPosition(o: Orbit = this.orbit): THREE.Vector3 {
     const az = (o.azimuth * Math.PI) / 180;
     const el = (o.elevation * Math.PI) / 180;
-    this.camera.position.set(
+    return new THREE.Vector3(
       o.target.x + o.distance * Math.cos(el) * Math.sin(az),
       o.target.y + o.distance * Math.sin(el),
       o.target.z - o.distance * Math.cos(el) * Math.cos(az),
     );
-    this.camera.lookAt(o.target);
+  }
+
+  positionFromOrbit(): void {
+    this.camera.position.copy(this.orbitPosition());
+    this.camera.lookAt(this.orbit.target);
+  }
+
+  /**
+   * When something else moves the camera (the explorer's orbit controls), a
+   * resize only updates the lens and leaves the camera where it is.
+   */
+  external = false;
+
+  /** The lens: aspect and the sideways shift. */
+  updateProjection(): void {
     const w = this.width;
     const h = this.height;
     const a = 0.5 + this.shift;
@@ -174,7 +193,8 @@ export class Stage {
     this.canvas.style.width = w + "px";
     this.canvas.style.height = h + "px";
     this.onResize?.();
-    this.applyCamera();
+    if (this.external) this.updateProjection();
+    else this.applyCamera();
   }
 
   onResize?: () => void;

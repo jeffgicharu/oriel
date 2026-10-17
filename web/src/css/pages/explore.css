@@ -1,0 +1,631 @@
+/* ---------- The explorer ---------- */
+
+.is-explorer .site-footer .footer-cta {
+  display: none;
+}
+
+.explorer {
+  position: relative;
+  display: grid;
+  grid-template-columns: 100%;
+  grid-template-rows: auto auto;
+  border-bottom: 1px solid var(--rule);
+}
+
+.explorer__stage {
+  position: relative;
+  height: 62svh;
+  min-height: 380px;
+  overflow: hidden;
+  background: var(--plaster);
+  touch-action: none;
+}
+
+.is-flat .explorer__stage {
+  height: auto;
+  min-height: 0;
+  touch-action: auto;
+}
+
+.explorer__canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  cursor: grab;
+}
+
+.explorer__canvas:active {
+  cursor: grabbing;
+}
+
+.explorer__loading {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--ink-soft);
+  animation: pulse 1.6s var(--ease-in-out) infinite alternate;
+}
+
+@keyframes pulse {
+  from {
+    opacity: 0.35;
+  }
+}
+
+.explorer__tip {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 5;
+  padding: 7px 10px;
+  background: var(--graphite);
+  color: var(--plaster-hi);
+  font-size: 13px;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 6px 18px -8px rgb(0 0 0 / 0.5);
+}
+
+.explorer__tip strong {
+  margin-right: 6px;
+}
+
+.explorer__hud {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 4;
+  padding: 12px var(--gutter);
+  pointer-events: none;
+}
+
+.is-flat .explorer__hud {
+  display: none;
+}
+
+.sunbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 10px 16px;
+  width: fit-content;
+  max-width: 100%;
+  margin-inline: auto;
+  padding: 10px 14px;
+  background: rgb(244 245 242 / 0.92);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--rule);
+  pointer-events: auto;
+}
+
+.sunbar label {
+  display: grid;
+  gap: 4px;
+}
+
+.sunbar .label {
+  color: var(--ink-soft);
+}
+
+.sunbar__time {
+  grid-template-columns: auto auto;
+  align-items: center;
+  column-gap: 10px;
+}
+
+.sunbar__time .label {
+  grid-column: 1 / -1;
+}
+
+.sunbar input[type="range"] {
+  width: min(48vw, 260px);
+  accent-color: var(--cobalt);
+}
+
+.sunbar output {
+  font-size: 15px;
+  min-width: 46px;
+}
+
+.sunbar .select {
+  min-width: 132px;
+}
+
+.is-night .sunbar {
+  background: rgb(26 29 31 / 0.82);
+  color: var(--plaster-hi);
+  border-color: var(--rule-light);
+}
+
+.is-night .sunbar .label {
+  color: var(--stone);
+}
+
+.explorer__panel {
+  display: grid;
+  align-content: start;
+  gap: 18px;
+  padding: 20px var(--gutter) 28px;
+  background: var(--plaster-hi);
+}
+
+.explorer__head {
+  display: grid;
+  gap: 8px;
+}
+
+.explorer__head .muted {
+  font-size: 14px;
+}
+
+.explorer__filters {
+  display: grid;
+  gap: 12px;
+}
+
+.explorer__filterrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 12px 18px;
+}
+
+/* The floors, each a row of its homes: a small stacking plan. */
+.levels {
+  display: grid;
+  border-top: 1px solid var(--rule);
+}
+
+.level {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 8px;
+  border: 0;
+  border-bottom: 1px solid var(--rule);
+  background: none;
+  text-align: left;
+  transition: background-color 0.2s var(--ease);
+}
+
+.level:hover {
+  background: var(--cobalt-mist);
+}
+
+.level[aria-pressed="true"] {
+  background: var(--graphite);
+  color: var(--plaster-hi);
+}
+
+.level__name {
+  font-size: 13px;
+}
+
+.level__plan {
+  display: flex;
+  gap: 3px;
+}
+
+.cell {
+  width: 16px;
+  height: 14px;
+  border: 1.5px solid currentColor;
+}
+
+.cell--available {
+  color: var(--cobalt);
+  background: var(--cobalt-wash);
+}
+
+.cell--held {
+  color: var(--graphite-2);
+  background: repeating-linear-gradient(45deg, currentColor 0 1.5px, transparent 1.5px 4.5px);
+}
+
+.cell--reserved {
+  color: var(--graphite-2);
+  background:
+    repeating-linear-gradient(45deg, currentColor 0 1px, transparent 1px 4.5px),
+    repeating-linear-gradient(-45deg, currentColor 0 1px, transparent 1px 4.5px);
+}
+
+.cell--sold {
+  color: var(--graphite);
+  background: var(--graphite);
+}
+
+.cell--withheld {
+  color: var(--ink-faint);
+  border-style: dashed;
+}
+
+.cell.is-dim {
+  opacity: 0.25;
+}
+
+.level[aria-pressed="true"] .cell--sold,
+.level[aria-pressed="true"] .cell--held,
+.level[aria-pressed="true"] .cell--reserved {
+  color: var(--plaster-hi);
+}
+
+.level[aria-pressed="true"] .cell--sold {
+  background: var(--stone);
+}
+
+.level__count {
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.level.is-empty .level__count {
+  color: var(--ink-faint);
+  font-weight: 400;
+}
+
+.level[aria-pressed="true"] .level__count {
+  color: var(--plaster-hi);
+}
+
+.explorer__homes {
+  display: grid;
+  gap: 8px;
+}
+
+.explorer__homes .label {
+  color: var(--ink-soft);
+}
+
+.explorer__homes ul {
+  display: grid;
+  gap: 6px;
+}
+
+.lhome {
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--rule);
+  background: var(--plaster);
+  text-align: left;
+  font-size: 13px;
+  transition: border-color 0.2s var(--ease), background-color 0.2s var(--ease);
+}
+
+.lhome:hover {
+  border-color: var(--cobalt);
+}
+
+.lhome.is-picked {
+  border-color: var(--amber);
+  background: #fbf3e2;
+}
+
+.lhome.is-dim {
+  opacity: 0.5;
+}
+
+.lhome__id {
+  grid-row: 1 / 3;
+  font-size: 18px;
+  color: var(--cobalt);
+  align-self: center;
+}
+
+.lhome__right {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  font-weight: 600;
+}
+
+.explorer__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  padding-top: 4px;
+}
+
+/* The home card. */
+.explorer__card {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 45;
+  max-height: 78svh;
+  overflow-y: auto;
+  background: var(--plaster-hi);
+  border-top: 1px solid var(--rule-strong);
+  box-shadow: 0 -18px 40px -24px rgb(26 29 31 / 0.45);
+  animation: card-up 0.45s var(--ease-out);
+}
+
+.explorer__card.is-loading {
+  opacity: 0.7;
+}
+
+@keyframes card-up {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+}
+
+.hcard {
+  position: relative;
+  display: grid;
+  gap: 14px;
+  padding: 18px var(--gutter) calc(18px + env(safe-area-inset-bottom));
+}
+
+.hcard__close {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--rule);
+  background: var(--plaster);
+}
+
+.hcard__close svg {
+  width: 14px;
+  height: 14px;
+  stroke: currentColor;
+  stroke-width: 1.8;
+}
+
+.hcard__head {
+  display: flex;
+  gap: 14px;
+  align-items: end;
+  padding-right: 48px;
+}
+
+.hcard__id {
+  font-size: 54px;
+  line-height: 0.82;
+  font-weight: 330;
+  font-stretch: 112%;
+  letter-spacing: -0.04em;
+  color: var(--cobalt);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.hcard__title {
+  font-size: 17px;
+  font-weight: 650;
+  line-height: 1.2;
+}
+
+.hcard__plan {
+  border: 1px solid var(--rule);
+  background: #fbfbfa;
+  padding: 8px;
+}
+
+.hcard__plan .fp-name {
+  font-size: 30px;
+}
+
+.hcard__plan .fp-note {
+  display: none;
+}
+
+.hcard__facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.hcard__facts dt {
+  color: var(--ink-soft);
+}
+
+.hcard__facts dd {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.hcard__deal {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.hcard__price {
+  font-size: 22px;
+  font-weight: 700;
+  font-stretch: 110%;
+}
+
+.hcard__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* The flat view. */
+.explorer__plate {
+  padding: 20px var(--gutter);
+  display: grid;
+  gap: 10px;
+}
+
+.explorer__plate .label {
+  color: var(--ink-soft);
+}
+
+.plate {
+  width: 100%;
+  height: auto;
+  max-width: 980px;
+}
+
+.plate__river {
+  fill: none;
+  stroke: #9db4c1;
+  stroke-width: 10;
+  stroke-linecap: round;
+}
+
+.plate__note {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  fill: var(--ink-soft);
+}
+
+.plate__core {
+  fill: var(--concrete);
+}
+
+.plate__home {
+  cursor: pointer;
+  color: var(--graphite-2);
+}
+
+.plate__home:focus {
+  outline: none;
+}
+
+.plate__fill,
+.plate__bay {
+  stroke: currentColor;
+  stroke-width: 2;
+}
+
+.plate__home--available {
+  color: var(--cobalt);
+}
+
+.plate__home--available .plate__fill,
+.plate__home--available .plate__bay {
+  fill: var(--cobalt-wash);
+}
+
+.plate__home--held .plate__fill,
+.plate__home--held .plate__bay {
+  fill: url(#plate-hatch);
+}
+
+.plate__home--reserved .plate__fill,
+.plate__home--reserved .plate__bay {
+  fill: url(#plate-cross);
+}
+
+.plate__home--sold .plate__fill,
+.plate__home--sold .plate__bay {
+  fill: var(--graphite);
+}
+
+.plate__home--sold .plate__id,
+.plate__home--sold .plate__sub {
+  fill: var(--plaster-hi);
+}
+
+.plate__home--withheld .plate__fill,
+.plate__home--withheld .plate__bay {
+  fill: var(--plaster);
+  stroke-dasharray: 8 6;
+}
+
+.plate__home.is-dim {
+  opacity: 0.35;
+}
+
+.plate__home:hover .plate__fill,
+.plate__home:focus-visible .plate__fill {
+  stroke-width: 5;
+}
+
+.plate__home.is-selected .plate__fill {
+  stroke: var(--amber);
+  stroke-width: 6;
+}
+
+.plate__id {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  fill: currentColor;
+}
+
+.plate__sub {
+  font-size: 13px;
+  fill: currentColor;
+}
+
+.plate__home--held .plate__id,
+.plate__home--reserved .plate__id,
+.plate__home--held .plate__sub,
+.plate__home--reserved .plate__sub {
+  paint-order: stroke;
+  stroke: var(--plaster-hi);
+  stroke-width: 5px;
+}
+
+.plate__north path {
+  fill: var(--graphite);
+}
+
+.plate__north text {
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+/* Wide screens: the floors on the left, the building filling the rest. */
+@media (min-width: 1000px) {
+  .explorer {
+    grid-template-columns: 340px minmax(0, 1fr);
+    grid-template-rows: none;
+    height: calc(100svh - var(--header-h));
+    min-height: 640px;
+  }
+
+  .explorer__panel {
+    grid-column: 1;
+    grid-row: 1;
+    overflow-y: auto;
+    border-right: 1px solid var(--rule);
+    padding: 24px 22px 28px;
+  }
+
+  .explorer__stage {
+    grid-column: 2;
+    grid-row: 1;
+    height: auto;
+    min-height: 0;
+  }
+
+  .is-flat .explorer__stage {
+    height: auto;
+    overflow-y: auto;
+  }
+
+  .explorer__card {
+    position: absolute;
+    left: auto;
+    right: 20px;
+    top: 20px;
+    bottom: auto;
+    width: 360px;
+    max-height: calc(100% - 40px);
+    border: 1px solid var(--rule-strong);
+    box-shadow: var(--shadow-sheet);
+  }
+
+  .hcard {
+    padding: 18px 20px 20px;
+  }
+}

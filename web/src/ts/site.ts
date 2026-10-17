@@ -64,6 +64,11 @@ function measureDrawings(): void {
 
 // The 3D building loads after the page has painted, and only where it is shown.
 function loadModel(): void {
+  const explorer = document.querySelector<HTMLElement>("[data-explorer]");
+  if (explorer) {
+    void import("./explorer/index").then((m) => m.mountExplorer(explorer));
+    return;
+  }
   const hero = document.querySelector<HTMLElement>("[data-model-stage='hero']");
   if (!hero) return;
   const start = () => import("./model/hero").then((m) => m.mountHero(hero));

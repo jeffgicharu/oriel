@@ -16,8 +16,15 @@ export interface Tower {
   lineMaterial: THREE.LineBasicMaterial;
   /** How many line vertices are drawn once each level is complete, bottom up. */
   levelEnds: number[];
+  /** Each level as its own group, when built split for the explorer. */
+  levels: Map<number, THREE.Group>;
   height: number;
   dispose(): void;
+}
+
+export interface TowerOptions {
+  /** Build each level as its own group, so floors can be lifted apart. */
+  split?: boolean;
 }
 
 const SLAB = 0.32;
@@ -39,7 +46,8 @@ export function makeMaterials(): Record<Part, THREE.MeshStandardMaterial> {
   };
 }
 
-export function buildTower(model: BuildingModel): Tower {
+export function buildTower(model: BuildingModel, options: TowerOptions = {}): Tower {
+  if (options.split) return buildSplitTower(model);
   const kit = new Kit<Part>();
   const levelEnds: number[] = [];
   const unitsOn = new Map<number, ModelUnit[]>();
@@ -72,11 +80,7 @@ export function buildTower(model: BuildingModel): Tower {
   const materials = makeMaterials();
   const group = new THREE.Group();
   group.name = "tower";
-  for (const mesh of kit.meshes(materials, {
-    balustrade: { cast: false, receive: false },
-    water: { cast: false, receive: true },
-    planting: { cast: true, receive: true },
-  })) {
+  for (const mesh of kit.meshes(materials, SHADOWS)) {
     group.add(mesh);
   }
   const lineMaterial = new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 1 });
@@ -98,11 +102,80 @@ export function buildTower(model: BuildingModel): Tower {
     lines,
     lineMaterial,
     levelEnds,
+    levels: new Map(),
     height: model.roof + 3.6,
     dispose() {
       group.traverse((o) => {
         if (o instanceof THREE.Mesh || o instanceof THREE.LineSegments) o.geometry.dispose();
       });
+      Object.values(materials).forEach((m) => m.dispose());
+      lineMaterial.dispose();
+    },
+  };
+}
+
+const SHADOWS = {
+  balustrade: { cast: false, receive: false },
+  water: { cast: false, receive: true },
+  planting: { cast: true, receive: true },
+};
+
+// The explorer's tower: one group per level, the roof riding on the top one.
+function buildSplitTower(model: BuildingModel): Tower {
+  const materials = makeMaterials();
+  const group = new THREE.Group();
+  group.name = "tower";
+  const levels = new Map<number, THREE.Group>();
+  const unitsOn = new Map<number, ModelUnit[]>();
+  for (const u of model.units) {
+    const list = unitsOn.get(u.l) ?? [];
+    list.push(u);
+    unitsOn.set(u.l, list);
+  }
+  for (const level of model.levels) {
+    const kit = new Kit<Part>();
+    switch (level.kind) {
+      case "ground":
+        groundFloor(kit, model, level);
+        break;
+      case "amenity":
+        amenityFloor(kit, model, level);
+        break;
+      case "homes":
+        homesFloor(kit, model, level, unitsOn.get(level.level) ?? []);
+        break;
+      case "penthouse":
+        penthouseFloor(kit, model, level, unitsOn.get(level.level) ?? []);
+        roof(kit, model);
+        break;
+    }
+    const g = new THREE.Group();
+    g.name = "level-" + level.level;
+    g.userData.level = level.level;
+    for (const mesh of kit.meshes(materials, SHADOWS)) g.add(mesh);
+    levels.set(level.level, g);
+    group.add(g);
+  }
+  for (const material of Object.values(materials)) {
+    material.polygonOffset = true;
+    material.polygonOffsetFactor = 1;
+    material.polygonOffsetUnits = 1;
+  }
+  const lineMaterial = new THREE.LineBasicMaterial({ visible: false });
+  const lines = new THREE.LineSegments(new THREE.BufferGeometry(), lineMaterial);
+  return {
+    group,
+    materials,
+    lines,
+    lineMaterial,
+    levelEnds: [],
+    levels,
+    height: model.roof + 3.6,
+    dispose() {
+      group.traverse((o) => {
+        if (o instanceof THREE.Mesh) o.geometry.dispose();
+      });
+      lines.geometry.dispose();
       Object.values(materials).forEach((m) => m.dispose());
       lineMaterial.dispose();
     },
