@@ -192,7 +192,7 @@ type FunnelRow struct {
 }
 
 // Funnel works out how far leads have got. A lead at a later stage has
-// passed through every earlier one.
+// passed through every earlier one; a lost lead is known only to have started.
 func Funnel(stages []store.Count) []FunnelRow {
 	total := 0
 	for _, s := range stages {
@@ -212,6 +212,10 @@ func Funnel(stages []store.Count) []FunnelRow {
 			if s.Key == key {
 				n = s.N
 			}
+		}
+		// Every lead starts as new, the lost ones included.
+		if i == 0 {
+			reached = total
 		}
 		pct := 0
 		if total > 0 {
@@ -304,4 +308,18 @@ func planName(code string) string {
 		return p.Name
 	}
 	return code
+}
+
+// priceField is a home's own price for its form, or nothing for the list price.
+func priceField(h store.Home) string {
+	if !h.Overridden {
+		return ""
+	}
+	return thousandsWeb(h.Price)
+}
+
+// ParseShillings reads an amount typed with or without commas: "18,480,000".
+func ParseShillings(s string) (int64, error) {
+	clean := strings.NewReplacer(",", "", " ", "", "KES", "", "kes", "", "Ksh", "", "_", "").Replace(strings.TrimSpace(s))
+	return strconv.ParseInt(clean, 10, 64)
 }

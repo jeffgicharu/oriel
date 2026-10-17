@@ -48,10 +48,14 @@ func Thousands(n int64) string {
 // KESShort writes a price as "KES 17.6M", for headings and labels.
 func KESShort(amount int64) string {
 	switch {
+	case amount >= 1_000_000_000:
+		hundredths := (amount + 5_000_000) / 10_000_000
+		return fmt.Sprintf("KES %d.%02dB", hundredths/100, hundredths%100)
 	case amount >= 1_000_000:
 		// Prices are whole multiples of KES 10,000, so two decimals are exact,
 		// and a fixed number of them keeps a column of prices aligned.
-		return fmt.Sprintf("KES %d.%02dM", amount/1_000_000, (amount%1_000_000+5_000)/10_000)
+		hundredths := (amount + 5_000) / 10_000
+		return fmt.Sprintf("KES %d.%02dM", hundredths/100, hundredths%100)
 	case amount >= 1_000:
 		return fmt.Sprintf("KES %dK", amount/1_000)
 	default:

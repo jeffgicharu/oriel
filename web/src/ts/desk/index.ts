@@ -62,10 +62,21 @@ const statuses = ["available", "held", "reserved", "sold", "withheld"];
 
 function applyUnit(change: Change): void {
   if (!change.id || !change.status) return;
-  document.querySelectorAll<HTMLElement>(`[data-unit="${CSS.escape(change.id)}"]`).forEach((cell) => {
+  const id = change.id;
+  const selector = `[data-unit="${CSS.escape(id)}"]`;
+  document.querySelectorAll<HTMLElement>(selector).forEach((cell) => {
     statuses.forEach((s) => cell.classList.remove("is-" + s));
-    cell.classList.add("is-" + change.status, "is-changed");
-    setTimeout(() => cell.classList.remove("is-changed"), 2400);
+    cell.classList.add("is-" + change.status);
+    // Fetch the cell again so its words follow its new status, then let it fill.
+    htmx
+      .ajax("get", `/desk/homes/${encodeURIComponent(id)}/cell`, { target: cell, swap: "outerHTML" })
+      .then(() => {
+        document.querySelectorAll<HTMLElement>(selector).forEach((fresh) => {
+          fresh.classList.add("is-changed");
+          setTimeout(() => fresh.classList.remove("is-changed"), 2400);
+        });
+      })
+      .catch(() => undefined);
   });
 }
 
@@ -95,6 +106,27 @@ function setUpLive(): void {
   window.addEventListener("pagehide", () => source.close());
 }
 
+// The home drawer on the stacking plan closes with its button or Escape.
+function setUpDrawer(): void {
+  const drawer = document.getElementById("drawer");
+  if (!drawer) return;
+  const close = () => {
+    if (!drawer.firstElementChild) return;
+    drawer.replaceChildren();
+    if (location.search.includes("home=")) history.pushState(null, "", location.pathname);
+  };
+  drawer.addEventListener("click", (e) => {
+    if ((e.target as HTMLElement).closest("[data-drawer-close]")) close();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") close();
+  });
+  window.addEventListener("popstate", () => {
+    if (!location.search.includes("home=")) drawer.replaceChildren();
+  });
+}
+
 setUpMenu();
+setUpDrawer();
 setUpConfirms();
 setUpLive();

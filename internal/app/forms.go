@@ -1,12 +1,17 @@
 package app
 
 import (
+	"context"
+	"database/sql"
+	"errors"
 	"net/http"
 	"net/mail"
 	"regexp"
 	"strconv"
 	"strings"
 	"unicode/utf8"
+
+	"modernc.org/sqlite"
 
 	"github.com/jeffgicharu/oriel/internal/store"
 	"github.com/jeffgicharu/oriel/internal/web"
@@ -97,4 +102,31 @@ func (a *App) busy(w http.ResponseWriter, r *http.Request) {
 	p := a.page(web.Meta{Title: "One moment", Description: "Oriel is very busy just now. Please try again in a minute.", Path: r.URL.Path, Quiet: true})
 	w.Header().Set("Retry-After", "60")
 	a.render(w, r, http.StatusServiceUnavailable, web.Busy(p))
+}
+
+// userError is a problem with what a member of staff asked for, shown to them
+// as it is.
+type userError string
+
+func (e userError) Error() string { return string(e) }
+
+// isInternal reports an error that is the server's fault, not the request's.
+// The store writes its refusals for people to read; an error from the
+// database itself, or a cancelled request, is internal.
+func isInternal(err error) bool {
+	var u userError
+	if errors.As(err, &u) {
+		return false
+	}
+	var se *sqlite.Error
+	return errors.As(err, &se) || errors.Is(err, sql.ErrNoRows) || errors.Is(err, sql.ErrTxDone) ||
+		errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) || errors.Is(err, store.ErrReadOnly)
+}
+
+func capitalFirst(s string) string {
+	if s == "" {
+		return s
+	}
+	r := []rune(s)
+	return strings.ToUpper(string(r[0])) + string(r[1:])
 }

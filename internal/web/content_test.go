@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/a-h/templ"
+
+	"github.com/jeffgicharu/oriel/internal/store"
 )
 
 func render(t *testing.T, c templ.Component) string {
@@ -125,5 +127,18 @@ func TestPlanRowsAddUp(t *testing.T) {
 	}
 	if folded != 1 {
 		t.Errorf("the staged plan should fold its construction instalments into one row, got %d", folded)
+	}
+}
+
+func TestFunnelCountsEveryLeadAsNew(t *testing.T) {
+	rows := Funnel([]store.Count{{Key: "new", N: 10}, {Key: "contacted", N: 5}, {Key: "viewing", N: 3}, {Key: "reservation", N: 1}, {Key: "won", N: 1}, {Key: "lost", N: 20}})
+	if rows[0].Reached != 40 || rows[0].Percent != 100 {
+		t.Fatalf("new: %+v", rows[0])
+	}
+	if rows[1].Reached != 10 || rows[4].Reached != 1 {
+		t.Fatalf("later stages: %+v", rows)
+	}
+	if last := rows[len(rows)-1]; !last.Lost || last.N != 20 || last.Percent != 50 {
+		t.Fatalf("lost: %+v", last)
 	}
 }

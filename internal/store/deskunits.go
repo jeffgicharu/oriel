@@ -331,3 +331,16 @@ func (db *DB) ActivityLog(ctx context.Context, actorKind string, offset, limit i
 	}
 	return out, rows.Err()
 }
+
+// UnitReservation is the reservation that holds, reserves or sold a home, if any.
+func (db *DB) UnitReservation(ctx context.Context, unitID string) (*Reservation, error) {
+	r, err := scanReservation(db.QueryRowContext(ctx, `SELECT `+reservationColumns+reservationJoins+`
+		WHERE r.unit_id = ? AND r.status IN ('requested', 'confirmed', 'completed') ORDER BY r.requested_at DESC LIMIT 1`, unitID))
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &r, nil
+}

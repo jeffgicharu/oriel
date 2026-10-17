@@ -52,6 +52,11 @@ func (a *App) routes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /desk/enter/{role}/{sig}", a.deskEnter)
 	mux.HandleFunc("GET /desk/events", a.desk(a.events))
 	mux.HandleFunc("GET /desk", a.desk(a.deskDashboard))
+	mux.HandleFunc("GET /desk/stack", a.desk(a.deskStack))
+	mux.HandleFunc("GET /desk/homes/{id}", a.desk(a.deskHome))
+	mux.HandleFunc("GET /desk/homes/{id}/cell", a.desk(a.deskHomeCell))
+	mux.HandleFunc("POST /desk/homes/{id}/status", a.desk(a.deskHomeStatus))
+	mux.HandleFunc("POST /desk/homes/{id}/price", a.desk(a.deskHomePrice))
 	mux.HandleFunc("GET /desk/{$}", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/desk", http.StatusMovedPermanently)
 	})

@@ -1,0 +1,201 @@
+package web
+
+import (
+	"strconv"
+	"time"
+
+	"github.com/jeffgicharu/oriel/internal/building"
+	"github.com/jeffgicharu/oriel/internal/store"
+)
+
+// DeskStackData is the stacking plan page.
+type DeskStackData struct {
+	Rows   []StackRow
+	Homes  map[string]store.Home
+	Counts map[string]int
+	Open   *DeskHomeData // the home whose drawer is open, if any
+}
+
+// DeskHomeData is a home's drawer on the stacking plan.
+type DeskHomeData struct {
+	Home        store.Home
+	History     []store.UnitEvent
+	Reservation *store.Reservation
+	Problem     string
+	Done        string
+	CanChange   bool
+	Now         time.Time
+}
+
+templ DeskStack(d DeskPage, x DeskStackData) {
+	@DeskLayout(d) {
+		@deskHeader("Stacking plan", "Every home, floor by floor. Changes made anywhere, by the team or on the website, appear here as they happen.") {
+			<a class="btn btn--line btn--small" href="/desk/pricing">Prices</a>
+		}
+		<div class="desk-stack">
+			<div class="desk-stack__bar">
+				<fieldset class="chips" aria-label="Show a type">
+					<label class="chip"><input type="radio" name="stack-type" value="" checked/><span>All types</span></label>
+					for _, code := range building.TypeOrder {
+						<label class="chip"><input type="radio" name="stack-type" value={ code }/><span>{ code }</span></label>
+					}
+				</fieldset>
+				<ul class="desk-legend" role="list">
+					for _, st := range []string{store.Available, store.Held, store.Reserved, store.Sold, store.Withheld} {
+						<li>@StatusBadge(st) <span class="tnum">{ strconv.Itoa(x.Counts[st]) }</span></li>
+					}
+				</ul>
+			</div>
+			<div class="stack-grid" role="grid" aria-label="Stacking plan">
+				for _, row := range x.Rows {
+					<div class="stack-grid__row" role="row">
+						<span class="stack-grid__level mono" role="rowheader">{ LevelName(row.Level) }</span>
+						for _, c := range row.Cells {
+							@stackCell(x.Homes[c.ID], c.Wide)
+						}
+					</div>
+				}
+			</div>
+		</div>
+		<aside class="desk-drawer" id="drawer" aria-label="Home details">
+			if x.Open != nil {
+				@DeskHome(*x.Open)
+			}
+		</aside>
+	}
+}
+
+// DeskStackCell is one home on the stacking plan.
+templ DeskStackCell(h store.Home) {
+	@stackCell(h, h.Level == building.PenthouseLevel)
+}
+
+templ stackCell(h store.Home, wide bool) {
+	<button class={ "stack-cell", "is-" + h.Status, templ.KV("stack-cell--wide", wide) } type="button" role="gridcell" data-unit={ h.ID } data-type={ h.Type.Code }
+		hx-get={ "/desk/homes/" + h.ID } hx-target="#drawer" hx-swap="innerHTML" hx-push-url={ "/desk/stack?home=" + h.ID }
+		aria-label={ "Home " + h.ID + ", " + h.Type.Name + ", " + store.StatusName(h.Status) }>
+		<span class="stack-cell__id mono">{ h.ID }</span>
+		<span class="stack-cell__type">{ h.Type.Code }</span>
+		<span class="stack-cell__price tnum">
+			if h.Status == store.Sold || h.Status == store.Reserved {
+				{ store.StatusName(h.Status) }
+			} else {
+				{ KESShort(h.Price) }
+			}
+		</span>
+	</button>
+}
+
+templ DeskHome(x DeskHomeData) {
+	<div class="desk-home">
+		<button class="desk-drawer__close" type="button" aria-label="Close" data-drawer-close>×</button>
+		<p class="label">{ LevelName(x.Home.Level) } · Type { x.Home.Type.Code }</p>
+		<h2 class="desk-h1">Home { x.Home.ID }</h2>
+		<p class="desk-lede">{ HomeTitle(x.Home) } · faces { x.Home.Facings() } · { strconv.Itoa(x.Home.Type.Internal) } m²</p>
+		if x.Done != "" {
+			<div class="desk-notice" role="status">{ x.Done }</div>
+		}
+		if x.Problem != "" {
+			<div class="notice notice--alert" role="alert">{ x.Problem }</div>
+		}
+		<dl class="desk-facts">
+			<div><dt class="label">Status</dt><dd>@StatusBadge(x.Home.Status)</dd></div>
+			<div>
+				<dt class="label">Price</dt>
+				<dd class="tnum">
+					{ KES(x.Home.Price) }
+					if x.Home.Overridden {
+						<span class="desk-small">its own price; list { KES(x.Home.ListPrice) }</span>
+					}
+				</dd>
+			</div>
+			if x.Reservation != nil {
+				<div>
+					<dt class="label">Reservation</dt>
+					<dd>
+						<a href={ templ.SafeURL("/desk/reservations#" + x.Reservation.Ref) }>{ x.Reservation.Ref }</a>
+						· { x.Reservation.Name } · { store.ReservationStatusName(x.Reservation.Status) }
+					</dd>
+				</div>
+			}
+		</dl>
+		<p class="desk-home__links">
+			<a class="desk-link" href={ templ.SafeURL(HomePath(x.Home.ID)) } target="_blank" rel="noopener">Its page on the website ↗</a>
+		</p>
+		if x.CanChange {
+			if x.Home.Status == store.Available || x.Home.Status == store.Withheld {
+				<form class="desk-form desk-home__form" hx-post={ "/desk/homes/" + x.Home.ID + "/status" } hx-target="#drawer" hx-swap="innerHTML">
+					<h3 class="desk-h2">
+						if x.Home.Status == store.Available {
+							Withhold from sale
+						} else {
+							Release for sale
+						}
+					</h3>
+					<input type="hidden" name="status" value={ map[bool]string{true: store.Withheld, false: store.Available}[x.Home.Status == store.Available] }/>
+					<div class="field">
+						<label class="field__label" for="f-status-reason">Reason</label>
+						<input class="input" id="f-status-reason" name="reason" type="text" maxlength="200" required/>
+					</div>
+					<button class="btn btn--small" type="submit">
+						if x.Home.Status == store.Available {
+							Withhold it
+						} else {
+							Release it
+						}
+					</button>
+				</form>
+			}
+			if x.Home.Status != store.Sold && x.Home.Status != store.Reserved {
+				<form class="desk-form desk-home__form" hx-post={ "/desk/homes/" + x.Home.ID + "/price" } hx-target="#drawer" hx-swap="innerHTML">
+					<h3 class="desk-h2">Its own price</h3>
+					<div class="desk-form__row">
+						<div class="field">
+							<label class="field__label" for="f-price">Price in KES</label>
+							<input class="input tnum" id="f-price" name="price" type="text" inputmode="numeric" value={ priceField(x.Home) } placeholder={ thousandsWeb(x.Home.ListPrice) }/>
+						</div>
+					</div>
+					<div class="field">
+						<label class="field__label" for="f-price-reason">Reason</label>
+						<input class="input" id="f-price-reason" name="reason" type="text" maxlength="200" required/>
+					</div>
+					<div class="desk-form__row">
+						<button class="btn btn--small" type="submit">Set the price</button>
+						if x.Home.Overridden {
+							<button class="btn btn--small btn--line" type="submit" name="clear" value="1">Back to the list price</button>
+						}
+					</div>
+				</form>
+			}
+		} else {
+			<p class="desk-small">Only the sales manager can change a home’s status or price.</p>
+		}
+		<section class="desk-home__history">
+			<h3 class="desk-h2">History</h3>
+			if len(x.History) == 0 {
+				<p class="desk-empty">No changes yet.</p>
+			} else {
+				<ol class="desk-timeline" role="list">
+					for _, e := range x.History {
+						<li>
+							<span class="desk-timeline__when mono">{ When(e.At, x.Now) }</span>
+							<span class="desk-timeline__body">
+								if e.Kind == "status" {
+									{ store.StatusName(e.From) } → { store.StatusName(e.To) }
+								} else {
+									{ e.From } → { e.To }
+								}
+								if e.Reason != "" {
+									<span class="desk-timeline__sub">{ e.Reason }</span>
+								}
+								if e.StaffName != "" {
+									<span class="desk-timeline__sub">{ e.StaffName }</span>
+								}
+							</span>
+						</li>
+					}
+				</ol>
+			}
+		</section>
+	</div>
+}
