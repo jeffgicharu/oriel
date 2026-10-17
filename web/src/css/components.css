@@ -532,7 +532,7 @@
 .floorplan .fp-size {
   paint-order: stroke;
   stroke: #f6f7f4;
-  stroke-width: 7px;
+  stroke-width: 12px;
   stroke-linejoin: round;
 }
 

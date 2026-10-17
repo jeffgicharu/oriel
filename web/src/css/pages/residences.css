@@ -62,7 +62,7 @@
 
 /* On phones the types are a row to swipe through. */
 @media (max-width: 699px) {
-  .types__list {
+  .types ol.types__list {
     display: flex;
     gap: 10px;
     overflow-x: auto;
@@ -73,7 +73,7 @@
     scrollbar-width: none;
   }
 
-  .types__list::-webkit-scrollbar {
+  .types ol.types__list::-webkit-scrollbar {
     display: none;
   }
 
