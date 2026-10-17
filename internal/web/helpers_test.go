@@ -19,8 +19,9 @@ func TestKES(t *testing.T) {
 
 func TestKESShort(t *testing.T) {
 	cases := map[int64]string{
-		11_400_000: "KES 11.4M",
-		58_000_000: "KES 58.0M",
+		11_400_000: "KES 11.40M",
+		58_000_000: "KES 58.00M",
+		12_450_000: "KES 12.45M",
 		750_000:    "KES 750K",
 	}
 	for in, want := range cases {

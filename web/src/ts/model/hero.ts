@@ -5,6 +5,7 @@
 // Devices that would have to draw 3D without a graphics processor get the
 // flat drawing instead, because the scene would crawl there.
 
+import gsap from "gsap";
 import { buildContext } from "./context";
 import { readModel } from "./data";
 import { buildIntro, playIntro, showFinished, type IntroOptions } from "./intro";
@@ -106,6 +107,7 @@ export function mountHero(stageEl: HTMLElement): void {
   }
 
   if (capture) {
+    gsap.ticker.lagSmoothing(0);
     // Shows the scene exactly as it is t seconds into the opening.
     const base = resting.azimuth;
     debug.__orielSeek = (t: number) =>

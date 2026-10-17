@@ -134,16 +134,6 @@
   min-width: 132px;
 }
 
-.is-night .sunbar {
-  background: rgb(26 29 31 / 0.82);
-  color: var(--plaster-hi);
-  border-color: var(--rule-light);
-}
-
-.is-night .sunbar .label {
-  color: var(--stone);
-}
-
 .explorer__panel {
   display: grid;
   align-content: start;
@@ -572,7 +562,9 @@
 .plate__home--reserved .plate__sub {
   paint-order: stroke;
   stroke: var(--plaster-hi);
-  stroke-width: 5px;
+  stroke-width: 9px;
+  stroke-linejoin: round;
+  fill: var(--graphite);
 }
 
 .plate__north path {

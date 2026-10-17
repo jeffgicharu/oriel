@@ -100,7 +100,7 @@ export function mountExplorer(root: HTMLElement): void {
           (h) =>
             `<li><button type="button" class="lhome${matches(h) ? "" : " is-dim"}${picked === h.id ? " is-picked" : ""}" data-pick="${h.id}">` +
             `<span class="mono lhome__id">${h.id}</span><span>${h.b === 4 ? "Penthouse" : h.b + " bed"} · ${h.f}</span>` +
-            `<span class="lhome__right">${h.pr ? `<span class="tnum">KES ${(h.pr / 1e6).toFixed(1)}M</span>` : ""}<span class="status status--${h.s}"><span class="status__swatch" aria-hidden="true"></span>${statusName(h.s)}</span></span></button></li>`,
+            `<span class="lhome__right">${h.pr ? `<span class="tnum">KES ${(h.pr / 1e6).toFixed(2)}M</span>` : ""}<span class="status status--${h.s}"><span class="status__swatch" aria-hidden="true"></span>${statusName(h.s)}</span></span></button></li>`,
         )
         .join("") +
       `</ul>`;
@@ -234,15 +234,21 @@ export function mountExplorer(root: HTMLElement): void {
   // ---------- 3D ----------
 
   const lite = !capture && preferLite();
+  if (capture) gsap.ticker.lagSmoothing(0);
   const canvas = document.createElement("canvas");
   canvas.className = "explorer__canvas";
   canvas.setAttribute("aria-hidden", "true");
   stageEl.prepend(canvas);
   const stage = new Stage(canvas, { lite });
   stage.external = true;
+  // The closed building draws merged, in a few dozen calls; the floors come
+  // apart only while one is open.
+  const whole = buildTower(model);
+  whole.lines.visible = false;
   const tower = buildTower(model, { split: true });
+  tower.group.visible = false;
   const context = buildContext(model, lite);
-  stage.scene.add(context.group, tower.group);
+  stage.scene.add(context.group, whole.group, tower.group);
 
   // Status materials: the hatches of the drawings, as small repeating textures.
   const hatch = (kind: "single" | "cross", colour: string, ground: string) => {
@@ -338,8 +344,8 @@ export function mountExplorer(root: HTMLElement): void {
   const overview = () => {
     stage.shift = wide.matches ? 0.14 : 0;
     stage.updateProjection();
-    const distance = stage.fitDistance(tower.height + 4, 52, wide.matches ? 0.8 : 0.9);
-    return { azimuth: 152, elevation: 12, distance, target: new THREE.Vector3(0, tower.height * 0.46, 0) };
+    const distance = stage.fitDistance(tower.height + 4, 52, wide.matches ? 0.72 : 0.84);
+    return { azimuth: 152, elevation: 12, distance, target: new THREE.Vector3(0, tower.height * 0.44, 0) };
   };
   const start = overview();
   stage.orbit.azimuth = start.azimuth;
@@ -393,10 +399,12 @@ export function mountExplorer(root: HTMLElement): void {
     (stage.scene.fog as THREE.Fog).color.copy(sky);
     stage.hemisphere.intensity = 1.15 - night * 0.85;
     stage.sun.intensity *= 1 - night;
-    for (const key of ["glass", "bayGlass"] as const) {
-      const mat = tower.materials[key];
-      mat.emissive.setHex(0xffc477);
-      mat.emissiveIntensity = night * (key === "bayGlass" ? 0.9 : 0.55);
+    for (const t of [whole, tower]) {
+      for (const key of ["glass", "bayGlass"] as const) {
+        const mat = t.materials[key];
+        mat.emissive.setHex(0xffc477);
+        mat.emissiveIntensity = night * (key === "bayGlass" ? 0.9 : 0.55);
+      }
     }
     root.classList.toggle("is-night", night > 0.5);
     stage.requestRender();
@@ -438,6 +446,10 @@ export function mountExplorer(root: HTMLElement): void {
     const duration = reduced ? 0 : 1.0;
     let running = true;
     stage.addTicker(() => running);
+    if (l !== null) {
+      whole.group.visible = false;
+      tower.group.visible = true;
+    }
     for (const [lvl, group] of tower.levels) {
       const lift = l !== null && lvl > l ? LIFT : 0;
       gsap.to(group.position, { y: lift, duration, ease: "power3.inOut" });
@@ -449,6 +461,10 @@ export function mountExplorer(root: HTMLElement): void {
     }
     gsap.delayedCall(duration + 0.05, () => {
       running = false;
+      if (openLevel === null) {
+        whole.group.visible = true;
+        tower.group.visible = false;
+      }
       stage.requestRender();
     });
     openLevel = l;
@@ -489,7 +505,7 @@ export function mountExplorer(root: HTMLElement): void {
     if (id) {
       const h = homes.get(id)!;
       tip.hidden = false;
-      tip.innerHTML = `<strong class="mono">${h.id}</strong> ${h.b === 4 ? "Penthouse" : h.b + " bed"}${h.pr ? ` · KES ${(h.pr / 1e6).toFixed(1)}M` : ""} · ${statusName(h.s)}`;
+      tip.innerHTML = `<strong class="mono">${h.id}</strong> ${h.b === 4 ? "Penthouse" : h.b + " bed"}${h.pr ? ` · KES ${(h.pr / 1e6).toFixed(2)}M` : ""} · ${statusName(h.s)}`;
       const box = stageEl.getBoundingClientRect();
       tip.style.transform = `translate(${event.clientX - box.left + 16}px, ${event.clientY - box.top + 12}px)`;
     } else {
@@ -515,12 +531,11 @@ export function mountExplorer(root: HTMLElement): void {
       const box = canvas.getBoundingClientRect();
       pointer.set(((e.clientX - box.left) / box.width) * 2 - 1, -((e.clientY - box.top) / box.height) * 2 + 1);
       raycaster.setFromCamera(pointer, stage.camera);
-      const found = raycaster.intersectObject(tower.group, true)[0];
+      const found = raycaster.intersectObject(whole.group, true)[0];
       if (found) {
-        let o: THREE.Object3D | null = found.object;
-        while (o && o.userData.level === undefined) o = o.parent;
-        const l = o?.userData.level as number | undefined;
-        if (l !== undefined && l >= 2) chooseLevel(l);
+        const y = found.point.y;
+        const lv = model.levels.find((x) => y >= x.y && y < x.y + x.h);
+        if (lv && lv.level >= 2) chooseLevel(lv.level);
       }
     }
   });
@@ -536,6 +551,7 @@ export function mountExplorer(root: HTMLElement): void {
     if (event.persisted) return;
     observer.disconnect();
     controls.dispose();
+    whole.dispose();
     tower.dispose();
     context.dispose();
     boxGeometry.dispose();
