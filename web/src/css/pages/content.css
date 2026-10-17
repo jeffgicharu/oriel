@@ -1475,3 +1475,9 @@
     object-position: 50% 35%;
   }
 }
+
+.plan-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 32px;
+}

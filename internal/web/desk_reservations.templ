@@ -68,9 +68,13 @@ templ DeskReservations(d DeskPage, x DeskReservationsData) {
 							case "confirmed":
 								<span class="res-card__offer">Offer <span class="mono">{ r.OfferNumber }</span></span>
 								<span class="desk-small">confirmed { When(r.DecidedAt, x.Now) } by { r.DecidedBy }</span>
+								<a class="desk-link" href={ templ.SafeURL("/desk/reservations/" + r.Ref + "/offer.pdf") } target="_blank" rel="noopener">Letter of offer (PDF)</a>
 							case "completed":
 								<span class="res-card__offer">Deposit <span class="tnum">{ KES(r.DepositAmount) }</span></span>
 								<span class="desk-small">received { When(r.DepositAt, x.Now) }</span>
+								if r.OfferNumber != "" {
+									<a class="desk-link" href={ templ.SafeURL("/desk/reservations/" + r.Ref + "/offer.pdf") } target="_blank" rel="noopener">Letter of offer (PDF)</a>
+								}
 							default:
 								<span class="res-card__closed">{ store.ReservationStatusName(r.Status) }</span>
 								if r.DeclineReason != "" {

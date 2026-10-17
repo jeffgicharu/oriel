@@ -312,6 +312,7 @@
   display: grid;
   gap: 2px;
   justify-items: start;
+  align-content: start;
 }
 
 .res-card__hold {

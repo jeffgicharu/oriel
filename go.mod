@@ -4,6 +4,7 @@ go 1.27.2
 
 require (
 	github.com/a-h/templ v0.3.1070
+	github.com/signintech/gopdf v0.38.2
 	golang.org/x/crypto v0.57.0
 	modernc.org/sqlite v1.60.1
 )
@@ -21,6 +22,8 @@ require (
 	github.com/mattn/go-isatty v0.0.24 // indirect
 	github.com/natefinch/atomic v1.0.1 // indirect
 	github.com/ncruces/go-strftime v1.0.0 // indirect
+	github.com/phpdave11/gofpdi v1.0.14-0.20211212211723-1f10f9844311 // indirect
+	github.com/pkg/errors v0.8.1 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	golang.org/x/mod v0.41.0 // indirect
 	golang.org/x/net v0.60.0 // indirect
