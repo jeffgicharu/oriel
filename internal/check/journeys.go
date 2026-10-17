@@ -198,7 +198,7 @@ func (c *Checker) reserve(ctx context.Context) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		if err := want(res, body, http.StatusOK, "Home "+id+" is held for you.", "Your payments on"); err != nil {
+		if err := want(res, body, http.StatusOK, "Home "+id+" is held for you.", "Your payments</h2>"); err != nil {
 			return "", err
 		}
 		m := resRefRe.FindStringSubmatch(res.Request.URL.Path)
