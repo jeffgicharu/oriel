@@ -21,10 +21,16 @@
   touch-action: none;
 }
 
+/* The flat plan keeps the stage's height, so nothing below it moves when the
+   explorer decides between 3D and the plan. */
 .is-flat .explorer__stage {
-  height: auto;
-  min-height: 0;
+  overflow-y: auto;
   touch-action: auto;
+}
+
+.is-flat .explorer__plate {
+  min-height: 100%;
+  align-content: center;
 }
 
 .explorer__canvas {
@@ -299,8 +305,14 @@
   background: #fbf3e2;
 }
 
+/* A home outside the filter stays readable, just set back. */
 .lhome.is-dim {
-  opacity: 0.5;
+  border-style: dashed;
+  background: transparent;
+}
+
+.lhome.is-dim .lhome__id {
+  color: var(--ink-soft);
 }
 
 .lhome__id {
