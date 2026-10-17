@@ -14,7 +14,7 @@ import (
 // Version names the sample's story. Change it whenever the story changes, and
 // the next release rebuilds the shared sample as it starts instead of waiting
 // for the nightly rebuild.
-const Version = "2026-10-18 example contacts"
+const Version = "2026-10-18 busier recent viewings"
 
 func Build(ctx context.Context, path string, now time.Time) error {
 	story := Tell(now)

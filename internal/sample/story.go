@@ -180,6 +180,7 @@ type Story struct {
 	slots     map[string]int
 	usedNames map[string]bool
 	nextOffer map[int]int // by year: letters of offer are numbered from one each year
+	notes     []int       // the order the viewing notes are used in, so they rarely repeat
 	refs      map[string]bool
 }
 
@@ -535,7 +536,10 @@ func (s *Story) book(l *Lead, slot, bookedAt time.Time, unit, status string) *Vi
 	s.event(l, bookedAt, l.AgentID, "viewing_booked", "Viewing booked for "+when, unit)
 	switch status {
 	case "attended":
-		v.Outcome = viewingNotes[s.rng.IntN(len(viewingNotes))]
+		if len(s.notes) == 0 {
+			s.notes = s.rng.Perm(len(viewingNotes))
+		}
+		v.Outcome, s.notes = viewingNotes[s.notes[0]], s.notes[1:]
 		s.event(l, slot.Add(Length()), l.AgentID, "viewing_attended", v.Outcome, unit)
 	case "no_show":
 		v.Outcome = "Did not arrive. Sent a message to rebook."
@@ -706,17 +710,26 @@ func (s *Story) addPipeline() {
 		l.FollowUpOn = s.day(s.rng.IntN(3)).Format("2006-01-02")
 	}
 
-	// Contacted: called, not yet booked.
+	// Contacted: called, not yet booked. A few booked a viewing in the last
+	// week and did not come.
 	for i := 0; i < 44; i++ {
 		created := s.within(s.day(-(4 + s.rng.IntN(70))), 7, 21)
 		l := s.newLead(pick(), created)
-		s.contact(l, s.past(created.Add(time.Duration(3+s.rng.IntN(60))*time.Hour)))
+		contacted := s.past(created.Add(time.Duration(3+s.rng.IntN(60)) * time.Hour))
+		s.contact(l, contacted)
 		follow := s.rng.IntN(12) - 2 // a few are overdue
 		l.FollowUpOn = s.day(follow).Format("2006-01-02")
+		if i < 5 {
+			if slot, ok := s.slotNear(s.day(-(1 + i%7)), -1, contacted.Add(24*time.Hour), s.Now.Add(-2*time.Hour)); ok {
+				s.book(l, slot, s.between(contacted.Add(10*time.Minute), slot.Add(-12*time.Hour)), "", "no_show")
+				l.FollowUpOn = s.day(s.rng.IntN(2)).Format("2006-01-02")
+			}
+		}
 	}
 
-	// Viewing: some booked for the coming fortnight, some seen in the last ten days.
-	for i := 0; i < 22; i++ {
+	// Viewing: some booked for the coming fortnight, some seen over the last
+	// ten days, spread so that every recent day the suite was open has visits.
+	for i := 0; i < 30; i++ {
 		created := s.within(s.day(-(3 + s.rng.IntN(40))), 7, 21)
 		l := s.newLead(pick(), created)
 		contacted := s.past(created.Add(time.Duration(2+s.rng.IntN(48)) * time.Hour))
@@ -731,7 +744,7 @@ func (s *Story) addPipeline() {
 			s.stage(l, booked.Add(time.Minute), l.AgentID, "viewing", "")
 			l.FollowUpOn = slot.In(nairobi).Format("2006-01-02")
 		} else {
-			slot, ok := s.slotNear(s.day(-(1 + s.rng.IntN(9))), -1, contacted.Add(24*time.Hour), s.Now.Add(-2*time.Hour))
+			slot, ok := s.slotNear(s.day(-(1 + (i-15)%10)), -1, contacted.Add(24*time.Hour), s.Now.Add(-2*time.Hour))
 			if !ok {
 				continue
 			}

@@ -499,3 +499,22 @@
 .desk-form > .btn {
   justify-self: start;
 }
+
+fieldset.chips {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.link-button {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: var(--cobalt);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
