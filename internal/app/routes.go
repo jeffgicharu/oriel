@@ -45,6 +45,17 @@ func (a *App) routes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /explore/card/{id}", a.exploreCard)
 	mux.HandleFunc("POST /internal/forget", a.forget)
 
+	// The sales desk.
+	mux.HandleFunc("GET /desk/login", a.deskLoginForm)
+	mux.HandleFunc("POST /desk/login", a.deskLogin)
+	mux.HandleFunc("POST /desk/logout", a.deskLogout)
+	mux.HandleFunc("GET /desk/enter/{role}/{sig}", a.deskEnter)
+	mux.HandleFunc("GET /desk/events", a.desk(a.events))
+	mux.HandleFunc("GET /desk", a.desk(a.deskDashboard))
+	mux.HandleFunc("GET /desk/{$}", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/desk", http.StatusMovedPermanently)
+	})
+
 	mux.HandleFunc("/", a.notFound)
 }
 

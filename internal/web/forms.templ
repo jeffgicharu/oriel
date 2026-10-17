@@ -123,6 +123,11 @@ templ Viewing(p Page, d ViewingData) {
 				</form>
 				<aside class="form-side">
 					<div class="side-card">
+						if HasPhoto("sales-suite") {
+							<div class="side-card__photo">
+								@Photo("sales-suite", "A sales consultant showing a couple the white model of the building in a bright room", "(min-width: 1000px) 30vw, 100vw", "")
+							</div>
+						}
 						<h2 class="label">The sales suite</h2>
 						<p>On site at Oriel, Riverside, Nairobi, with visitor parking at the entrance on Riverside Drive.</p>
 						<dl class="hours">

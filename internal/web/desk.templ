@@ -1,0 +1,297 @@
+package web
+
+import (
+	"strconv"
+
+	"github.com/jeffgicharu/oriel/internal/assets"
+	"github.com/jeffgicharu/oriel/internal/store"
+)
+
+templ deskHead(title string) {
+	<meta charset="utf-8"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+	<title>{ title }</title>
+	<meta name="robots" content="noindex, nofollow"/>
+	<meta name="theme-color" content="#1a1d1f"/>
+	<meta name="color-scheme" content="light"/>
+	<meta name="format-detection" content="telephone=no"/>
+	<link rel="icon" href="/favicon.ico" sizes="48x48"/>
+	<link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
+	<link rel="preload" href={ assets.URL("fonts/MonaSans.woff2") } as="font" type="font/woff2" crossorigin/>
+	<link rel="stylesheet" href={ assets.URL("css/desk.css") }/>
+	<script type="module" src={ assets.URL("js/desk.js") }></script>
+}
+
+// DeskLayout is the frame of every page of the sales desk.
+templ DeskLayout(d DeskPage) {
+	<!DOCTYPE html>
+	<html lang="en-KE">
+		<head>
+			@deskHead(d.DeskTitle())
+		</head>
+		<body class="desk" data-desk-live>
+			<a class="skip-link" href="#main">Skip to content</a>
+			<div class="desk-shell">
+				<aside class="desk-side" id="desk-side">
+					<a class="desk-mark" href="/desk">
+						<span class="desk-mark__name">ORIEL</span>
+						<span class="desk-mark__sub">Sales desk</span>
+					</a>
+					<nav class="desk-nav" aria-label="Desk">
+						<ul role="list">
+							for _, item := range DeskNav {
+								if !item.ManagerOnly || d.Staff.Manager() {
+									<li>
+										<a href={ templ.SafeURL(item.Href) } { current(d.Nav == item.Key)... }>
+											<span>{ item.Label }</span>
+											if item.Key == "reservations" {
+												<span class={ "desk-nav__badge", templ.KV("is-empty", d.Waiting == 0) } data-waiting-badge aria-label={ strconv.Itoa(d.Waiting) + " waiting" }>{ strconv.Itoa(d.Waiting) }</span>
+											}
+										</a>
+									</li>
+								}
+							}
+						</ul>
+					</nav>
+					<div class="desk-side__foot">
+						<div class="desk-me">
+							<span class="desk-me__dot" style={ dotColour(d.Staff.Colour) } aria-hidden="true">{ d.Staff.Initials() }</span>
+							<span>
+								<span class="desk-me__name">{ d.Staff.Name }</span>
+								<span class="desk-me__role">{ d.Staff.Title }</span>
+							</span>
+						</div>
+						<a class="desk-side__link" href="/" target="_blank" rel="noopener">The website ↗</a>
+						<form method="post" action="/desk/logout">
+							<button class="desk-side__link" type="submit">Sign out</button>
+						</form>
+					</div>
+				</aside>
+				<div class="desk-main">
+					<header class="desk-bar">
+						<button class="desk-bar__menu" type="button" aria-controls="desk-side" aria-expanded="false" data-desk-menu>Menu</button>
+						<span class="desk-bar__title">{ d.Meta.Title }</span>
+					</header>
+					<main id="main" class="desk-content">
+						if d.Notice != "" {
+							<div class="desk-notice" role="status">{ d.Notice }</div>
+						}
+						{ children... }
+					</main>
+				</div>
+			</div>
+			<div class="desk-toasts" aria-live="polite" data-toasts></div>
+		</body>
+	</html>
+}
+
+templ deskHeader(title, lede string) {
+	<header class="desk-head">
+		<div>
+			<h1 class="desk-h1">{ title }</h1>
+			if lede != "" {
+				<p class="desk-lede">{ lede }</p>
+			}
+		</div>
+		<div class="desk-head__actions">
+			{ children... }
+		</div>
+	</header>
+}
+
+// DeskLogin is the sign-in page.
+templ DeskLogin(title, username, problem, next string) {
+	<!DOCTYPE html>
+	<html lang="en-KE">
+		<head>
+			@deskHead(title)
+		</head>
+		<body class="desk desk--login">
+			<main class="desk-login" id="main">
+				<a class="desk-mark desk-mark--dark" href="/">
+					<span class="desk-mark__name">ORIEL</span>
+					<span class="desk-mark__sub">Sales desk</span>
+				</a>
+				<form class="desk-login__card" method="post" action="/desk/login" novalidate>
+					<h1 class="desk-h1">Sign in</h1>
+					if problem != "" {
+						<div class="notice notice--alert" role="alert">{ problem }</div>
+					}
+					<input type="hidden" name="next" value={ next }/>
+					<div class="field">
+						<label class="field__label" for="f-username">Username</label>
+						<input class="input" id="f-username" name="username" type="text" value={ username } autocomplete="username" autocapitalize="none" spellcheck="false" required/>
+					</div>
+					<div class="field">
+						<label class="field__label" for="f-password">Password</label>
+						<input class="input" id="f-password" name="password" type="password" autocomplete="current-password" required/>
+					</div>
+					<button class="btn btn--cobalt btn--wide" type="submit">Sign in</button>
+				</form>
+				<p class="desk-login__foot"><a href="/">Back to the website</a></p>
+			</main>
+		</body>
+	</html>
+}
+
+// DeskDashboardData is the dashboard.
+type DeskDashboardData struct {
+	Dash      store.Dashboard
+	Counts    map[string]int
+	Total     int
+	Stock     int64 // the price of every home still to sell
+	Funnel    []FunnelRow
+	Waiting   []store.Reservation
+	FollowUps []store.Lead
+}
+
+templ DeskDashboard(d DeskPage, x DeskDashboardData) {
+	@DeskLayout(d) {
+		@deskHeader("Good "+partOfDay(d.Site.Now)+", "+firstName(d.Staff.Name)+".", LongDate(d.Site.Now)) {
+			<a class="btn btn--line btn--small" href="/desk/stack">Stacking plan</a>
+		}
+		<div class="desk-kpis">
+			<div class="desk-kpi">
+				<span class="label">Available</span>
+				<span class="desk-kpi__n tnum">{ strconv.Itoa(x.Counts[store.Available]) }</span>
+				<span class="desk-kpi__note">of { strconv.Itoa(x.Total) } homes · { KESShort(x.Stock) } to sell</span>
+			</div>
+			<div class="desk-kpi">
+				<span class="label">Sold and reserved</span>
+				<span class="desk-kpi__n tnum">{ KESShort(x.Dash.SoldValue) }</span>
+				<span class="desk-kpi__note">{ strconv.Itoa(x.Counts[store.Sold] + x.Counts[store.Reserved]) } homes</span>
+			</div>
+			<div class="desk-kpi">
+				<span class="label">Sold this month</span>
+				<span class="desk-kpi__n tnum">{ strconv.Itoa(lastN(x.Dash.Months, 0)) }</span>
+				<span class="desk-kpi__note">{ Trend(lastN(x.Dash.Months, 0), lastN(x.Dash.Months, 1), "month") }</span>
+			</div>
+			<div class="desk-kpi">
+				<span class="label">New leads, 7 days</span>
+				<span class="desk-kpi__n tnum">{ strconv.Itoa(x.Dash.NewLeads) }</span>
+				<span class="desk-kpi__note">{ Trend(x.Dash.NewLeads, x.Dash.NewLeadsWas, "week") }</span>
+			</div>
+		</div>
+		<section class="desk-panel" aria-labelledby="dash-status">
+			<div class="desk-panel__head">
+				<h2 class="desk-h2" id="dash-status">Every home by status</h2>
+				<a class="desk-link" href="/desk/stack">Open the stacking plan</a>
+			</div>
+			@StatusBar(x.Counts, x.Total)
+			<ul class="desk-legend" role="list">
+				for _, st := range []string{store.Sold, store.Reserved, store.Held, store.Available, store.Withheld} {
+					<li>@StatusBadge(st) <span class="tnum">{ strconv.Itoa(x.Counts[st]) }</span></li>
+				}
+			</ul>
+		</section>
+		<div class="desk-grid">
+			<section class="desk-panel" aria-labelledby="dash-waiting">
+				<div class="desk-panel__head">
+					<h2 class="desk-h2" id="dash-waiting">Waiting for a decision</h2>
+					<a class="desk-link" href="/desk/reservations">All reservations</a>
+				</div>
+				if len(x.Waiting) == 0 {
+					<p class="desk-empty">No reservation requests are waiting.</p>
+				} else {
+					<ul class="desk-list" role="list">
+						for _, r := range x.Waiting {
+							<li>
+								<a class="desk-list__row" href={ templ.SafeURL("/desk/reservations#" + r.Ref) }>
+									<span class="mono desk-list__id">{ r.UnitID }</span>
+									<span class="desk-list__main">{ r.Name }<span class="desk-list__sub">{ planName(r.Plan) } · { KES(r.Price) }</span></span>
+									<span class="desk-list__aside">{ Lapses(d.Site.Now, r.HoldExpiresAt) }</span>
+								</a>
+							</li>
+						}
+					</ul>
+				}
+			</section>
+			<section class="desk-panel" aria-labelledby="dash-follow">
+				<div class="desk-panel__head">
+					<h2 class="desk-h2" id="dash-follow">Follow-ups due</h2>
+					<a class="desk-link" href="/desk/leads?view=table&sort=follow">All leads</a>
+				</div>
+				if len(x.FollowUps) == 0 {
+					<p class="desk-empty">Nothing due today.</p>
+				} else {
+					<ul class="desk-list" role="list">
+						for _, l := range x.FollowUps {
+							<li>
+								<a class="desk-list__row" href={ templ.SafeURL("/desk/leads/" + strconv.FormatInt(l.ID, 10)) }>
+									<span class="desk-dot" style={ dotColour(l.AgentColour) } title={ l.AgentName } aria-hidden="true"></span>
+									<span class="desk-list__main">{ l.Name }<span class="desk-list__sub">{ store.StageTitle(l.Stage) } · { l.Interest }</span></span>
+									<span class={ "desk-list__aside", templ.KV("is-late", l.FollowUpOn < d.Site.Now.In(Nairobi).Format("2006-01-02")) }>{ DayLabel(l.FollowUpOn) }</span>
+								</a>
+							</li>
+						}
+					</ul>
+				}
+			</section>
+		</div>
+		<div class="desk-grid">
+			<section class="desk-panel" aria-labelledby="dash-sales">
+				<div class="desk-panel__head">
+					<h2 class="desk-h2" id="dash-sales">Homes sold each month</h2>
+				</div>
+				@MonthBars(x.Dash.Months)
+			</section>
+			<section class="desk-panel" aria-labelledby="dash-funnel">
+				<div class="desk-panel__head">
+					<h2 class="desk-h2" id="dash-funnel">How far leads get</h2>
+					<a class="desk-link" href="/desk/leads">Pipeline</a>
+				</div>
+				<ol class="funnel" role="list">
+					for _, f := range x.Funnel {
+						<li class={ "funnel__row", templ.KV("is-lost", f.Lost) }>
+							<span class="funnel__label">{ f.Label }</span>
+							<span class="funnel__track"><span class="funnel__bar" style={ funnelWidth(f.Percent) }></span></span>
+							<span class="funnel__n tnum">{ strconv.Itoa(f.Reached) }</span>
+							<span class="funnel__pct tnum">{ strconv.Itoa(f.Percent) }%</span>
+						</li>
+					}
+				</ol>
+				<p class="desk-small">The share of every lead that reached each stage. A lead counts in every stage it has passed.</p>
+			</section>
+		</div>
+		<div class="desk-grid">
+			<section class="desk-panel" aria-labelledby="dash-sources">
+				<div class="desk-panel__head">
+					<h2 class="desk-h2" id="dash-sources">Where leads come from</h2>
+				</div>
+				@HBars(x.Dash.Sources, "leads")
+			</section>
+			<section class="desk-panel" aria-labelledby="dash-week">
+				<div class="desk-panel__head">
+					<h2 class="desk-h2" id="dash-week">Viewings this week</h2>
+					<a class="desk-link" href="/desk/viewings">Agenda</a>
+				</div>
+				if len(x.Dash.Week) == 0 {
+					<p class="desk-empty">No viewings booked in the next seven days.</p>
+				} else {
+					<ul class="desk-list" role="list">
+						for _, v := range x.Dash.Week {
+							<li class={ templ.KV("is-cancelled", v.Status == "cancelled") }>
+								<a class="desk-list__row" href={ templ.SafeURL("/desk/leads/" + strconv.FormatInt(v.LeadID, 10)) }>
+									<span class="mono desk-list__id">{ v.StartsAt.In(Nairobi).Format("Mon 15:04") }</span>
+									<span class="desk-list__main">
+										{ v.Name }
+										<span class="desk-list__sub">
+											{ strconv.Itoa(v.PartySize) } { plural(v.PartySize, "person", "people") }
+											if v.UnitID != "" {
+												· home { v.UnitID }
+											}
+											if v.Status == "cancelled" {
+												· cancelled
+											}
+										</span>
+									</span>
+									<span class="desk-list__aside">{ v.AgentName }</span>
+								</a>
+							</li>
+						}
+					</ul>
+				}
+			</section>
+		</div>
+	}
+}

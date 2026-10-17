@@ -578,3 +578,12 @@
 .booking-card .schedule-card {
   box-shadow: none;
 }
+
+.side-card__photo {
+  margin: -18px -18px 4px;
+}
+
+.side-card__photo img {
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+}
