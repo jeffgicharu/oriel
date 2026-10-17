@@ -105,7 +105,7 @@ templ DeskPricing(d DeskPage, x DeskPricingData) {
 					<h2 class="desk-h2" id="preview-title">What this list would do</h2>
 				</div>
 				<div class="desk-kpis price-preview__kpis">
-					<div class="desk-kpi"><span class="label">Homes repriced</span><span class="desk-kpi__n tnum">{ strconv.Itoa(x.Preview.Changed) }</span><span class="desk-kpi__note">{ strconv.Itoa(x.Preview.KeptOwn) } keep their own price</span></div>
+					<div class="desk-kpi"><span class="label">Homes repriced</span><span class="desk-kpi__n tnum">{ strconv.Itoa(x.Preview.Changed) }</span><span class="desk-kpi__note">{ strconv.Itoa(x.Preview.KeptOwn) } { plural(x.Preview.KeptOwn, "keeps its", "keep their") } own price</span></div>
 					<div class="desk-kpi"><span class="label">Stock value now</span><span class="desk-kpi__n tnum">{ KESShort(x.Preview.OldTotal) }</span><span class="desk-kpi__note">every unsold home</span></div>
 					<div class="desk-kpi"><span class="label">After</span><span class="desk-kpi__n tnum">{ KESShort(x.Preview.NewTotal) }</span><span class="desk-kpi__note">at the new prices</span></div>
 					<div class="desk-kpi"><span class="label">Change</span><span class={ "desk-kpi__n tnum", templ.KV("is-up", x.Preview.NewTotal > x.Preview.OldTotal), templ.KV("is-down", x.Preview.NewTotal < x.Preview.OldTotal) }>{ signedKES(x.Preview.NewTotal - x.Preview.OldTotal) }</span><span class="desk-kpi__note">{ changePercent(x.Preview.OldTotal, x.Preview.NewTotal) }</span></div>

@@ -105,7 +105,12 @@ func (a *App) deskPricingPreview(w http.ResponseWriter, r *http.Request) {
 		p.NewTotal += row.New
 		p.Rows = append(p.Rows, row)
 	}
+	// The homes that change come first.
 	sort.SliceStable(p.Rows, func(i, j int) bool {
+		ci, cj := p.Rows[i].Change() != 0, p.Rows[j].Change() != 0
+		if ci != cj {
+			return ci
+		}
 		if p.Rows[i].Home.Type.Code != p.Rows[j].Home.Type.Code {
 			return strings.Index("ABCDP", p.Rows[i].Home.Type.Code) < strings.Index("ABCDP", p.Rows[j].Home.Type.Code)
 		}
