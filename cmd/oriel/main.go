@@ -127,12 +127,13 @@ func deskLinks(args []string) error {
 			return err
 		}
 	}
-	cfg, err := config.FromEnv()
-	if err != nil {
-		return err
+	site := strings.TrimRight(os.Getenv("ORIEL_SITE_URL"), "/")
+	key := os.Getenv("ORIEL_DESK_KEY")
+	if site == "" || len(key) < 16 {
+		return errors.New("desk-links needs ORIEL_SITE_URL and ORIEL_DESK_KEY")
 	}
 	for _, role := range []string{"manager", "agent"} {
-		fmt.Printf("%s: %s/desk/enter/%s/%s\n", role, cfg.SiteURL, role, app.EnterSignature(cfg.DeskKey, role))
+		fmt.Printf("%s: %s/desk/enter/%s/%s\n", role, site, role, app.EnterSignature([]byte(key), role))
 	}
 	return nil
 }
