@@ -13,7 +13,7 @@ import (
 
 // publicPaths are the pages listed in the sitemap.
 func (a *App) publicPaths() []string {
-	paths := []string{"/", "/explore", "/residences", "/viewings/new", "/enquire"}
+	paths := []string{"/", "/explore", "/residences", "/building", "/location", "/progress", "/buying", "/viewings/new", "/enquire", "/privacy", "/terms"}
 	for _, code := range building.TypeOrder {
 		paths = append(paths, "/residences/types/"+code)
 	}
@@ -130,7 +130,7 @@ func complexLD(site string) map[string]any {
 		"@type":                      "ApartmentComplex",
 		"@id":                        site + "/#oriel",
 		"name":                       "Oriel",
-		"description":                "A seventeen-storey building of 86 apartments and two penthouses in Riverside, Nairobi, completing in December 2028.",
+		"description":                "A seventeen-storey building of 86 homes, two of them penthouses, in Riverside, Nairobi, completing in December 2028.",
 		"url":                        site + "/",
 		"numberOfAccommodationUnits": 86,
 		"petsAllowed":                false,

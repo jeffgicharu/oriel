@@ -24,6 +24,12 @@ func PublicPaths() []string {
 		"/residences",
 		"/residences/0704",
 		"/residences/types/B",
+		"/building",
+		"/location",
+		"/progress",
+		"/buying",
+		"/privacy",
+		"/terms",
 		"/robots.txt",
 		"/sitemap.xml",
 		"/site.webmanifest",
@@ -47,6 +53,14 @@ var pages = []struct {
 	{"/residences/1601", "Penthouse on the top floor"},
 	{"/residences/types/B", "Two bedrooms."},
 	{"/residences/types/P", "Penthouse."},
+	{"/building", "Built around the light."},
+	{"/location", "Between the forest and the city."},
+	{"/progress", "The programme"},
+	{"/buying", "Three ways to pay."},
+	{"/privacy", "Your privacy."},
+	{"/terms", "Terms of use."},
+	{"/viewings/new", "Book a viewing."},
+	{"/enquire", "Ask us anything."},
 }
 
 // Checker walks a release at Base.
@@ -91,6 +105,7 @@ func (c *Checker) Run(ctx context.Context) error {
 		{"the release answers as itself", c.health},
 		{"every page loads with its title, description and share tags", c.pagesLoad},
 		{"the files every page asks for load", c.assetsLoad},
+		{"every link on those pages leads to a page", c.linksLead},
 		{"robots.txt, the sitemap and the web manifest load", c.metadataFiles},
 		{"an unknown address gets Oriel's own not-found page", c.notFound},
 		{"the live-update stream opens", c.stream},
@@ -250,6 +265,42 @@ func (c *Checker) assetsLoad(ctx context.Context) error {
 					queue = append(queue, cleanPath(dir+m[1]))
 				}
 			}
+		}
+	}
+	return nil
+}
+
+var linkRe = regexp.MustCompile(`href="(/[^"#]*)(?:#[^"]*)?"`)
+
+// linksLead follows every link to another page of the site from the pages
+// checked, so a link to a page that does not exist never reaches a visitor.
+func (c *Checker) linksLead(ctx context.Context) error {
+	links := map[string]string{}
+	for _, page := range pages {
+		_, body, err := c.get(ctx, page.path)
+		if err != nil {
+			return err
+		}
+		for _, m := range linkRe.FindAllStringSubmatch(body, -1) {
+			link := strings.ReplaceAll(m[1], "&amp;", "&")
+			if strings.HasPrefix(link, "/assets/") || link == "/events" {
+				continue
+			}
+			if _, seen := links[link]; !seen {
+				links[link] = page.path
+			}
+		}
+	}
+	if len(links) > 600 {
+		return fmt.Errorf("%d links is more than the check expects", len(links))
+	}
+	for link, from := range links {
+		res, _, err := c.get(ctx, link)
+		if err != nil {
+			return fmt.Errorf("%s (linked from %s): %w", link, from, err)
+		}
+		if res.StatusCode != http.StatusOK {
+			return fmt.Errorf("%s (linked from %s): status %d", link, from, res.StatusCode)
 		}
 	}
 	return nil

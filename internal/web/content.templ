@@ -1,0 +1,465 @@
+package web
+
+import (
+	"strconv"
+
+	"github.com/jeffgicharu/oriel/internal/building"
+	"github.com/jeffgicharu/oriel/internal/plans"
+	"github.com/jeffgicharu/oriel/internal/store"
+)
+
+// Photo is a photograph at the right size for the screen, or nothing if it
+// is not in the build yet.
+templ Photo(name, alt, sizes, class string) {
+	if src, ok := PhotoFor(name); ok {
+		<picture class={ "photo", class }>
+			<source type="image/avif" srcset={ src.AVIF } sizes={ sizes }/>
+			<img src={ src.Fallback } srcset={ src.WebP } sizes={ sizes } width={ strconv.Itoa(src.Width) } height={ strconv.Itoa(src.Height) } alt={ alt } loading="lazy" decoding="async"/>
+		</picture>
+	}
+}
+
+templ contentHead(tag, title, lede string) {
+	<header class="page-head content-head">
+		<p class="sheet-tag label">{ tag }</p>
+		<h1 class="h1">{ title }</h1>
+		<p class="lede">{ lede }</p>
+	</header>
+}
+
+templ sectionTitle(tag, title string) {
+	<div class="content-section__head">
+		<p class="sheet-tag label">{ tag }</p>
+		<h2 class="h2">{ title }</h2>
+	</div>
+}
+
+// ---------- The building ----------
+
+templ BuildingPage(p Page, types []store.TypeSummary) {
+	@Layout(p) {
+		<div class="wrap content-page">
+			@contentHead("A-300 · The building", "Built around the light.", "Seventeen storeys of homes above a garden by the river, each with a glazed bay at its corner. Here is how the building works, what it shares and what every home comes with.")
+			<dl class="content-facts">
+				<div><dt class="label">Storeys</dt><dd>17</dd></div>
+				<div><dt class="label">Homes</dt><dd>86</dd></div>
+				<div><dt class="label">Homes a floor</dt><dd>6</dd></div>
+				<div><dt class="label">Floor to floor</dt><dd class="tnum">{ n1(building.FloorHeight) } m</dd></div>
+				<div><dt class="label">Completion</dt><dd>Dec 2028</dd></div>
+			</dl>
+		</div>
+		<section class="content-section" aria-labelledby="bay-title">
+			<div class="wrap content-split">
+				<div class="content-split__text">
+					<div class="content-section__head">
+						<p class="sheet-tag label">A-301 · The bay</p>
+						<h2 class="h2" id="bay-title">A window you can sit in.</h2>
+					</div>
+					<div class="prose">
+						<p>Every home has a bay at its corner: a glazed box that steps { n1(building.BayProjection) } metres out from the wall, so you can see along the façade as well as straight out. Corner bays look two ways.</p>
+						<p>The glass starts at a solid oak seat { n1(building.BaySeatHeight) } metres off the floor, with storage under it, and stops under a cobalt band. The band and the slab above shade the glass from the high midday sun, while the low light of early morning reaches far into the room.</p>
+						<p>From the street the bays read as a column of blue-capped lanterns up each corner of the tower. That is the building’s signature, and its name: an oriel is a window that projects from a wall to catch more light and more view.</p>
+					</div>
+				</div>
+				<figure class="content-sheet">
+					@BaySection()
+					<figcaption class="content-sheet__caption"><span class="mono">A-301</span> Section through a bay. Dimensions in metres.</figcaption>
+				</figure>
+			</div>
+			if HasPhoto("living-bay-b") {
+				<div class="wrap">
+					<figure class="content-photo content-photo--wide crop">
+						@Photo("living-bay-b", "A woman reading on an oak window seat in a corner bay, with a cobalt cushion and treetops outside", "(min-width: 1520px) 1408px, calc(100vw - 2 * var(--gutter))", "photo--bay")
+						<figcaption class="content-photo__caption">The bay of a two-bedroom home, on a morning in February.</figcaption>
+					</figure>
+				</div>
+			}
+		</section>
+		<section class="content-section content-section--rule" aria-labelledby="sun-title">
+			<div class="wrap content-split content-split--flip">
+				<div class="content-split__text">
+					<div class="content-section__head">
+						<p class="sheet-tag label">A-302 · Sun and shade</p>
+						<h2 class="h2" id="sun-title">Shaped by a sun that passes overhead.</h2>
+					</div>
+					<div class="prose">
+						<p>Riverside is a degree and a quarter south of the equator, so the sun climbs almost straight up and comes down almost straight. It tracks a little north of overhead in June and a little south in December.</p>
+						<p>That makes the long north and south faces easy to shade: the slab edge and the balconies keep the high sun off the glass. The hard light comes low from the east in the morning and the west in the afternoon, so those faces carry deep concrete fins.</p>
+						<p>Every home’s page shows how many hours of direct sun it gets in each month, worked out from this same sun path and the shade around each window.</p>
+					</div>
+					<ul class="sun-legend" role="list">
+						<li><span class="sun-legend__line sun-legend__line--june"></span>21 June</li>
+						<li><span class="sun-legend__line sun-legend__line--equinox"></span>20 March and 22 September</li>
+						<li><span class="sun-legend__line sun-legend__line--december"></span>21 December</li>
+					</ul>
+				</div>
+				<figure class="content-sheet content-sheet--square">
+					@SunPath()
+					<figcaption class="content-sheet__caption"><span class="mono">A-302</span> The sun’s path over Riverside, as seen from the roof. North is at the top; the centre is straight overhead.</figcaption>
+				</figure>
+			</div>
+		</section>
+		<section class="content-section content-section--rule" aria-labelledby="homes-title">
+			<div class="wrap">
+				<div class="content-section__head">
+					<p class="sheet-tag label">A-303 · The homes</p>
+					<h2 class="h2" id="homes-title">Five kinds of home.</h2>
+				</div>
+				<ol class="type-list" role="list">
+					for _, t := range types {
+						<li>
+							<a class="type-list__row" href={ templ.SafeURL("/residences/types/" + t.Code) }>
+								<span class="type-list__code mono">{ t.Code }</span>
+								<span class="type-list__name">{ t.Name }</span>
+								<span class="type-list__area tnum">{ strconv.Itoa(t.Internal) } m²</span>
+								<span class="type-list__count muted">{ strconv.Itoa(t.Total) } { plural(t.Total, "home", "homes") }</span>
+								@Arrow()
+							</a>
+						</li>
+					}
+				</ol>
+			</div>
+		</section>
+		<section class="content-section content-section--rule" aria-labelledby="shared-title">
+			<div class="wrap">
+				<div class="content-section__head">
+					<p class="sheet-tag label">A-304 · Shared spaces</p>
+					<h2 class="h2" id="shared-title">What every resident shares.</h2>
+				</div>
+				<ul class="amenities" role="list">
+					for _, a := range Amenities {
+						<li class="amenity">
+							if HasPhoto(a.Image) {
+								<div class="amenity__photo">
+									@Photo(a.Image, a.Alt, "(min-width: 1000px) 33vw, (min-width: 640px) 50vw, 100vw", "")
+								</div>
+							} else {
+								<div class="amenity__key" aria-hidden="true"><span>{ a.Code }</span></div>
+							}
+							<div class="amenity__body">
+								<p class="label">{ a.Where }</p>
+								<h3 class="h3">{ a.Name }</h3>
+								<p class="muted">{ a.Text }</p>
+							</div>
+						</li>
+					}
+				</ul>
+			</div>
+		</section>
+		<section class="content-section content-section--rule" id="specification" aria-labelledby="spec-title">
+			<div class="wrap">
+				<div class="content-section__head">
+					<p class="sheet-tag label">A-305 · Specification</p>
+					<h2 class="h2" id="spec-title">What every home comes with.</h2>
+				</div>
+				<div class="spec">
+					for _, g := range Specification {
+						<div class="spec__group">
+							<h3 class="spec__title"><span class="mono">{ g.Code }</span> { g.Title }</h3>
+							<dl class="spec__items">
+								for i, item := range g.Items {
+									<div class="spec__item">
+										<dt><span class="mono spec__code">{ g.Code }.{ strconv.Itoa(i + 1) }</span> { item.Name }</dt>
+										<dd>{ item.Text }</dd>
+									</div>
+								}
+							</dl>
+						</div>
+					}
+				</div>
+				<p class="content-note muted">The specification may change in detail as the design is developed; anything that changes will be of the same standard or better.</p>
+			</div>
+		</section>
+	}
+}
+
+// ---------- Location ----------
+
+templ LocationPage(p Page) {
+	@Layout(p) {
+		<div class="wrap content-page">
+			@contentHead("A-400 · Location", "Between the forest and the city.", "Riverside is a quiet, green neighbourhood on the river between Westlands and the city centre: five minutes from one, twelve from the other, and fifteen from Karura Forest.")
+		</div>
+		<section class="content-section content-section--first" aria-labelledby="map-heading">
+			<div class="wrap location">
+				<figure class="content-sheet location__map">
+					@LocationMap()
+					<figcaption class="content-sheet__caption"><span class="mono">A-401</span> Riverside and the places around it. A diagram: roads and distances are simplified.</figcaption>
+				</figure>
+				<div class="location__list">
+					<h2 class="h3" id="map-heading">How far it is</h2>
+					<dl class="places">
+						for _, pl := range Places {
+							<div>
+								<dt>{ pl.Name }</dt>
+								<dd><span class="tnum">{ pl.Minutes } min</span> <span class="muted">{ pl.How }</span></dd>
+							</div>
+						}
+					</dl>
+					<p class="content-note muted">Times by car are outside the rush hour; allow longer between 7 and 9 in the morning and 5 and 7 in the evening.</p>
+				</div>
+			</div>
+		</section>
+		<section class="content-section content-section--rule" aria-labelledby="around-title">
+			<div class="wrap">
+				<div class="content-section__head">
+					<p class="sheet-tag label">A-402 · Around the corner</p>
+					<h2 class="h2" id="around-title">Everything close, nothing loud.</h2>
+				</div>
+				<ul class="nearby" role="list">
+					<li><span class="label">Green space</span><p>The Arboretum is a ten-minute walk; Karura Forest, with forty kilometres of trails and a waterfall, is fifteen minutes’ drive.</p></li>
+					<li><span class="label">Schools</span><p>Four international schools and several of Nairobi’s best-known Kenyan schools are within fifteen minutes.</p></li>
+					<li><span class="label">Health</span><p>Two of the city’s main private hospitals are within ten minutes, and a pharmacy and clinic in Westlands.</p></li>
+					<li><span class="label">Shopping</span><p>Westlands’ shopping centres, markets and restaurants are five minutes away; there is a grocer on Riverside Drive.</p></li>
+					<li><span class="label">Work</span><p>Westlands, the city centre and Upper Hill are all within fifteen minutes; the UN offices in Gigiri are eighteen.</p></li>
+					<li><span class="label">Travel</span><p>The Expressway joins Waiyaki Way at Westlands and reaches the airport in about thirty-five minutes.</p></li>
+				</ul>
+				if HasPhoto("neighbourhood-street") || HasPhoto("forest-path") {
+					<div class="content-photos">
+						@Photo("neighbourhood-street", "A quiet tree-lined street in Riverside in the morning", "(min-width: 1000px) 60vw, 100vw", "content-photos__wide")
+						@Photo("forest-path", "A path through tall trees in Karura Forest", "(min-width: 1000px) 34vw, 100vw", "content-photos__tall")
+					</div>
+				}
+			</div>
+		</section>
+		<section class="content-section content-section--rule" id="getting-here" aria-labelledby="here-title">
+			<div class="wrap content-split">
+				<div class="content-split__text">
+					<div class="content-section__head">
+						<p class="sheet-tag label">A-403 · Getting here</p>
+						<h2 class="h2" id="here-title">Visiting the sales suite.</h2>
+					</div>
+					<div class="prose">
+						<p>The sales suite is on site, off Riverside Drive: look for the Oriel hoarding and the blue gate. There is visitor parking inside the gate.</p>
+						<p>By taxi or ride-hailing app, ask for the Oriel sales suite on Riverside Drive. By matatu, the Riverside Drive stop is a three-minute walk.</p>
+						<p>From September 2027 viewings move into the building itself, to finished show apartments on level 3.</p>
+					</div>
+				</div>
+				<div class="side-card here-card">
+					<h3 class="label">Opening hours</h3>
+					<dl class="hours">
+						<div><dt>Tuesday to Sunday</dt><dd class="mono">10:00 to 17:00</dd></div>
+						<div><dt>Monday</dt><dd class="mono">Closed</dd></div>
+						<div><dt>Public holidays</dt><dd class="mono">Closed</dd></div>
+					</dl>
+					<a class="btn btn--cobalt" href="/viewings/new">Book a viewing @Arrow()</a>
+				</div>
+			</div>
+		</section>
+	}
+}
+
+// ---------- Progress ----------
+
+templ ProgressPage(p Page, g Progress) {
+	@Layout(p) {
+		<div class="wrap content-page">
+			@contentHead("A-500 · Progress", progressTitle(g), "The building goes up in public. This page follows the programme, from the first pile to the keys, and is brought up to date as each stage is reached.")
+			<dl class="content-facts progress-facts">
+				<div>
+					<dt class="label">Overall</dt>
+					<dd class="tnum">{ strconv.Itoa(g.Percent) }%</dd>
+					<div class="progress-bar" role="presentation"><span style={ progressWidth(g.Percent) }></span></div>
+				</div>
+				<div><dt class="label">On site now</dt><dd>{ g.Current }</dd></div>
+				<div><dt class="label">Completion</dt><dd>{ plans.Completion.Format("Jan 2006") }</dd></div>
+				<div><dt class="label">As at</dt><dd>{ g.Now.In(Nairobi).Format("2 Jan 2006") }</dd></div>
+			</dl>
+		</div>
+		<section class="content-section content-section--first" aria-labelledby="programme-title">
+			<div class="wrap progress">
+				<figure class="content-sheet progress__drawing">
+					@ProgressDrawing(g.Frame)
+					<figcaption class="content-sheet__caption"><span class="mono">A-501</span> South elevation. Storeys with their frame built are solid; the one under way is hatched.</figcaption>
+				</figure>
+				<div class="progress__programme">
+					<h2 class="h3" id="programme-title">The programme</h2>
+					<ol class="timeline" role="list">
+						for _, m := range Milestones {
+							<li class={ "timeline__item", "is-" + m.Status(g.Now) }>
+								<span class="timeline__dot" aria-hidden="true"></span>
+								<p class="timeline__when mono">{ m.When() }</p>
+								<p class="timeline__title">
+									{ m.Title }
+									switch m.Status(g.Now) {
+										case "done":
+											<span class="visually-hidden">(done)</span>
+										case "now":
+											<span class="timeline__now label">Under way</span>
+									}
+								</p>
+								<p class="timeline__note">{ m.Note }</p>
+							</li>
+						}
+					</ol>
+				</div>
+			</div>
+		</section>
+		if photos := PhotosBy(g.Now); len(photos) > 0 && HasPhoto(photos[0].Image) {
+			<section class="content-section content-section--rule" aria-labelledby="photos-title">
+				<div class="wrap">
+					<div class="content-section__head">
+						<p class="sheet-tag label">A-502 · From the site</p>
+						<h2 class="h2" id="photos-title">Photographs, newest first.</h2>
+					</div>
+					<ul class="site-photos" role="list">
+						for i, ph := range photos {
+							if HasPhoto(ph.Image) {
+								<li class={ "site-photo", templ.KV("site-photo--lead", i == 0) }>
+									<figure class="crop">
+										@Photo(ph.Image, ph.Caption, sitePhotoSizes(i), "")
+										<figcaption><span class="mono">{ ph.Taken.Format("2 Jan 2006") }</span> { ph.Caption }</figcaption>
+									</figure>
+								</li>
+							}
+						}
+					</ul>
+				</div>
+			</section>
+		}
+	}
+}
+
+// ---------- Buying ----------
+
+templ BuyingPage(p Page, examples []plans.Schedule) {
+	@Layout(p) {
+		<div class="wrap content-page">
+			@contentHead("A-600 · Buying", "Buying off-plan, step by step.", "How a reservation works, the three ways to pay, what it costs beyond the price, and the questions buyers ask us most.")
+		</div>
+		<section class="content-section content-section--first" aria-labelledby="steps-title">
+			<div class="wrap">
+				<h2 class="visually-hidden" id="steps-title">The steps</h2>
+				<ol class="steps-row" role="list">
+					for i, s := range BuyingSteps {
+						<li class="steps-row__item">
+							<span class="steps-row__n mono">{ strconv.Itoa(i + 1) }</span>
+							<p class="steps-row__when label">{ s.When }</p>
+							<h3 class="steps-row__title">{ s.Title }</h3>
+							<p class="steps-row__text">{ s.Text }</p>
+						</li>
+					}
+				</ol>
+			</div>
+		</section>
+		<section class="content-section content-section--rule" id="payment-plans" aria-labelledby="plans-title">
+			<div class="wrap">
+				<div class="content-section__head">
+					<p class="sheet-tag label">A-601 · Payment plans</p>
+					<h2 class="h2" id="plans-title">Three ways to pay.</h2>
+					<p class="lede">Shown on a home priced at { KES(ExamplePrice) }. Every home’s page works out its own schedule to the shilling.</p>
+				</div>
+				<div class="plan-cards">
+					for _, s := range examples {
+						<article class="plan-card">
+							<header class="plan-card__head">
+								<h3 class="h3">{ s.Plan.Name }</h3>
+								<p class="muted">{ s.Plan.Summary }</p>
+								<p class="plan-card__total tnum">{ KES(s.Price) }</p>
+								if s.Discount > 0 {
+									<p class="plan-card__saving">{ KES(s.Discount) } off for paying early</p>
+								}
+							</header>
+							<ol class="plan-card__list" role="list">
+								for _, in := range s.Instalments {
+									<li>
+										<span class="plan-card__share mono">{ percent(in.PercentBP) }</span>
+										<span class="plan-card__label">{ in.Label }</span>
+										<span class="plan-card__amount tnum">{ KESShort(in.Amount) }</span>
+									</li>
+								}
+							</ol>
+						</article>
+					}
+				</div>
+				<a class="link-arrow" href="/residences">Find a home and see its schedule @Arrow()</a>
+			</div>
+		</section>
+		<section class="content-section content-section--rule" aria-labelledby="costs-title">
+			<div class="wrap content-split">
+				<div class="content-split__text">
+					<div class="content-section__head">
+						<p class="sheet-tag label">A-602 · Costs</p>
+						<h2 class="h2" id="costs-title">What you pay beyond the price.</h2>
+					</div>
+					<p class="muted">Our prices include VAT where it applies. These are the costs a buyer usually meets on top; your advocate will confirm them for your purchase.</p>
+				</div>
+				<table class="costs">
+					<caption class="visually-hidden">Costs of buying beyond the price</caption>
+					<tbody>
+						for _, c := range BuyingCosts {
+							<tr>
+								<th scope="row">{ c.Name }<span class="costs__note">{ c.Note }</span></th>
+								<td>{ c.Amount }</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		</section>
+		<section class="content-section content-section--rule" id="questions" aria-labelledby="faq-title">
+			<div class="wrap content-split">
+				<div class="content-split__text">
+					<div class="content-section__head">
+						<p class="sheet-tag label">A-603 · Questions</p>
+						<h2 class="h2" id="faq-title">What buyers ask us.</h2>
+					</div>
+					<a class="link-arrow" href="/enquire">Ask your own question @Arrow()</a>
+				</div>
+				<div class="faq">
+					for _, q := range Questions {
+						<details class="faq__item">
+							<summary>{ q.Q }</summary>
+							<p>{ q.A }</p>
+						</details>
+					}
+				</div>
+			</div>
+		</section>
+	}
+}
+
+// ---------- Privacy and terms ----------
+
+templ PrivacyPage(p Page) {
+	@Layout(p) {
+		<div class="wrap content-page">
+			@contentHead("A-900 · Privacy", "Your privacy.", "What this website keeps about you, where, and for how long. In short: very little, nowhere else, and not for long.")
+			<div class="prose legal">
+				<h2 class="h3">What you tell us</h2>
+				<p>When you book a viewing, request a reservation or ask a question, the details you type (your name, email address, phone number and anything you add) are saved so the booking and the sales desk can show them.</p>
+				<p>They are saved in a private workspace that belongs to your browser alone. Nobody visiting from another browser can see it. It is deleted automatically when it has not been used for 24 hours, and nothing in it is copied anywhere else, sold or used for marketing.</p>
+				<h2 class="h3">Cookies and storage</h2>
+				<p>The site sets one cookie, <span class="mono">oriel_copy</span>, which links your browser to its private workspace. It is set only once you send a form, and it lasts seven days at most. The sales desk sets one more cookie while a member of staff is signed in.</p>
+				<p>The homes you shortlist are kept in your browser’s own storage and never leave your device.</p>
+				<p>There are no advertising or tracking cookies. The fonts, pictures and code are all served from this site, with one exception: Cloudflare, which delivers the site, adds a small script that counts visits and measures how fast pages load. It sets no cookies and does not follow you to other sites.</p>
+				<h2 class="h3">Server records</h2>
+				<p>Like every website, the server and Cloudflare keep short technical logs of requests (the address asked for, the time and your IP address) to keep the site running and safe. The server’s are kept for about two weeks.</p>
+				<h2 class="h3">Your rights</h2>
+				<p>Under Kenya’s Data Protection Act, 2019, you can ask what we hold about you, have it corrected or have it deleted. As everything you type is deleted within a day of your last visit, the quickest way is simply to wait; or use the question form to ask us.</p>
+				<p class="muted">Last updated 17 October 2026.</p>
+			</div>
+		</div>
+	}
+}
+
+templ TermsPage(p Page) {
+	@Layout(p) {
+		<div class="wrap content-page">
+			@contentHead("A-901 · Terms", "Terms of use.", "The fine print for using this website. Buying a home is governed by its own letter of offer and agreement for sale, not by these terms.")
+			<div class="prose legal">
+				<h2 class="h3">Information on this site</h2>
+				<p>The pictures, plans, dimensions, specification and prices on this site show the building as designed. They are a guide, may change as the design is developed, and do not form part of any offer or contract.</p>
+				<p>Floor areas are measured to the inside face of external walls and exclude the balcony or terrace, which is given separately. Plans are not to scale unless dimensioned.</p>
+				<h2 class="h3">Prices and availability</h2>
+				<p>Prices and availability change as homes are sold and are confirmed only in a letter of offer. A reservation request holds a home for 72 hours; it becomes binding only when the sales team issues a letter of offer and the deposit is paid.</p>
+				<h2 class="h3">Using the site</h2>
+				<p>You may use this site to find out about Oriel and to arrange viewings and reservations for yourself. Please don’t try to break it, overload it, or collect its content automatically.</p>
+				<p>The design, drawings, text and pictures belong to { CompanyName } and may not be copied without permission.</p>
+				<h2 class="h3">Law</h2>
+				<p>These terms are governed by the laws of Kenya.</p>
+				<p class="muted">Last updated 17 October 2026.</p>
+			</div>
+		</div>
+	}
+}
