@@ -22,6 +22,16 @@ func (a *App) events(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "streaming is not supported", http.StatusInternalServerError)
 		return
 	}
+	// Changes reach only browsers sharing the visitor's own copy. Subscribe
+	// before the first byte goes out, so a change made the moment the browser
+	// sees the stream open is not missed.
+	var updates chan []byte
+	if v := visitorFrom(r.Context()); v != nil && v.copyID != "" {
+		ch, unsubscribe := a.broker.subscribe(v.copyID)
+		defer unsubscribe()
+		updates = ch
+	}
+
 	h := w.Header()
 	h.Set("Content-Type", "text/event-stream; charset=utf-8")
 	h.Set("Cache-Control", "no-store")
@@ -34,14 +44,6 @@ func (a *App) events(w http.ResponseWriter, r *http.Request) {
 	defer heartbeat.Stop()
 	lifetime := time.NewTimer(streamLifetime)
 	defer lifetime.Stop()
-
-	// Changes reach only browsers sharing the visitor's own copy.
-	var updates chan []byte
-	if v := visitorFrom(r.Context()); v != nil && v.copyID != "" {
-		ch, unsubscribe := a.broker.subscribe(v.copyID)
-		defer unsubscribe()
-		updates = ch
-	}
 
 	for {
 		select {
