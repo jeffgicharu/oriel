@@ -60,7 +60,8 @@ func drawSunPath() string {
 	p.f(`<circle class="sp-horizon" r="%s"/>`, n1(R))
 	for _, alt := range []float64{30, 60} {
 		p.f(`<circle class="sp-ring" r="%s"/>`, n1(R*(90-alt)/90))
-		p.f(`<text class="sp-ring-label" x="4" y="%s">%d°</text>`, n1(-R*(90-alt)/90-4), int(alt))
+		// On the south side, clear of the June path's hours.
+		p.f(`<text class="sp-ring-label" x="5" y="%s" dominant-baseline="hanging">%d°</text>`, n1(R*(90-alt)/90+4), int(alt))
 	}
 	for az := 0; az < 360; az += 15 {
 		a := float64(az) * math.Pi / 180
@@ -176,7 +177,7 @@ func drawBaySection() string {
 	}
 	p.f(`<g class="bs-sun">`)
 	var fx float64
-	for i, h := range []float64{2.2, 1.2} {
+	for i, h := range []float64{2.0, 0.8} {
 		gy := y(h)
 		x, ly := land(h)
 		if i == 0 {
@@ -185,8 +186,8 @@ func drawBaySection() string {
 		p.f(`<line class="bs-ray bs-ray--low" x1="%s" y1="%s" x2="%s" y2="%s"/>`, n1(outer+150), n1(gy-150*math.Tan(low)), n1(outer-3), n1(gy))
 		p.f(`<line class="bs-ray bs-ray--low bs-ray--in" x1="%s" y1="%s" x2="%s" y2="%s"/>`, n1(outer-3), n1(gy), n1(x), n1(ly))
 	}
-	p.f(`<rect class="bs-patch" x="%s" y="%s" width="%s" height="4"/>`, n1(fx), n1(floor-4), n1(seatLeft-fx))
-	p.f(`<text class="bs-note bs-note--sun" x="676" y="%s" text-anchor="end">Morning sun, low</text>`, n1(y(2.2)-150*math.Tan(low)-12))
+	p.f(`<rect class="bs-patch" x="%s" y="%s" width="%s" height="6"/>`, n1(fx), n1(floor-6), n1(seatLeft-fx))
+	p.f(`<text class="bs-note bs-note--sun" x="676" y="%s" text-anchor="end">Morning sun, low</text>`, n1(y(2.0)-150*math.Tan(low)-12))
 	// The midday sun, almost overhead, stopped by the band and the slab.
 	high := 80.0 * math.Pi / 180
 	ray := func(x, yy float64) {

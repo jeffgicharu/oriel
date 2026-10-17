@@ -18,6 +18,15 @@ export function showFormErrors(): void {
   summary.focus({ preventScroll: true });
 }
 
+// Drawings that pan on a phone start on their most telling part.
+export function setUpPans(): void {
+  document.querySelectorAll<HTMLElement>("[data-pan]").forEach((el) => {
+    const at = Number(el.dataset.pan);
+    const room = el.scrollWidth - el.clientWidth;
+    if (room > 0 && at >= 0 && at <= 1) el.scrollLeft = room * at;
+  });
+}
+
 export function setUpLiveReservation(): void {
   const page = document.querySelector<HTMLElement>("[data-live-reservation]");
   if (!page || !("EventSource" in window)) return;

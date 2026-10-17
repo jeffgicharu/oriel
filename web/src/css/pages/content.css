@@ -12,8 +12,12 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   border-top: 1px solid var(--graphite);
-  border-bottom: 1px solid var(--rule);
   margin-bottom: clamp(16px, 3vw, 32px);
+}
+
+/* An odd fact out on a phone takes the whole row. */
+.content-facts > div:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
 }
 
 .content-facts > div {
@@ -38,6 +42,11 @@
     grid-template-columns: none;
     grid-auto-columns: minmax(0, 1fr);
     grid-auto-flow: column;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .content-facts > div:last-child:nth-child(odd) {
+    grid-column: auto;
   }
 
   .content-facts > div {
@@ -120,6 +129,24 @@
   display: block;
   width: 100%;
   height: auto;
+}
+
+/* Drawings too detailed to shrink pan sideways on a phone instead. */
+.content-sheet__pan {
+  overflow-x: auto;
+  scrollbar-width: thin;
+  overscroll-behavior-x: contain;
+}
+
+@media (max-width: 759px) {
+  .content-sheet__pan > svg {
+    width: auto;
+    min-width: var(--pan-width, 600px);
+  }
+
+  .content-sheet__pan + .content-sheet__caption::after {
+    content: " Swipe across to see it all.";
+  }
 }
 
 .content-sheet--square svg {
@@ -296,6 +323,20 @@
   fill: var(--stone);
 }
 
+@media (max-width: 759px) {
+  .sunpath .sp-hour-label {
+    font-size: 19px;
+  }
+
+  .sunpath .sp-compass {
+    font-size: 26px;
+  }
+
+  .sunpath .sp-ring-label {
+    font-size: 17px;
+  }
+}
+
 .sunpath .sp-hour-label {
   font-size: 12px;
   fill: var(--graphite);
@@ -368,8 +409,8 @@
 }
 
 .baysection .bs-patch {
-  fill: #e6b54a;
-  fill-opacity: 0.55;
+  fill: #e3a72f;
+  fill-opacity: 0.8;
 }
 
 .baysection .bs-note--sun {

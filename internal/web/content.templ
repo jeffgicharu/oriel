@@ -62,7 +62,9 @@ templ BuildingPage(p Page, types []store.TypeSummary) {
 					</div>
 				</div>
 				<figure class="content-sheet">
-					@BaySection()
+					<div class="content-sheet__pan" style="--pan-width: 620px" data-pan="1" tabindex="0" role="group" aria-label="Section through a bay">
+						@BaySection()
+					</div>
 					<figcaption class="content-sheet__caption"><span class="mono">A-301</span> Section through a bay. Dimensions in metres.</figcaption>
 				</figure>
 			</div>
@@ -183,7 +185,9 @@ templ LocationPage(p Page, showFlatsOpen bool) {
 		<section class="content-section content-section--first" aria-labelledby="map-heading">
 			<div class="wrap location">
 				<figure class="content-sheet location__map">
-					@LocationMap()
+					<div class="content-sheet__pan" style="--pan-width: 760px" data-pan="0.4" tabindex="0" role="group" aria-label="Map of Riverside">
+						@LocationMap()
+					</div>
 					<figcaption class="content-sheet__caption"><span class="mono">A-401</span> Riverside and the places around it. A diagram: roads and distances are simplified.</figcaption>
 				</figure>
 				<div class="location__list">
