@@ -47,7 +47,7 @@ func (c *Checker) deskManager(ctx context.Context) error {
 	if err := want(res, body, http.StatusOK, "Every home by status", "Grace Wambui"); err != nil {
 		return fmt.Errorf("signing in by link: %w", err)
 	}
-	defer c.send(ctx, client, http.MethodPost, "/internal/forget", url.Values{})
+	defer c.send(ctx, client, http.MethodPost, "/privacy/delete", url.Values{})
 
 	res, body, err = c.deskGet(ctx, client, "/desk/stack")
 	if err != nil {
@@ -144,7 +144,7 @@ func (c *Checker) deskAgent(ctx context.Context) error {
 	if err := want(res, body, http.StatusOK, "Every home by status"); err != nil {
 		return fmt.Errorf("signing in as an agent: %w", err)
 	}
-	defer c.send(ctx, client, http.MethodPost, "/internal/forget", url.Values{})
+	defer c.send(ctx, client, http.MethodPost, "/privacy/delete", url.Values{})
 	if strings.Contains(body, `href="/desk/pricing"`) {
 		return errors.New("an agent's menu offers pricing")
 	}

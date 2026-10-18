@@ -460,7 +460,13 @@ templ BuyingPage(p Page, examples []plans.Schedule) {
 
 // ---------- Privacy and terms ----------
 
-templ PrivacyPage(p Page) {
+// PrivacyData says whether the visitor has anything to delete.
+type PrivacyData struct {
+	HasCopy bool // this browser has sent something
+	Deleted bool // it has just been deleted
+}
+
+templ PrivacyPage(p Page, x PrivacyData) {
 	@Layout(p) {
 		<div class="wrap content-page">
 			@contentHead("A-900 · Privacy", "Your privacy.", "What this website keeps about you, where, and for how long. In short: very little, nowhere else, and not for long.")
@@ -475,8 +481,19 @@ templ PrivacyPage(p Page) {
 				<h2 class="h3">Server records</h2>
 				<p>Like every website, the server and Cloudflare keep short technical logs of requests (the address asked for, the time and your IP address) to keep the site running and safe. The server’s are kept for about two weeks.</p>
 				<h2 class="h3">Your rights</h2>
-				<p>Under Kenya’s Data Protection Act, 2019, you can ask what we hold about you, have it corrected or have it deleted. As everything you type is deleted within a day of your last visit, the quickest way is simply to wait; or use the question form to ask us.</p>
-				<p class="muted">Last updated 17 October 2026.</p>
+				<p>Under Kenya’s Data Protection Act, 2019, you can ask what we hold about you, have it corrected or have it deleted. Everything you type is deleted within a day of your last visit, or straight away below.</p>
+				<h2 class="h3" id="yours">Delete what you have sent</h2>
+				if x.Deleted {
+					<div class="notice" role="status">Everything you sent from this browser has been deleted.</div>
+				} else if x.HasCopy {
+					<p>This browser has a private workspace holding the bookings, reservations and questions you sent. You can delete it now instead of waiting a day. Any viewing or reservation in it goes with it.</p>
+					<form method="post" action="/privacy/delete">
+						<button class="btn btn--line" type="submit">Delete what I have sent</button>
+					</form>
+				} else {
+					<p>Nothing has been sent from this browser, so there is nothing to delete.</p>
+				}
+				<p class="muted">Last updated 18 October 2026.</p>
 			</div>
 		</div>
 	}

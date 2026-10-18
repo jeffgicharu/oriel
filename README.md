@@ -63,5 +63,5 @@ The server runs two slots, on ports 8400 and 8401, behind nginx. See `deploy/act
 | `ORIEL_ADDR` | Local address to listen on |
 | `ORIEL_DATA` | Folder for the databases |
 | `ORIEL_SITE_URL` | Public address |
-| `ORIEL_SECRET` | Signs cookies and form tokens |
+| `ORIEL_SECRET` | Signs a visitor's copy cookie, the confirmations shown after a form, and the release gate's check token |
 | `ORIEL_DESK_KEY` | Signs one-click links into the desk |

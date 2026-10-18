@@ -162,20 +162,19 @@ func (a *App) isReleaseCheck(r *http.Request) bool {
 
 // forget deletes the release gate's own copy the moment it has finished.
 // Only the gate can call it, and only on a copy it made.
-func (a *App) forget(w http.ResponseWriter, r *http.Request) {
-	v := visitorFrom(r.Context())
-	if !a.isReleaseCheck(r) || v == nil || !strings.HasPrefix(v.copyID, "chk") {
-		a.notFound(w, r)
-		return
+// deleteMine deletes the visitor's private copy at once, with everything they
+// sent from this browser, instead of waiting for it to lapse.
+func (a *App) deleteMine(w http.ResponseWriter, r *http.Request) {
+	if v := visitorFrom(r.Context()); v != nil && v.copyID != "" {
+		id := v.copyID
+		for _, release := range v.releases {
+			release()
+		}
+		v.releases, v.copyID, v.db = nil, "", a.copies.Sample()
+		a.copies.Delete(id)
 	}
-	id := v.copyID
-	for _, release := range v.releases {
-		release()
-	}
-	v.releases, v.copyID, v.db = nil, "", a.copies.Sample()
-	a.copies.Delete(id)
 	http.SetCookie(w, a.expiredCopyCookie())
-	w.WriteHeader(http.StatusNoContent)
+	http.Redirect(w, r, "/privacy?deleted=1#yours", http.StatusSeeOther)
 }
 
 // clientIP is the visitor's address, as nginx passes it on from Cloudflare.

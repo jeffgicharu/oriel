@@ -128,7 +128,7 @@ func (c *Checker) Run(ctx context.Context) error {
 		{"a reservation is seen by the visitor who made it and nobody else", func(ctx context.Context) error {
 			return c.privateCopy(ctx, c.reservation)
 		}},
-		{"the checker's own copy is deleted", c.forget},
+		{"a visitor deletes what they sent, and their reservation goes with it", c.deleteMine},
 		{"the manager signs in by link, works the desk, confirms a reservation and gets its letter of offer", c.deskManager},
 		{"an agent signs in by link and cannot open pricing", c.deskAgent},
 	}

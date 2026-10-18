@@ -276,18 +276,27 @@ func (c *Checker) privateCopy(ctx context.Context, ref string) error {
 	return nil
 }
 
-func (c *Checker) forget(ctx context.Context) error {
-	res, _, err := c.post(ctx, "/internal/forget", url.Values{})
+// deleteMine uses the privacy page's button, which also throws the checker's
+// own copy away.
+func (c *Checker) deleteMine(ctx context.Context) error {
+	res, body, err := c.post(ctx, "/privacy/delete", url.Values{})
 	if err != nil {
 		return err
 	}
-	if res.StatusCode != http.StatusNoContent {
-		return fmt.Errorf("status %d", res.StatusCode)
+	if res.StatusCode != http.StatusOK || !strings.Contains(body, "has been deleted") {
+		return fmt.Errorf("the privacy page does not say the visitor's details were deleted (status %d)", res.StatusCode)
 	}
 	for _, ck := range c.client.Jar.Cookies(c.baseURL()) {
 		if ck.Name == "oriel_copy" {
 			return errors.New("the copy's cookie is still set")
 		}
+	}
+	res, _, err = c.get(ctx, "/reservations/"+c.reservation)
+	if err != nil {
+		return err
+	}
+	if res.StatusCode != http.StatusNotFound {
+		return fmt.Errorf("reservation %s is still there after deleting (status %d)", c.reservation, res.StatusCode)
 	}
 	return nil
 }

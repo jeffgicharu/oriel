@@ -47,7 +47,7 @@ func (a *App) routes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /terms", a.termsPage)
 	mux.HandleFunc("GET /explore", a.explore)
 	mux.HandleFunc("GET /explore/card/{id}", a.exploreCard)
-	mux.HandleFunc("POST /internal/forget", a.forget)
+	mux.HandleFunc("POST /privacy/delete", a.deleteMine)
 
 	// The sales desk.
 	mux.HandleFunc("GET /desk/login", a.deskLoginForm)

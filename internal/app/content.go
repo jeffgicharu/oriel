@@ -66,7 +66,10 @@ func (a *App) privacyPage(w http.ResponseWriter, r *http.Request) {
 		Path:        "/privacy",
 		Sheet:       web.Sheet{Number: "A-900", Name: "Privacy"},
 	})
-	a.render(w, r, http.StatusOK, web.PrivacyPage(p))
+	v := visitorFrom(r.Context())
+	x := web.PrivacyData{HasCopy: v != nil && v.copyID != ""}
+	x.Deleted = !x.HasCopy && r.URL.Query().Get("deleted") == "1"
+	a.render(w, r, http.StatusOK, web.PrivacyPage(p, x))
 }
 
 func (a *App) termsPage(w http.ResponseWriter, r *http.Request) {
