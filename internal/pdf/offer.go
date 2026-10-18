@@ -219,17 +219,22 @@ func drawPlan(d *doc, p floorplan.Plan, x, y, w, maxH float64) float64 {
 				big = r
 			}
 		}
-		// One line if the name fits, else two, else a size smaller.
+		// One line if the name fits; else two, when it parts into two real
+		// words ("Principal bedroom", not "Bedroom 3"); else a size smaller.
 		cx, cy := px((big.X0+big.X1)/2), py((big.Y0+big.Y1)/2)
 		fit := big.W()*scale - 4
 		lines, size := []string{room.Name}, 6.0
 		if d.measure(sans, size, room.Name) > fit {
 			lines = nil
-			if first, rest, ok := strings.Cut(room.Name, " "); ok && big.H()*scale > 20 &&
-				d.measure(sans, size, first) <= fit && d.measure(sans, size, rest) <= fit {
+			first, rest, ok := strings.Cut(room.Name, " ")
+			twoLines := ok && big.H()*scale > 20 && d.measure(sans, size, first) <= fit && d.measure(sans, size, rest) <= fit
+			switch {
+			case twoLines && len(first) >= 4 && len(rest) >= 4:
 				lines = []string{first, rest}
-			} else if d.measure(sans, 5, room.Name) <= fit {
+			case d.measure(sans, 5, room.Name) <= fit:
 				lines, size = []string{room.Name}, 5
+			case twoLines:
+				lines = []string{first, rest}
 			}
 		}
 		for i, line := range lines {
