@@ -15,23 +15,23 @@ templ Explore(p Page, d ExploreData, rows []LevelRow) {
 				<div class="explorer__plate" data-plate hidden></div>
 				<p class="explorer__loading label" data-loading>Drawing the building…</p>
 				<div class="explorer__tip" data-tip hidden></div>
-				<div class="explorer__hud">
-					<div class="sunbar" data-sun>
-						<label class="sunbar__time">
-							<span class="label">Time</span>
-							<input type="range" min="360" max="1170" step="5" value="970" data-sun-time aria-label="Time of day"/>
-							<output class="mono" data-sun-out>16:10</output>
-						</label>
-						<label class="sunbar__month">
-							<span class="label">Month</span>
-							<select class="select select--small" data-sun-month aria-label="Month">
-								for m := 1; m <= 12; m++ {
-									<option value={ strconv.Itoa(m) }>{ MonthName(m) }</option>
-								}
-							</select>
-						</label>
-						<button class="btn btn--line btn--small" type="button" data-reset>Whole building</button>
-					</div>
+			</div>
+			<div class="explorer__hud">
+				<div class="sunbar" data-sun>
+					<label class="sunbar__time">
+						<span class="label">Time</span>
+						<input type="range" min="360" max="1170" step="5" value="970" data-sun-time aria-label="Time of day"/>
+						<output class="mono" data-sun-out>16:10</output>
+					</label>
+					<label class="sunbar__month">
+						<span class="label">Month</span>
+						<select class="select select--small" data-sun-month aria-label="Month">
+							for m := 1; m <= 12; m++ {
+								<option value={ strconv.Itoa(m) }>{ MonthName(m) }</option>
+							}
+						</select>
+					</label>
+					<button class="btn btn--line btn--small" type="button" data-reset>Whole building</button>
 				</div>
 			</div>
 			<aside class="explorer__panel" aria-label="Floors and filters">

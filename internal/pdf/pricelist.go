@@ -59,9 +59,16 @@ func PriceList(p PriceListDoc) ([]byte, error) {
 	}
 	for _, t := range building.OrderedTypes() {
 		var homes []store.Home
+		withheld := 0
 		for _, h := range p.Catalog.Homes {
-			if h.Type.Code == t.Code && (h.Status == store.Available || h.Status == store.Held) {
+			if h.Type.Code != t.Code {
+				continue
+			}
+			switch h.Status {
+			case store.Available, store.Held:
 				homes = append(homes, h)
+			case store.Withheld:
+				withheld++
 			}
 		}
 		d.ensure(64)
@@ -70,7 +77,11 @@ func PriceList(p PriceListDoc) ([]byte, error) {
 		d.rightText(right, d.y, sans, 8.5, inkSoft, fmt.Sprintf("%d m² inside · %s %d m²", t.Internal, t.OutdoorName, t.Outdoor))
 		d.y += 18
 		if len(homes) == 0 {
-			d.text(marginL, d.y, sans, 9, inkSoft, "None for sale just now.")
+			note := "Sold out."
+			if withheld > 0 {
+				note = "None for sale just now. The next release is coming soon."
+			}
+			d.text(marginL, d.y, sans, 9, inkSoft, note)
 			d.y += 24
 			continue
 		}
