@@ -743,11 +743,21 @@ func (s *Story) addPipeline() {
 			// The first few are today, if the suite is open, so its agenda
 			// has visits on it whenever the desk is opened.
 			var slot time.Time
-			ok := false
-			if i < 4 {
-				slot, ok = s.slotNear(s.day(0), 1, contacted.Add(18*time.Hour), s.day(1).Add(-time.Minute))
+			ok, seen := false, false
+			if i < 2 {
+				// Earlier today, over and seen.
+				slot, ok = s.slotNear(s.day(0), 1, contacted.Add(18*time.Hour), s.Now.Add(-Length()-10*time.Minute))
+				seen = ok
 			}
-			if ok && slot.Add(Length()).Before(s.Now) {
+			if !ok && i < 4 {
+				// Later today, not yet begun.
+				from := contacted.Add(18 * time.Hour)
+				if soon := s.Now.Add(30 * time.Minute); soon.After(from) {
+					from = soon
+				}
+				slot, ok = s.slotNear(s.day(0), 1, from, s.day(1).Add(-time.Minute))
+			}
+			if seen {
 				booked := s.between(contacted.Add(10*time.Minute), slot.Add(-12*time.Hour))
 				s.book(l, slot, booked, "", "attended")
 				s.stage(l, slot.Add(Length()+time.Minute), l.AgentID, "viewing", "")
