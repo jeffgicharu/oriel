@@ -967,3 +967,8 @@
   display: flex;
   gap: 8px;
 }
+
+/* A preview opens at its result, clear of the phone's top bar. */
+.price-preview {
+  scroll-margin-top: 68px;
+}

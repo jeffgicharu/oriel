@@ -480,25 +480,6 @@ main {
   gap: 22px;
 }
 
-.breadcrumb {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  color: var(--ink-soft);
-}
-
-.breadcrumb a {
-  text-decoration: none;
-}
-
-.breadcrumb a:hover {
-  color: var(--cobalt);
-}
-
-.breadcrumb span[aria-hidden] {
-  color: var(--ink-faint);
-}
-
 /* A breadcrumb that opens a page sits clear of the header, and the heading
    under it closes up. */
 .wrap > .breadcrumb:first-child {

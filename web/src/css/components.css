@@ -1110,3 +1110,24 @@
   justify-items: start;
   padding: 48px 0;
 }
+
+/* ---------- Breadcrumbs, on the website and the desk ---------- */
+
+.breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: var(--ink-soft);
+}
+
+.breadcrumb a {
+  text-decoration: none;
+}
+
+.breadcrumb a:hover {
+  color: var(--cobalt);
+}
+
+.breadcrumb span[aria-hidden] {
+  color: var(--ink-faint);
+}

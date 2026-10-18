@@ -42,7 +42,7 @@ templ DeskPricing(d DeskPage, x DeskPricingData) {
 	@DeskLayout(d) {
 		@deskHeader("Pricing", "Every unsold home’s price comes from the list in force: a base price for each type, raised for each floor above level 2 and for a river view.")
 		<div class="pricing">
-			<form class="desk-panel desk-form pricing__form" method="post" action="/desk/pricing/preview" novalidate>
+			<form class="desk-panel desk-form pricing__form" method="post" action="/desk/pricing/preview#preview" novalidate>
 				<div class="desk-panel__head">
 					<h2 class="desk-h2">A new price list</h2>
 					<span class="desk-small">In force: list { strconv.FormatInt(x.Current.ID, 10) }, { When(x.Current.PublishedAt, x.Now) }</span>
