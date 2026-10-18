@@ -36,7 +36,7 @@ type App struct {
 }
 
 // New prepares the server: it opens the data folder, building the shared
-// sample if there is none, and starts the nightly rebuild and the sweep of
+// sample if there is none, and starts the hourly rebuild and the sweep of
 // expired copies.
 func New(cfg config.Config, release string, log *slog.Logger) (*App, error) {
 	streams, stop := context.WithCancel(context.Background())

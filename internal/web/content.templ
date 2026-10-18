@@ -2,9 +2,11 @@ package web
 
 import (
 	"strconv"
+	"time"
 
 	"github.com/jeffgicharu/oriel/internal/building"
 	"github.com/jeffgicharu/oriel/internal/plans"
+	"github.com/jeffgicharu/oriel/internal/programme"
 	"github.com/jeffgicharu/oriel/internal/store"
 )
 
@@ -45,7 +47,7 @@ templ BuildingPage(p Page, types []store.TypeSummary) {
 				<div><dt class="label">Homes</dt><dd>86</dd></div>
 				<div><dt class="label">Homes per floor</dt><dd>6</dd></div>
 				<div><dt class="label">Floor to floor</dt><dd class="tnum">{ n1(building.FloorHeight) } m</dd></div>
-				<div><dt class="label">Completion</dt><dd>Dec 2028</dd></div>
+				<div><dt class="label">Completion</dt><dd>{ programme.Completion(p.Site.Now).Format("Jan 2006") }</dd></div>
 			</dl>
 		</div>
 		<section class="content-section" aria-labelledby="bay-title">
@@ -200,7 +202,7 @@ templ BuildingPage(p Page, types []store.TypeSummary) {
 
 // ---------- Location ----------
 
-templ LocationPage(p Page, showFlatsOpen bool) {
+templ LocationPage(p Page, showFlatsOpen time.Time) {
 	@Layout(p) {
 		<div class="wrap content-page">
 			@contentHead("A-400 · Location", "Between the forest and the city.", "Riverside is a quiet, green neighbourhood on the river between Westlands and the city centre: five minutes from one, twelve from the other, and fifteen from Karura Forest.")
@@ -259,10 +261,10 @@ templ LocationPage(p Page, showFlatsOpen bool) {
 					<div class="prose">
 						<p>The sales suite is on site, off Riverside Drive: look for the Oriel hoarding and the blue gate. There is visitor parking inside the gate.</p>
 						<p>By taxi or ride-hailing app, ask for the Oriel sales suite on Riverside Drive. By matatu, the Riverside Drive stop is a three-minute walk.</p>
-						if showFlatsOpen {
+						if !p.Site.Now.Before(showFlatsOpen) {
 							<p>Viewings are now held in the building itself, in finished show apartments on level 3.</p>
 						} else {
-							<p>From September 2027 viewings move into the building itself, to finished show apartments on level 3.</p>
+							<p>From { showFlatsOpen.Format("January 2006") } viewings move into the building itself, to finished show apartments on level 3.</p>
 						}
 					</div>
 				</div>
@@ -282,7 +284,7 @@ templ LocationPage(p Page, showFlatsOpen bool) {
 
 // ---------- Progress ----------
 
-templ ProgressPage(p Page, g Progress) {
+templ ProgressPage(p Page, g programme.Progress) {
 	@Layout(p) {
 		<div class="wrap content-page">
 			@contentHead("A-500 · Progress", progressTitle(g), "The building goes up in public. This page follows the programme, from the first pile to the keys, and is brought up to date as each stage is reached.")
@@ -293,7 +295,7 @@ templ ProgressPage(p Page, g Progress) {
 					<div class="progress-bar" role="presentation"><span style={ progressWidth(g.Percent) }></span></div>
 				</div>
 				<div><dt class="label">On site now</dt><dd>{ g.Current }</dd></div>
-				<div><dt class="label">Completion</dt><dd>{ plans.Completion.Format("Jan 2006") }</dd></div>
+				<div><dt class="label">Completion</dt><dd>{ g.Completion.Format("Jan 2006") }</dd></div>
 				<div><dt class="label">As at</dt><dd>{ g.Now.In(Nairobi).Format("2 Jan 2006") }</dd></div>
 			</dl>
 		</div>
@@ -306,7 +308,7 @@ templ ProgressPage(p Page, g Progress) {
 				<div class="progress__programme">
 					<h2 class="h3" id="programme-title">The programme</h2>
 					<ol class="timeline" role="list">
-						for _, m := range Milestones {
+						for _, m := range g.Milestones {
 							<li class={ "timeline__item", "is-" + m.Status(g.Now) }>
 								<span class="timeline__dot" aria-hidden="true"></span>
 								<p class="timeline__when mono">{ m.When() }</p>
@@ -326,7 +328,7 @@ templ ProgressPage(p Page, g Progress) {
 				</div>
 			</div>
 		</section>
-		if photos := PhotosBy(g.Now); len(photos) > 0 && HasPhoto(photos[0].Image) {
+		if photos := g.Photos; len(photos) > 0 && HasPhoto(photos[0].Image) {
 			<section class="content-section content-section--rule" aria-labelledby="photos-title">
 				<div class="wrap">
 					<div class="content-section__head">
@@ -362,7 +364,7 @@ templ BuyingPage(p Page, examples []plans.Schedule) {
 			<div class="wrap">
 				<h2 class="visually-hidden" id="steps-title">The steps</h2>
 				<ol class="steps-row" role="list">
-					for i, s := range BuyingSteps {
+					for i, s := range BuyingSteps(p.Site.Now) {
 						<li class="steps-row__item">
 							<span class="steps-row__n mono">{ strconv.Itoa(i + 1) }</span>
 							<p class="steps-row__when label">{ s.When }</p>

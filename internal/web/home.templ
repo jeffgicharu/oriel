@@ -4,7 +4,6 @@ import (
 	"strconv"
 
 	"github.com/jeffgicharu/oriel/internal/building"
-	"github.com/jeffgicharu/oriel/internal/plans"
 	"github.com/jeffgicharu/oriel/internal/store"
 )
 
@@ -27,7 +26,7 @@ templ Home(p Page, model building.Model, story HomeStory) {
 				@ElevationDrawing("hero__drawing")
 			</div>
 			<div class="wrap hero__content">
-				<p class="label label--cobalt hero__place"><span>Riverside, Nairobi</span><span>Completing December 2028</span></p>
+				<p class="label label--cobalt hero__place"><span>Riverside, Nairobi</span><span>Completing { CompletionMonth(p.Site.Now) }</span></p>
 				<h1 class="display hero__title" id="hero-title">Homes designed around the light.</h1>
 				<p class="lede">Eighty-six apartments over fifteen floors. Every one has a glazed bay that reaches out for the morning sun and the long view over the river.</p>
 				<div class="hero__actions">
@@ -49,7 +48,7 @@ templ Home(p Page, model building.Model, story HomeStory) {
 							}
 						</dd>
 					</div>
-					<div><dt class="label">Completion</dt><dd>December 2028</dd></div>
+					<div><dt class="label">Completion</dt><dd>{ CompletionMonth(p.Site.Now) }</dd></div>
 				</dl>
 			</div>
 		</section>
@@ -209,7 +208,7 @@ templ homeStory(s HomeStory) {
 				<h2 class="h2" id="story-progress">{ progressTitle(s.Progress) }</h2>
 				<p class="story-progress__figure"><span class="tnum">{ strconv.Itoa(s.Progress.Percent) }%</span> complete</p>
 				<div class="progress-bar" role="presentation"><span style={ progressWidth(s.Progress.Percent) }></span></div>
-				<p class="muted">{ s.Progress.Current }. Completion in { plans.Completion.Format("January 2006") }.</p>
+				<p class="muted">{ s.Progress.Current }. Completion in { s.Progress.Completion.Format("January 2006") }.</p>
 				<a class="link-arrow" href="/progress">Follow the build @Arrow()</a>
 			</div>
 		</div>

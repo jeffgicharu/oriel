@@ -6,6 +6,7 @@ import (
 
 	"github.com/jeffgicharu/oriel/internal/building"
 	"github.com/jeffgicharu/oriel/internal/plans"
+	"github.com/jeffgicharu/oriel/internal/programme"
 	"github.com/jeffgicharu/oriel/internal/store"
 )
 
@@ -42,7 +43,7 @@ func PriceList(p PriceListDoc) ([]byte, error) {
 	})
 	d.text(marginL, d.y, display, 19, graphite, "Homes for sale at Oriel, Riverside")
 	d.y += 26
-	d.para(marginL, width, sans, 9.5, 14, inkSoft, fmt.Sprintf("Every home still for sale, with its price on the list in force. Homes on hold are waiting for a reservation to be confirmed and may come free. Completion is planned for %s.", plans.Completion.Format("January 2006")))
+	d.para(marginL, width, sans, 9.5, 14, inkSoft, fmt.Sprintf("Every home still for sale, with its price on the list in force. Homes on hold are waiting for a reservation to be confirmed and may come free. Completion is planned for %s.", programme.Completion(p.AsAt).Format("January 2006")))
 	d.y += 16
 
 	cols := []float64{marginL, marginL + 52, marginL + 100, marginL + 214, marginL + 270, marginL + 330, right}

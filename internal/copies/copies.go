@@ -5,7 +5,8 @@
 // A visitor's first change copies the sample to a file of their own, and from
 // then on that browser reads and writes only its copy. A copy is deleted a day
 // after it was last used, and the oldest idle copies make way when the folder
-// reaches its limits. The sample is rebuilt every night with its dates moved on.
+// reaches its limits. The sample is rebuilt every hour with its dates moved on,
+// so the day it tells stays the day it is.
 package copies
 
 import (
@@ -48,8 +49,8 @@ type Options struct {
 	Protect time.Duration
 	// MaxOpen is how many copies may be open at once; others are reopened on use.
 	MaxOpen int
-	// RebuildAt is the time of day (UTC) the sample is rebuilt.
-	RebuildHour, RebuildMinute int
+	// RebuildMinute is the minute past each hour the sample is rebuilt.
+	RebuildMinute int
 	// SampleVersion is the sample story this release expects; a sample made
 	// from another story is rebuilt when the store opens.
 	SampleVersion string
@@ -63,7 +64,6 @@ func DefaultOptions() Options {
 		IdleLife:      24 * time.Hour,
 		Protect:       2 * time.Minute,
 		MaxOpen:       24,
-		RebuildHour:   2,
 		RebuildMinute: 50,
 	}
 }
@@ -515,9 +515,9 @@ func (s *Store) Usage() (count int, bytes int64) {
 // dueRebuild is the latest scheduled rebuild time at or before now.
 func (s *Store) dueRebuild(now time.Time) time.Time {
 	now = now.UTC()
-	due := time.Date(now.Year(), now.Month(), now.Day(), s.opt.RebuildHour, s.opt.RebuildMinute, 0, 0, time.UTC)
+	due := now.Truncate(time.Hour).Add(time.Duration(s.opt.RebuildMinute) * time.Minute)
 	if due.After(now) {
-		due = due.AddDate(0, 0, -1)
+		due = due.Add(-time.Hour)
 	}
 	return due
 }
@@ -531,7 +531,7 @@ func (s *Store) Run(ctx context.Context) {
 		now := s.now()
 		if s.SampleBuiltAt().Before(s.dueRebuild(now)) {
 			if err := s.RebuildSample(ctx); err != nil {
-				s.log.Error("nightly rebuild failed", "err", err)
+				s.log.Error("rebuilding the sample failed", "err", err)
 			}
 		}
 		if now.Sub(lastSweep) >= 10*time.Minute {

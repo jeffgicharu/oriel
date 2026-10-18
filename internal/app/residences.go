@@ -5,10 +5,12 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/jeffgicharu/oriel/internal/building"
 	"github.com/jeffgicharu/oriel/internal/light"
 	"github.com/jeffgicharu/oriel/internal/plans"
+	"github.com/jeffgicharu/oriel/internal/programme"
 	"github.com/jeffgicharu/oriel/internal/store"
 	"github.com/jeffgicharu/oriel/internal/web"
 )
@@ -85,6 +87,12 @@ func sortHomes(homes []store.Home, by string) {
 	})
 }
 
+// planOptions are the options for a schedule from a reservation made at
+// from, against the completion date as the programme stands today.
+func (a *App) planOptions(from time.Time) plans.Options {
+	return plans.Options{From: from, Completion: programme.Completion(a.now())}
+}
+
 // scheduleFor builds the payment schedule asked for in the query.
 func (a *App) scheduleFor(r *http.Request, h store.Home) (plans.Schedule, string) {
 	code := r.URL.Query().Get("plan")
@@ -92,7 +100,7 @@ func (a *App) scheduleFor(r *http.Request, h store.Home) (plans.Schedule, string
 	if !ok {
 		plan = plans.Plans[0]
 	}
-	opt := plans.Options{From: a.now()}
+	opt := a.planOptions(a.now())
 	if v, err := strconv.ParseInt(r.URL.Query().Get("rate"), 10, 64); err == nil {
 		opt.RateBP = v
 	}
@@ -101,7 +109,7 @@ func (a *App) scheduleFor(r *http.Request, h store.Home) (plans.Schedule, string
 	}
 	s, err := plans.Build(plan, h.Price, opt)
 	if err != nil {
-		s, _ = plans.Build(plan, h.Price, plans.Options{From: a.now()})
+		s, _ = plans.Build(plan, h.Price, a.planOptions(a.now()))
 	}
 	return s, plan.Code
 }

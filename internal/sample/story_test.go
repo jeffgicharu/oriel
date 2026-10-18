@@ -179,13 +179,15 @@ func checkStory(s *Story) error {
 	return nil
 }
 
-// The story holds whatever the date and whatever the hour, including the
-// nightly rebuild at 02:50 UTC and odd minutes in the evening.
+// The story holds whatever the date and whatever the hour. The sample is
+// rebuilt at ten to every hour, so each tested day takes four hours six apart,
+// and the next tested day the four after them: every hour of the day is
+// covered every six tested days, at the rebuild minute and at odd minutes.
 func TestStoryHoldsOnEveryDay(t *testing.T) {
 	start := time.Date(2026, 10, 17, 2, 50, 0, 0, time.UTC)
-	hours := []int{0, 7, 14, 20}
 	for d := 0; d < 400; d += 3 {
-		for _, h := range hours {
+		first := (d / 3) % 6
+		for _, h := range []int{first, first + 6, first + 12, first + 18} {
 			now := start.AddDate(0, 0, d).Add(time.Duration(h)*time.Hour + time.Duration(d%60)*time.Minute)
 			if err := checkStory(Tell(now)); err != nil {
 				t.Fatalf("on %s: %v", now.Format(time.RFC3339), err)
@@ -194,7 +196,7 @@ func TestStoryHoldsOnEveryDay(t *testing.T) {
 	}
 }
 
-func TestStoryIsTheSameEveryNight(t *testing.T) {
+func TestStoryIsTheSameEveryDay(t *testing.T) {
 	a := Tell(time.Date(2026, 10, 17, 2, 50, 0, 0, time.UTC))
 	b := Tell(time.Date(2026, 10, 18, 2, 50, 0, 0, time.UTC))
 	for id, u := range a.Units {

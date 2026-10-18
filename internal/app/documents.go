@@ -51,7 +51,7 @@ func (a *App) offerPDF(w http.ResponseWriter, r *http.Request) {
 	if from.IsZero() {
 		from = res.RequestedAt
 	}
-	s, err := plans.Build(plan, res.Price, plans.Options{From: from})
+	s, err := plans.Build(plan, res.Price, a.planOptions(from))
 	if err != nil {
 		a.serverError(w, r)
 		return

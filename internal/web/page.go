@@ -98,7 +98,7 @@ func (p Page) ImageAltText() string {
 	if p.Meta.ImageAlt != "" {
 		return p.Meta.ImageAlt
 	}
-	return "Oriel: 86 homes designed around the light, in Riverside, Nairobi. Completing December 2028."
+	return "Oriel: 86 homes designed around the light, in Riverside, Nairobi. Selling off-plan from KES 11.4M."
 }
 
 // OGType is the Open Graph type of the page.

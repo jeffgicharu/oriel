@@ -11,9 +11,6 @@ import (
 	"time"
 )
 
-// Completion is when the building is due to be handed over.
-var Completion = time.Date(2028, time.December, 15, 0, 0, 0, 0, nairobi)
-
 var nairobi = func() *time.Location {
 	loc, err := time.LoadLocation("Africa/Nairobi")
 	if err != nil {
@@ -77,6 +74,7 @@ type Schedule struct {
 	ListPrice   int64
 	Discount    int64
 	Price       int64
+	Completion  time.Time
 	Instalments []Instalment
 	// Mortgage is set on the mortgage plan.
 	Mortgage *MortgageEstimate
@@ -96,6 +94,8 @@ type MortgageEstimate struct {
 type Options struct {
 	// From is when the reservation is made. Dates follow from it.
 	From time.Time
+	// Completion is when the building is due to be handed over.
+	Completion time.Time
 	// RateBP and Years are for the mortgage estimate.
 	RateBP int64
 	Years  int
@@ -116,13 +116,17 @@ func Build(plan Plan, listPrice int64, opt Options) (Schedule, error) {
 	if listPrice <= 0 {
 		return Schedule{}, fmt.Errorf("plans: price must be positive")
 	}
+	if opt.Completion.IsZero() {
+		return Schedule{}, fmt.Errorf("plans: no completion date")
+	}
 	from := opt.From.In(nairobi)
 	day := time.Date(from.Year(), from.Month(), from.Day(), 0, 0, 0, 0, nairobi)
-	if !day.Before(Completion.AddDate(0, -1, 0)) {
+	completion := opt.Completion
+	if !day.Before(completion.AddDate(0, -1, 0)) {
 		return Schedule{}, fmt.Errorf("plans: too close to completion to build a schedule")
 	}
 
-	s := Schedule{Plan: plan, ListPrice: listPrice}
+	s := Schedule{Plan: plan, ListPrice: listPrice, Completion: completion}
 	s.Discount = share(listPrice, plan.DiscountBP)
 	s.Price = listPrice - s.Discount
 
@@ -137,7 +141,7 @@ func Build(plan Plan, listPrice int64, opt Options) (Schedule, error) {
 		onCompletion := s.Price - deposit - onSigning - duringBuild
 		s.add("Reservation deposit", reserve, deposit, 1000, "Within 7 days of your letter of offer")
 		s.add("On signing the sale agreement", signing, onSigning, 2000, "")
-		quarters := quarterDates(signing, Completion)
+		quarters := quarterDates(signing, completion)
 		if len(quarters) == 0 {
 			onSigning += duringBuild
 			s.Instalments[len(s.Instalments)-1].Amount = onSigning
@@ -152,7 +156,7 @@ func Build(plan Plan, listPrice int64, opt Options) (Schedule, error) {
 				s.add(fmt.Sprintf("Construction instalment %d of %d", i+1, len(quarters)), due, amount, 4000/int64(len(quarters)), "")
 			}
 		}
-		s.add("On completion", Completion, onCompletion, 3000, "When you receive the keys")
+		s.add("On completion", completion, onCompletion, 3000, "When you receive the keys")
 	case "cash":
 		deposit := share(s.Price, 1000)
 		s.add("Reservation deposit", reserve, deposit, 1000, "Within 7 days of your letter of offer")
@@ -163,7 +167,7 @@ func Build(plan Plan, listPrice int64, opt Options) (Schedule, error) {
 		loan := s.Price - deposit - second
 		s.add("Reservation deposit", reserve, deposit, 1000, "Within 7 days of your letter of offer")
 		s.add("On signing the sale agreement", signing, second, 1000, "")
-		s.add("From your bank", Completion, loan, 8000, "Paid by your lender on completion")
+		s.add("From your bank", completion, loan, 8000, "Paid by your lender on completion")
 		rate, years := opt.RateBP, opt.Years
 		if rate == 0 {
 			rate = DefaultRateBP
@@ -181,7 +185,7 @@ func Build(plan Plan, listPrice int64, opt Options) (Schedule, error) {
 			Years:      years,
 			Monthly:    monthly,
 			TotalPaid:  monthly * int64(years*12),
-			FirstMonth: Completion.AddDate(0, 1, 0),
+			FirstMonth: completion.AddDate(0, 1, 0),
 		}
 	default:
 		return Schedule{}, fmt.Errorf("plans: unknown plan %q", plan.Code)

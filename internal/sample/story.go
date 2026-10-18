@@ -1,5 +1,5 @@
 // Package sample writes the shared sample: Oriel's sales story from launch to
-// the moment it is built. The story is the same every night, moved forward so
+// the moment it is built. The story is the same every time, moved forward so
 // that it always ends now: about seven months of sales, a pipeline of leads,
 // viewings booked for the next two weeks, and a few reservations waiting for
 // the sales manager.

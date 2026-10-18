@@ -5,6 +5,7 @@ import (
 	"encoding/xml"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/jeffgicharu/oriel/internal/assets"
 	"github.com/jeffgicharu/oriel/internal/building"
@@ -124,13 +125,13 @@ func websiteLD(site string) map[string]any {
 	}
 }
 
-func complexLD(site string) map[string]any {
+func complexLD(site string, now time.Time) map[string]any {
 	return map[string]any{
 		"@context":                   "https://schema.org",
 		"@type":                      "ApartmentComplex",
 		"@id":                        site + "/#oriel",
 		"name":                       "Oriel",
-		"description":                "A seventeen-storey building of 86 homes, two of them penthouses, in Riverside, Nairobi, completing in December 2028.",
+		"description":                "A seventeen-storey building of 86 homes, two of them penthouses, in Riverside, Nairobi, completing in " + web.CompletionMonth(now) + ".",
 		"url":                        site + "/",
 		"numberOfAccommodationUnits": 86,
 		"petsAllowed":                false,

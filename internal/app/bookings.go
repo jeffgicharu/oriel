@@ -272,7 +272,7 @@ func (a *App) viewingCalendar(w http.ResponseWriter, r *http.Request) {
 func (a *App) reserveData(r *http.Request, c *store.Catalog, h store.Home, f web.Form, plan string) web.ReserveData {
 	d := web.ReserveData{Form: f, Home: h, Plan: plan}
 	for _, pl := range plans.Plans {
-		if s, err := plans.Build(pl, h.Price, plans.Options{From: a.now()}); err == nil {
+		if s, err := plans.Build(pl, h.Price, a.planOptions(a.now())); err == nil {
 			d.Previews = append(d.Previews, s)
 		}
 	}
@@ -415,9 +415,9 @@ func (a *App) reservationPage(w http.ResponseWriter, r *http.Request) {
 	}
 	h, _ := c.Home(res.UnitID)
 	plan, _ := plans.ByCode(res.Plan)
-	s, err := plans.Build(plan, res.Price, plans.Options{From: res.RequestedAt})
+	s, err := plans.Build(plan, res.Price, a.planOptions(res.RequestedAt))
 	if err != nil {
-		s, _ = plans.Build(plan, res.Price, plans.Options{From: a.now()})
+		s, _ = plans.Build(plan, res.Price, a.planOptions(a.now()))
 	}
 	d := web.ReservationData{Reservation: res, Home: h, Schedule: s, Plan: plan, Fresh: r.URL.Query().Get("new") == "1", Now: a.now()}
 	p := a.page(web.Meta{

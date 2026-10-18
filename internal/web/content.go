@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/jeffgicharu/oriel/internal/plans"
+	"github.com/jeffgicharu/oriel/internal/programme"
 )
 
 // The words for the building, buying, privacy and terms pages.
@@ -85,14 +86,28 @@ type BuyingStep struct {
 	Title, Text, When string
 }
 
-// BuyingSteps take a buyer from a viewing to the keys.
-var BuyingSteps = []BuyingStep{
+// buyingSteps take a buyer from a viewing to the keys. The last is dated
+// on the day it is shown.
+var buyingSteps = []BuyingStep{
 	{Title: "Choose your home", When: "Any time", Text: "Explore the building, shortlist homes and come to the sales suite to see the show apartments and the model."},
 	{Title: "Request a reservation", When: "Day 1", Text: "Choose a payment plan online. The home is held for you for 72 hours while the sales team checks it is free and prepares a letter of offer."},
 	{Title: "Pay the deposit", When: "Within 7 days", Text: "Pay 10% by bank transfer to the project’s escrow account. The home is then yours, and it comes off the market."},
 	{Title: "Sign the sale agreement", When: "Within 30 days", Text: "Your advocate reviews the agreement for sale; you sign and pay the next instalment as your plan sets out."},
 	{Title: "Pay the instalments", When: "Until completion", Text: "As your plan sets out: in stages as the building rises, within 90 days if you pay cash, or from your bank at completion. You can follow every stage on the progress page."},
-	{Title: "Collect your keys", When: "December 2028", Text: "We walk through the home with you, fix anything on the snagging list, and hand over the keys and your title."},
+	{Title: "Collect your keys", Text: "We walk through the home with you, fix anything on the snagging list, and hand over the keys and your title."},
+}
+
+// BuyingSteps are the steps to the keys as of now.
+func BuyingSteps(now time.Time) []BuyingStep {
+	steps := append([]BuyingStep(nil), buyingSteps...)
+	steps[len(steps)-1].When = CompletionMonth(now)
+	return steps
+}
+
+// CompletionMonth is the month the building is due to complete, as the
+// programme stands at now: "December 2028".
+func CompletionMonth(now time.Time) string {
+	return programme.Completion(now).Format("January 2006")
 }
 
 // Cost is one of the costs of buying beyond the price.
@@ -129,7 +144,7 @@ const ExamplePrice = 18_000_000
 func PlanExamples(now time.Time) []plans.Schedule {
 	var out []plans.Schedule
 	for _, pl := range plans.Plans {
-		if s, err := plans.Build(pl, ExamplePrice, plans.Options{From: now}); err == nil {
+		if s, err := plans.Build(pl, ExamplePrice, plans.Options{From: now, Completion: programme.Completion(now)}); err == nil {
 			out = append(out, s)
 		}
 	}

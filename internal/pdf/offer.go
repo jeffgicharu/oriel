@@ -130,7 +130,7 @@ func OfferLetter(o Offer) ([]byte, error) {
 		fmt.Sprintf("The reservation deposit of %s is due by %s, by bank transfer to the project’s escrow account. The account details are on the deposit invoice that comes with this letter.", kes(deposit.Amount), deposit.Due.In(o.Nairobi).Format("2 January 2006")),
 		"Once the deposit is received the home is yours and comes off the market. If it is not received by that date, this offer lapses and the home is released.",
 		"The agreement for sale follows within 30 days of the deposit, prepared by our advocates; your own advocate reviews it with you before you sign.",
-		"Payments are made against the stages of construction certified by the project’s quantity surveyor. Completion is planned for " + plans.Completion.Format("January 2006") + ".",
+		"Payments are made against the stages of construction certified by the project’s quantity surveyor. Completion is planned for " + o.Schedule.Completion.Format("January 2006") + ".",
 		"Stamp duty, your advocate’s fees and the other costs of buying are paid by you, as set out at " + o.Site + "/buying.",
 		"This letter is an offer and is subject to contract. Nothing is binding until the agreement for sale is signed by both parties.",
 	}

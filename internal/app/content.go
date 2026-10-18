@@ -3,6 +3,7 @@ package app
 import (
 	"net/http"
 
+	"github.com/jeffgicharu/oriel/internal/programme"
 	"github.com/jeffgicharu/oriel/internal/web"
 )
 
@@ -19,7 +20,7 @@ func (a *App) buildingPage(w http.ResponseWriter, r *http.Request) {
 		Path:        "/building",
 		Sheet:       web.Sheet{Number: "A-300", Name: "The building"},
 		Nav:         "building",
-		JSONLD:      []any{complexLD(a.cfg.SiteURL)},
+		JSONLD:      []any{complexLD(a.cfg.SiteURL, a.now())},
 	})
 	a.render(w, r, http.StatusOK, web.BuildingPage(p, c.Types()))
 }
@@ -32,14 +33,14 @@ func (a *App) locationPage(w http.ResponseWriter, r *http.Request) {
 		Sheet:       web.Sheet{Number: "A-400", Name: "Location"},
 		Nav:         "location",
 	})
-	a.render(w, r, http.StatusOK, web.LocationPage(p, !a.now().Before(web.ShowFlatsOpen)))
+	a.render(w, r, http.StatusOK, web.LocationPage(p, programme.ShowFlatsOpen(a.now())))
 }
 
 func (a *App) progressPage(w http.ResponseWriter, r *http.Request) {
-	g := web.ProgressOn(a.now())
+	g := programme.On(a.now())
 	p := a.page(web.Meta{
 		Title:       "Construction progress",
-		Description: "Oriel is going up in Riverside, Nairobi. Follow the programme from the first pile to completion in December 2028, with photographs from the site.",
+		Description: "Oriel is going up in Riverside, Nairobi. Follow the programme from the first pile to completion in " + web.CompletionMonth(a.now()) + ", with photographs from the site.",
 		Path:        "/progress",
 		Sheet:       web.Sheet{Number: "A-500", Name: "Progress"},
 		Nav:         "progress",

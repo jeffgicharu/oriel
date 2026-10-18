@@ -13,8 +13,8 @@ import (
 // Build writes the shared sample, as of now, to a new file at path.
 // Version names the sample's story. Change it whenever the story changes, and
 // the next release rebuilds the shared sample as it starts instead of waiting
-// for the nightly rebuild.
-const Version = "2026-10-18 visits today"
+// for the hourly rebuild.
+const Version = "2026-10-18 hourly"
 
 func Build(ctx context.Context, path string, now time.Time) error {
 	story := Tell(now)

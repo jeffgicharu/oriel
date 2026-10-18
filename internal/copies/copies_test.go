@@ -189,9 +189,10 @@ func TestRebuildPointsAtTheNewSample(t *testing.T) {
 func TestDueRebuild(t *testing.T) {
 	s, _ := openStore(t, DefaultOptions())
 	cases := map[string]string{
-		"2026-10-17T02:49:59Z": "2026-10-16T02:50:00Z",
+		"2026-10-17T02:49:59Z": "2026-10-17T01:50:00Z",
 		"2026-10-17T02:50:00Z": "2026-10-17T02:50:00Z",
-		"2026-10-17T23:10:00Z": "2026-10-17T02:50:00Z",
+		"2026-10-17T23:10:00Z": "2026-10-17T22:50:00Z",
+		"2026-10-18T00:20:00Z": "2026-10-17T23:50:00Z",
 	}
 	for now, want := range cases {
 		n, _ := time.Parse(time.RFC3339, now)

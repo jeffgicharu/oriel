@@ -114,11 +114,11 @@ func (a *App) publicFile(name string) http.HandlerFunc {
 
 func (a *App) home(w http.ResponseWriter, r *http.Request) {
 	p := a.page(web.Meta{
-		Description: "Eighty-six homes in Riverside, Nairobi, each with a glazed bay that catches the morning light. Explore the building in 3D, find a home and book a viewing. Completing December 2028.",
+		Description: "Eighty-six homes in Riverside, Nairobi, each with a glazed bay that catches the morning light. Explore the building in 3D, find a home and book a viewing. Completing " + web.CompletionMonth(a.now()) + ".",
 		Path:        "/",
 		Sheet:       web.Sheet{Number: "A-000", Name: "General arrangement"},
 		HeaderOver:  true,
-		JSONLD:      []any{organizationLD(a.cfg.SiteURL), websiteLD(a.cfg.SiteURL), complexLD(a.cfg.SiteURL)},
+		JSONLD:      []any{organizationLD(a.cfg.SiteURL), websiteLD(a.cfg.SiteURL), complexLD(a.cfg.SiteURL, a.now())},
 	})
 	c, ok := a.catalog(w, r)
 	if !ok {

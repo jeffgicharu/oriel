@@ -7,6 +7,7 @@ import (
 
 	"github.com/jeffgicharu/oriel/internal/building"
 	"github.com/jeffgicharu/oriel/internal/plans"
+	"github.com/jeffgicharu/oriel/internal/programme"
 	"github.com/jeffgicharu/oriel/internal/store"
 )
 
@@ -17,7 +18,7 @@ type HomeStory struct {
 	Available int
 	Total     int
 	Stack     []StackRow
-	Progress  Progress
+	Progress  programme.Progress
 }
 
 // StackRow is one floor of the stacking plan.
@@ -34,7 +35,7 @@ type StackCell struct {
 
 // StoryFor gathers the home page's figures from the catalogue.
 func StoryFor(c *store.Catalog, now time.Time) HomeStory {
-	s := HomeStory{Types: c.Types(), From: c.FromPrice(), Progress: ProgressOn(now), Total: len(c.Homes)}
+	s := HomeStory{Types: c.Types(), From: c.FromPrice(), Progress: programme.On(now), Total: len(c.Homes)}
 	byLevel := map[int][]StackCell{}
 	for _, h := range c.Homes {
 		if h.Status == store.Available {

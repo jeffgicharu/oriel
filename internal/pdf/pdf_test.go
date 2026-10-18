@@ -9,6 +9,7 @@ import (
 
 	"github.com/jeffgicharu/oriel/internal/floorplan"
 	"github.com/jeffgicharu/oriel/internal/plans"
+	"github.com/jeffgicharu/oriel/internal/programme"
 	"github.com/jeffgicharu/oriel/internal/sample"
 	"github.com/jeffgicharu/oriel/internal/store"
 )
@@ -49,7 +50,7 @@ func TestTheDocumentsDraw(t *testing.T) {
 	res := all[0]
 	h, _ := c.Home(res.UnitID)
 	plan, _ := plans.ByCode(res.Plan)
-	s, err := plans.Build(plan, res.Price, plans.Options{From: res.DecidedAt})
+	s, err := plans.Build(plan, res.Price, plans.Options{From: res.DecidedAt, Completion: programme.Completion(res.DecidedAt)})
 	if err != nil {
 		t.Fatal(err)
 	}

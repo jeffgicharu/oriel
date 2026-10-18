@@ -59,7 +59,7 @@ var enquiryMessages = map[string][]string{
 	"B": {
 		"We are a couple looking for a 2 bed with good light. Which corner gets the morning sun?",
 		"Interested in a two bedroom on a high floor. Is the cash discount still available?",
-		"Living in Dubai, looking for a 2 bed to move back to in 2029. Can I do everything remotely?",
+		"Living in Dubai, looking for a 2 bed to move back to once it is finished. Can I do everything remotely?",
 		"Please send the price list for two bedrooms and the payment plan details.",
 	},
 	"C": {

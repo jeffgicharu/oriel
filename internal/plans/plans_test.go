@@ -5,6 +5,9 @@ import (
 	"time"
 )
 
+// completion is the date the tests build schedules against.
+var completion = at("2028-12-15 00:00")
+
 func at(s string) time.Time {
 	t, err := time.ParseInLocation("2006-01-02 15:04", s, nairobi)
 	if err != nil {
@@ -20,7 +23,7 @@ func TestSchedulesAddUpOnEveryDay(t *testing.T) {
 	for day := at("2026-10-17 02:50"); day.Before(at("2028-10-01 00:00")); day = day.Add(37*time.Hour + 11*time.Minute) {
 		for _, plan := range Plans {
 			for _, price := range prices {
-				s, err := Build(plan, price, Options{From: day})
+				s, err := Build(plan, price, Options{From: day, Completion: completion})
 				if err != nil {
 					t.Fatalf("%s on %s: %v", plan.Code, day, err)
 				}
@@ -47,7 +50,7 @@ func TestSchedulesAddUpOnEveryDay(t *testing.T) {
 }
 
 func TestStagedPlanSplits(t *testing.T) {
-	s, err := Build(Plans[0], 17_600_000, Options{From: at("2026-10-17 10:00")})
+	s, err := Build(Plans[0], 17_600_000, Options{From: at("2026-10-17 10:00"), Completion: completion})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -58,7 +61,7 @@ func TestStagedPlanSplits(t *testing.T) {
 		t.Errorf("signing %d, want 3,520,000", s.Instalments[1].Amount)
 	}
 	last := s.Instalments[len(s.Instalments)-1]
-	if last.Amount != 5_280_000 || !last.Due.Equal(Completion) {
+	if last.Amount != 5_280_000 || !last.Due.Equal(completion) {
 		t.Errorf("completion %d on %s", last.Amount, last.Due)
 	}
 	// Signing is 30 days after 17 Oct 2026: 16 Nov 2026. Quarters run from
@@ -84,14 +87,14 @@ func TestStagedPlanSplits(t *testing.T) {
 }
 
 func TestCashDiscount(t *testing.T) {
-	s, _ := Build(Plans[1], 20_000_000, Options{From: at("2026-10-17 10:00")})
+	s, _ := Build(Plans[1], 20_000_000, Options{From: at("2026-10-17 10:00"), Completion: completion})
 	if s.Discount != 1_400_000 || s.Price != 18_600_000 {
 		t.Errorf("discount %d, price %d", s.Discount, s.Price)
 	}
 }
 
 func TestMortgageEstimate(t *testing.T) {
-	s, err := Build(Plans[2], 17_600_000, Options{From: at("2026-10-17 10:00")})
+	s, err := Build(Plans[2], 17_600_000, Options{From: at("2026-10-17 10:00"), Completion: completion})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -103,7 +106,13 @@ func TestMortgageEstimate(t *testing.T) {
 	if m.Monthly < 169_000 || m.Monthly > 171_000 {
 		t.Errorf("monthly %d", m.Monthly)
 	}
-	if _, err := Build(Plans[2], 17_600_000, Options{From: at("2026-10-17 10:00"), RateBP: 9_999}); err == nil {
+	if _, err := Build(Plans[2], 17_600_000, Options{From: at("2026-10-17 10:00"), Completion: completion, RateBP: 9_999}); err == nil {
 		t.Error("a 99.99% rate was accepted")
+	}
+}
+
+func TestAScheduleNeedsACompletionDate(t *testing.T) {
+	if _, err := Build(Plans[0], 17_600_000, Options{From: at("2026-10-17 10:00")}); err == nil {
+		t.Error("a schedule was built without a completion date")
 	}
 }

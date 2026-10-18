@@ -20,7 +20,8 @@ internal/app        routes, middleware and handlers for the site and the desk
 internal/web        templ components, drawings and plans in SVG
 internal/store      the database: homes, leads, viewings, reservations, prices, the activity log
 internal/copies     each visitor's private copy of the database, and clearing them away
-internal/sample     the sample sales history every copy starts from, rebuilt each night
+internal/sample     the sample sales history every copy starts from, rebuilt every hour
+internal/programme  the construction programme, moving on with the calendar
 internal/building   the one description of the building: floors, homes, sizes
 internal/floorplan  each home type's rooms, doors and windows
 internal/pricing    prices from the list in force
