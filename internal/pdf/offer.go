@@ -48,8 +48,10 @@ func OfferLetter(o Offer) ([]byte, error) {
 	d.text(marginL, d.y, sans, 9, inkSoft, r.Email+"  ·  "+r.Phone)
 	d.y += 34
 
-	d.text(marginL, d.y, display, 19, graphite, "Home "+o.Home.ID+", "+lowerFirst(o.HomeTitle))
-	d.y += 34
+	// The home's name, on two lines if it is long.
+	d.y -= 2
+	d.para(marginL, width, display, 19, 24, graphite, "Home "+o.Home.ID+", "+lowerFirst(o.HomeTitle))
+	d.y += 12
 
 	first := strings.Fields(r.Name)[0]
 	d.para(marginL, width, sans, 10, 15, graphite, "Dear "+first+",")
@@ -65,7 +67,7 @@ func OfferLetter(o Offer) ([]byte, error) {
 	terms := [][2]string{
 		{"Home", o.Home.ID + " · type " + o.Home.Type.Code},
 		{"Floor", fmt.Sprintf("Level %d", o.Home.Level)},
-		{"Faces", o.Home.Facings()},
+		{"Faces", upperFirst(o.Home.Facings())},
 		{"Inside", fmt.Sprintf("%d m²", o.Home.Type.Internal)},
 		{o.Home.Type.OutdoorName, fmt.Sprintf("%d m²", o.Home.Type.Outdoor)},
 		{"Parking", fmt.Sprintf("%d %s in the basement", o.Parking, map[bool]string{true: "space", false: "spaces"}[o.Parking == 1])},
@@ -165,6 +167,14 @@ func lowerFirst(s string) string {
 	return strings.ToLower(string(r[0])) + string(r[1:])
 }
 
+func upperFirst(s string) string {
+	if s == "" {
+		return s
+	}
+	r := []rune(s)
+	return strings.ToUpper(string(r[0])) + string(r[1:])
+}
+
 // drawPlan draws a home's plan, simplified, in a box: the outdoor space and
 // bay, the rooms, the outer walls, the windows and the room names. It returns
 // the height used.
@@ -209,12 +219,23 @@ func drawPlan(d *doc, p floorplan.Plan, x, y, w, maxH float64) float64 {
 				big = r
 			}
 		}
-		size := 6.0
-		tw := d.measure(sans, size, room.Name)
-		if tw > big.W()*scale-4 {
-			continue
+		// One line if the name fits, else two, else a size smaller.
+		cx, cy := px((big.X0+big.X1)/2), py((big.Y0+big.Y1)/2)
+		fit := big.W()*scale - 4
+		lines, size := []string{room.Name}, 6.0
+		if d.measure(sans, size, room.Name) > fit {
+			lines = nil
+			if first, rest, ok := strings.Cut(room.Name, " "); ok && big.H()*scale > 20 &&
+				d.measure(sans, size, first) <= fit && d.measure(sans, size, rest) <= fit {
+				lines = []string{first, rest}
+			} else if d.measure(sans, 5, room.Name) <= fit {
+				lines, size = []string{room.Name}, 5
+			}
 		}
-		d.text(px((big.X0+big.X1)/2)-tw/2, py((big.Y0+big.Y1)/2)-2, sans, size, inkSoft, room.Name)
+		for i, line := range lines {
+			y := cy - 2 + (float64(i)-float64(len(lines)-1)/2)*7.5
+			d.text(cx-d.measure(sans, size, line)/2, y, sans, size, inkSoft, line)
+		}
 	}
 	return b.H() * scale
 }
