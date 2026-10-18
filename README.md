@@ -15,11 +15,21 @@ Visitors explore the building in 3D, find a home, see how the light reaches it t
 ## Layout
 
 ```
-cmd/oriel           the binary: serve, version, check-release
-internal/app        routes, middleware and handlers
-internal/web        templ components for the site and the desk
-internal/assets     the embedded browser build and root files
+cmd/oriel           the binary: serve, version, check-release, desk-links
+internal/app        routes, middleware and handlers for the site and the desk
+internal/web        templ components, drawings and plans in SVG
+internal/store      the database: homes, leads, viewings, reservations, prices, the activity log
+internal/copies     each visitor's private copy of the database, and clearing them away
+internal/sample     the sample sales history every copy starts from, rebuilt each night
+internal/building   the one description of the building: floors, homes, sizes
+internal/floorplan  each home type's rooms, doors and windows
+internal/pricing    prices from the list in force
+internal/plans      payment schedules on each plan
+internal/light      direct sun reaching each home through the year
+internal/viewings   the sales suite's opening hours and slots
+internal/pdf        the letter of offer and the price list
 internal/check      the release gate, run before visitors reach a release
+internal/assets     the embedded browser build and root files
 internal/config     settings from the environment
 web/                TypeScript, CSS, fonts and pictures, built by esbuild
 deploy/             server setup, the systemd unit, nginx and the activation script
