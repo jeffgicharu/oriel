@@ -83,7 +83,7 @@ var Types = map[string]Type{
 	"P": {
 		Code: "P", Name: "Penthouse", Short: "Penthouse",
 		Bedrooms: 4, Bathrooms: 4, Study: true, DSQ: true,
-		Internal: 310, Outdoor: 120, OutdoorName: "Terrace", Parking: 3,
+		Internal: 310, Outdoor: 120, OutdoorName: "Terrace", Parking: 2,
 		ListPrice: 50_150_000,
 		Summary:   "One of two homes on the top floor, set back behind a terrace on three sides, with the pool and garden directly above.",
 		Features: []string{
